@@ -7,7 +7,7 @@ import {
   Heart, MapPin, Users, Trophy, Clock, Flame,
   TrendingUp, Award, Gift, Zap, Crown, Sparkles,
   Radio, Shield, Swords,
-  Gamepad2, Calendar, Target, Wallet
+  Gamepad2, Calendar, Target, Wallet, Search, List, Grid3X3, ChevronDown, ChevronUp, Filter
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -66,7 +66,7 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
 
-/* ─── StatusBadge (unchanged) ─── */
+/* ─── StatusBadge ─── */
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
     setup: { label: 'Setup', cls: 'bg-muted text-muted-foreground' },
@@ -117,7 +117,7 @@ function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }
   );
 }
 
-/* ─── Simple section card — no image header, clean Toornament style ─── */
+/* ─── Toornament-style Section Card — clean header with thin bottom border ─── */
 function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
@@ -129,17 +129,175 @@ function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
   return (
     <Card className={`${dt.casinoCard} overflow-hidden ${className}`}>
       <div className={dt.casinoBar} />
-      <CardContent className="p-4 relative z-10">
-        <div className="flex items-center gap-2 mb-3">
-          <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+      <CardContent className="p-0 relative z-10">
+        {/* Toornament-style section header — full width, bordered bottom */}
+        <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
+          <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
             <Icon className={`w-3 h-3 ${dt.neonText}`} />
           </div>
-          <h3 className="text-sm font-semibold">{title}</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider">{title}</h3>
           {badge && <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{badge}</Badge>}
         </div>
-        {children}
+        <div className="p-4">
+          {children}
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+/* ─── Toornament-style Match Row — clean, compact ─── */
+function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
+  club1: string; club2: string; score1: number; score2: number;
+  week?: number; status?: string; mvp?: string; isLive?: boolean;
+}) {
+  const dt = useDivisionTheme();
+  const isCompleted = status === 'completed' || (score1 !== score2);
+  const winner1 = score1 > score2;
+  const winner2 = score2 > score1;
+
+  return (
+    <div className={`group flex items-stretch rounded-lg overflow-hidden ${dt.bgSubtle} ${dt.borderSubtle} border transition-all hover:${dt.border} hover:shadow-sm`}>
+      {/* Week/Round indicator — toornament style left bar */}
+      {week && (
+        <div className={`w-10 shrink-0 flex items-center justify-center ${dt.bg} border-r ${dt.borderSubtle}`}>
+          <span className={`text-[9px] font-bold ${dt.neonText}`}>W{week}</span>
+        </div>
+      )}
+      {/* Main match content */}
+      <div className="flex-1 min-w-0">
+        {/* Team 1 */}
+        <div className={`flex items-center px-3 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? '' : 'opacity-60'}`}>
+          <span className={`text-xs font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
+            {winner1 && <span className="mr-1">▸</span>}
+            {club1}
+          </span>
+          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner1 ? dt.neonText : 'text-foreground'}`}>{score1}</span>
+        </div>
+        {/* Team 2 */}
+        <div className={`flex items-center px-3 py-1.5 ${winner2 ? '' : 'opacity-60'}`}>
+          <span className={`text-xs font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
+            {winner2 && <span className="mr-1">▸</span>}
+            {club2}
+          </span>
+          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner2 ? dt.neonText : 'text-foreground'}`}>{score2}</span>
+        </div>
+      </div>
+      {/* Status / MVP indicator */}
+      <div className="w-16 shrink-0 flex flex-col items-center justify-center border-l border-transparent">
+        {isLive ? (
+          <Badge className="bg-red-500/10 text-red-500 text-[8px] border-0 live-dot">LIVE</Badge>
+        ) : isCompleted ? (
+          <Badge className="bg-green-500/10 text-green-500 text-[8px] border-0">FT</Badge>
+        ) : (
+          <Badge className={`${dt.casinoBadge} text-[8px]`}>VS</Badge>
+        )}
+        {mvp && <span className="text-[8px] text-yellow-500 mt-0.5">MVP</span>}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Toornament-style Bracket Match ─── */
+function BracketMatch({ team1, team2, score1, score2, status, round, matchIdx, isLast }: {
+  team1: string; team2: string; score1: number | null; score2: number | null;
+  status: string; round: number; matchIdx: number; isLast: boolean;
+}) {
+  const dt = useDivisionTheme();
+  const hasScore = score1 !== null && score2 !== null;
+  const winner1 = hasScore && score1! > score2!;
+  const winner2 = hasScore && score2! > score1!;
+  const isLive = status === 'live';
+
+  return (
+    <div className="relative" style={{ marginBottom: isLast ? 0 : 'var(--bracket-gap, 24px)' }}>
+      {/* Connector lines for rounds > 0 */}
+      {round > 0 && (
+        <div className="absolute -left-5 top-1/2 w-5 flex items-center">
+          <div className={`w-full h-px ${dt.borderSubtle}`} />
+        </div>
+      )}
+      <div className={`rounded-lg overflow-hidden border ${dt.borderSubtle} ${isLive ? `border-red-500/30 ${dt.neonPulse}` : ''} transition-all hover:${dt.border} hover:shadow-sm`} style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}>
+        {/* Team 1 row */}
+        <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
+          <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
+            {team1 || 'TBD'}
+          </span>
+          <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
+            {hasScore ? score1 : '-'}
+          </span>
+        </div>
+        {/* Team 2 row */}
+        <div className={`flex items-center px-2.5 py-1.5 ${winner2 ? dt.bgSubtle : ''}`}>
+          <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
+            {team2 || 'TBD'}
+          </span>
+          <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
+            {hasScore ? score2 : '-'}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Toornament-style Participant Row ─── */
+function ParticipantRow({ player, rank, onClick }: {
+  player: StatsData['topPlayers'][0];
+  rank: number;
+  onClick: () => void;
+}) {
+  const dt = useDivisionTheme();
+  const division = useAppStore(s => s.division);
+
+  return (
+    <motion.div
+      whileHover={{ x: 2 }}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors border border-transparent hover:${dt.border} hover:${dt.bgSubtle}`}
+      onClick={onClick}
+    >
+      {/* Rank */}
+      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+        rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
+        rank === 2 ? 'bg-gray-400/20 text-gray-400' :
+        rank === 3 ? 'bg-amber-600/20 text-amber-600' :
+        `${dt.bgSubtle} text-muted-foreground`
+      }`}>
+        {rank}
+      </span>
+      {/* Avatar */}
+      <div className={`w-8 h-8 rounded-full ${rank <= 3
+        ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light')
+        : dt.iconBg
+      } flex items-center justify-center text-[10px] font-bold ${rank <= 3 ? 'text-white' : dt.text} shrink-0 shadow-sm`}>
+        {player.gamertag.slice(0, 2).toUpperCase()}
+      </div>
+      {/* Name & Club */}
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-semibold truncate">{player.gamertag}</p>
+        {player.club && (
+          <p className="text-[9px] text-muted-foreground truncate flex items-center gap-0.5">
+            <Shield className="w-2.5 h-2.5" />
+            {player.club}
+          </p>
+        )}
+      </div>
+      {/* Tier */}
+      <div className="shrink-0">
+        <TierBadge tier={player.tier} />
+      </div>
+      {/* Points */}
+      <div className="w-14 text-right shrink-0">
+        <p className={`text-xs font-bold ${rank <= 3 ? dt.neonText : ''}`}>{player.points}</p>
+        <p className="text-[8px] text-muted-foreground">pts</p>
+      </div>
+      {/* Quick stats */}
+      <div className="hidden sm:flex items-center gap-2 shrink-0 text-[9px] text-muted-foreground">
+        <span className="text-green-500 font-medium">{player.totalWins}W</span>
+        <span className="text-red-500 font-medium">{player.matches - player.totalWins}L</span>
+        {player.streak > 1 && <span className="text-orange-400">🔥{player.streak}</span>}
+      </div>
+    </motion.div>
   );
 }
 
@@ -149,6 +307,12 @@ export function Dashboard() {
   const dt = useDivisionTheme();
   const [selectedPlayer, setSelectedPlayer] = useState<StatsData['topPlayers'][0] | null>(null);
   const [selectedClub, setSelectedClub] = useState<StatsData['clubs'][0] | null>(null);
+  const [participantView, setParticipantView] = useState<'list' | 'grid'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [leaderboardSort, setLeaderboardSort] = useState<'players' | 'clubs'>('players');
+  const [showAllPlayers, setShowAllPlayers] = useState(false);
+  const [showAllClubs, setShowAllClubs] = useState(false);
+
   const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['stats', division],
     queryFn: async () => {
@@ -196,6 +360,27 @@ export function Dashboard() {
     }, {} as Record<number, StatsData['upcomingMatches']>);
   }, [upcomingMatches]);
 
+  /* Group tournament matches by round for bracket view */
+  const tournamentMatchesByRound = useMemo(() => {
+    if (!data?.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
+    return data.activeTournament.matches.reduce((acc, m) => {
+      const round = 'round' in m ? (m as any).round || 1 : 1;
+      if (!acc[round]) acc[round] = [];
+      acc[round].push(m);
+      return acc;
+    }, {} as Record<number, StatsData['activeTournament']['matches']>);
+  }, [data?.activeTournament?.matches]);
+
+  /* Filtered participants */
+  const filteredPlayers = useMemo(() => {
+    if (!data?.topPlayers) return [];
+    if (!searchQuery) return data.topPlayers;
+    return data.topPlayers.filter(p =>
+      p.gamertag.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.club && p.club.toLowerCase().includes(searchQuery.toLowerCase()))
+    );
+  }, [data.topPlayers, searchQuery]);
+
   if (isLoading || !data?.hasData) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -205,12 +390,14 @@ export function Dashboard() {
   }
 
   const t = data.activeTournament;
+  const displayedPlayers = showAllPlayers ? data.topPlayers : data.topPlayers?.slice(0, 10);
+  const displayedClubs = showAllClubs ? data.clubs : data.clubs?.slice(0, 6);
 
   return (
     <>
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-5 max-w-5xl mx-auto">
 
-      {/* ========== HERO BANNER (kept, slightly more compact) ========== */}
+      {/* ========== HERO BANNER ========== */}
       <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.casinoCard} ${dt.neonPulse} min-h-[180px] casino-shimmer`}>
         <div className={dt.casinoBar} />
         <div className="absolute inset-0 hidden sm:block">
@@ -223,7 +410,6 @@ export function Dashboard() {
         <div className={`absolute top-1/3 right-1/4 w-64 h-64 rounded-full blur-3xl ${dt.bg} opacity-30`} />
         <div className={`absolute top-3 left-3 ${dt.cornerAccent}`} />
         <div className={`absolute top-3 right-3 rotate-90 ${dt.cornerAccent}`} />
-        {/* Tournament info overlay */}
         <div className="absolute top-3 right-3 z-10">
           <StatusBadge status={t?.status || 'registration'} />
         </div>
@@ -238,7 +424,6 @@ export function Dashboard() {
           </div>
           <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Arena'}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
-          {/* Quick info row inside hero */}
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
             <span className="flex items-center gap-1"><MapPin className={`w-3 h-3 ${dt.neonText}`} />{t?.location || 'Online'}</span>
@@ -248,15 +433,13 @@ export function Dashboard() {
         </div>
       </motion.div>
 
-      {/* ========== COUNTDOWN + PRIZE POOL (compact row) ========== */}
+      {/* ========== COUNTDOWN + PRIZE POOL ========== */}
       <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* Countdown */}
         {t?.scheduledAt && t.status !== 'completed' && (
           <div className={`flex items-center justify-center rounded-xl ${dt.bgSubtle} ${dt.border} p-3`}>
             <CountdownTimer targetDate={t.scheduledAt} />
           </div>
         )}
-        {/* Prize Pool */}
         <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
           <div className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
@@ -267,7 +450,7 @@ export function Dashboard() {
         </div>
       </motion.div>
 
-      {/* ========== QUICK STATS — Casino Pills (kept) ========== */}
+      {/* ========== QUICK STATS — Casino Pills ========== */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { icon: Users, value: `${data.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
@@ -275,11 +458,7 @@ export function Dashboard() {
           { icon: Wallet, value: formatCurrency(data.totalPrizePool).replace('Rp', '').trim(), label: 'Prize Pool', color: 'from-[#d4a853] to-[#b8860b]' },
           { icon: Target, value: `${data.seasonProgress?.percentage || 0}%`, label: 'Progress', color: 'from-green-500 to-green-600' },
         ].map((stat, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.03, y: -2 }}
-            className="group"
-          >
+          <motion.div key={i} whileHover={{ scale: 1.03, y: -2 }} className="group">
             <div className={`casino-pill ${dt.casinoGlow}`}>
               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shrink-0`}>
                 <stat.icon className="w-5 h-5 text-white" />
@@ -319,27 +498,21 @@ export function Dashboard() {
         <TabsContent value="overview" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Recent Results — compact match rows (Toornament style) */}
+            {/* Recent Results — Toornament match row style */}
             {data.recentMatches?.length > 0 && (
               <motion.div variants={item}>
                 <SectionCard title="Recent Results" icon={Radio} badge="LIVE">
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {data.recentMatches.slice(0, 6).map(m => (
-                      <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} hover:${dt.bgSubtle} transition-colors`}>
-                        <Badge variant="outline" className={`text-[9px] shrink-0 ${dt.casinoBadge}`}>W{m.week}</Badge>
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <span className={`text-xs font-semibold truncate flex-1 text-right ${m.score1 > m.score2 ? dt.neonText : 'text-muted-foreground'}`}>{m.club1.name}</span>
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${dt.bg} shrink-0`}>
-                            <span className={`text-sm font-bold ${m.score1 > m.score2 ? dt.neonText : 'text-foreground'}`}>{m.score1}</span>
-                            <span className="text-[10px] text-muted-foreground">-</span>
-                            <span className={`text-sm font-bold ${m.score2 > m.score1 ? dt.neonText : 'text-foreground'}`}>{m.score2}</span>
-                          </div>
-                          <span className={`text-xs font-semibold truncate flex-1 ${m.score2 > m.score1 ? dt.neonText : 'text-muted-foreground'}`}>{m.club2.name}</span>
-                        </div>
-                        <Badge className={`text-[9px] border-0 shrink-0 ${m.score1 !== m.score2 ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                          {m.score1 !== m.score2 ? 'Completed' : 'Draw'}
-                        </Badge>
-                      </div>
+                      <MatchRow
+                        key={m.id}
+                        club1={m.club1.name}
+                        club2={m.club2.name}
+                        score1={m.score1}
+                        score2={m.score2}
+                        week={m.week}
+                        status="completed"
+                      />
                     ))}
                   </div>
                 </SectionCard>
@@ -374,9 +547,8 @@ export function Dashboard() {
               </div>
             </motion.div>
 
-            {/* Donation & Season Progress — 2-column, simpler cards without image headers */}
+            {/* Donation & Season Progress */}
             <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Donation Tracker */}
               <SectionCard title="Donation & Sawer" icon={Gift} badge="LIVE">
                 <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} mb-3`}>
                   <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
@@ -401,7 +573,6 @@ export function Dashboard() {
                 </div>
               </SectionCard>
 
-              {/* Season Progress */}
               <SectionCard title="Season Progress" icon={TrendingUp} badge={`${data.seasonProgress?.percentage}%`}>
                 <div className="space-y-3">
                   <div>
@@ -430,7 +601,7 @@ export function Dashboard() {
               </SectionCard>
             </motion.div>
 
-            {/* Latest completed match highlight (from tournament matches) */}
+            {/* Featured Match */}
             {t?.matches?.filter(m => m.status === 'completed').length > 0 && (
               <motion.div variants={item}>
                 <CasinoHeaderCard icon={Trophy} title="Featured Match" badge="RESULT">
@@ -463,43 +634,60 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ STANDINGS TAB ═══════════════ */}
+        {/* ═══════════════ STANDINGS TAB — Toornament Style ═══════════════ */}
         <TabsContent value="standings" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Player Leaderboard TABLE */}
-            <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} overflow-hidden`}>
-                <div className={dt.casinoBar} />
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+            {/* Toornament-style sub-tabs for Players/Clubs */}
+            <div className={`flex items-center gap-1 p-1 rounded-lg ${dt.bgSubtle} ${dt.border} w-fit`}>
+              <button
+                onClick={() => setLeaderboardSort('players')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${leaderboardSort === 'players' ? `${dt.bg} ${dt.text} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Users className="w-3 h-3" /> Players
+              </button>
+              <button
+                onClick={() => setLeaderboardSort('clubs')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${leaderboardSort === 'clubs' ? `${dt.bg} ${dt.text} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                <Shield className="w-3 h-3" /> Clubs
+              </button>
+            </div>
+
+            {/* Player Leaderboard — Toornament clean table */}
+            {leaderboardSort === 'players' && (
+              <motion.div variants={item}>
+                <Card className={`${dt.casinoCard} overflow-hidden`}>
+                  <div className={dt.casinoBar} />
+                  {/* Toornament-style header bar */}
+                  <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
+                    <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Award className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
-                    <h3 className="text-sm font-semibold">Player Leaderboard</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>TOP {Math.min(data.topPlayers?.length || 10, 10)}</Badge>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider">Player Leaderboard</h3>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>TOP {displayedPlayers?.length || 10}</Badge>
                   </div>
-                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                  <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                     <Table>
                       <TableHeader>
-                        <TableRow className={`hover:bg-transparent border-b ${dt.border}`}>
-                          <TableHead className="w-10 text-center text-[10px]">#</TableHead>
-                          <TableHead className="text-[10px]">Player</TableHead>
-                          <TableHead className="w-14 text-center text-[10px]">Tier</TableHead>
-                          <TableHead className="w-14 text-right text-[10px]">Pts</TableHead>
-                          <TableHead className="w-10 text-center text-[10px]">W</TableHead>
-                          <TableHead className="w-10 text-center text-[10px]">L</TableHead>
-                          <TableHead className="w-14 text-center text-[10px]">Streak</TableHead>
-                          <TableHead className="w-10 text-center text-[10px]">MVP</TableHead>
+                        <TableRow className={`hover:bg-transparent border-b ${dt.border} bg-muted/30`}>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">#</TableHead>
+                          <TableHead className="text-[10px] font-semibold">Player</TableHead>
+                          <TableHead className="w-14 text-center text-[10px] font-semibold">Tier</TableHead>
+                          <TableHead className="w-14 text-right text-[10px] font-semibold">Pts</TableHead>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">W</TableHead>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">L</TableHead>
+                          <TableHead className="w-14 text-center text-[10px] font-semibold">Streak</TableHead>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">MVP</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {data.topPlayers?.slice(0, 10).map((p, idx) => {
+                        {displayedPlayers?.map((p, idx) => {
                           const losses = p.matches - p.totalWins;
                           return (
                             <TableRow
                               key={p.id}
-                              className={`cursor-pointer transition-colors ${
+                              className={`cursor-pointer transition-colors border-b ${dt.borderSubtle} ${
                                 idx < 3 ? `${dt.bgSubtle}` : ''
                               }`}
                               onClick={() => setSelectedPlayer(p)}
@@ -549,39 +737,50 @@ export function Dashboard() {
                       </TableBody>
                     </Table>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  {/* Show more / less toggle */}
+                  {data.topPlayers?.length > 10 && (
+                    <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
+                      <button
+                        onClick={() => setShowAllPlayers(!showAllPlayers)}
+                        className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
+                      >
+                        {showAllPlayers ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({data.topPlayers.length})</>}
+                      </button>
+                    </div>
+                  )}
+                </Card>
+              </motion.div>
+            )}
 
-            {/* Club Standings TABLE */}
-            <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} overflow-hidden`}>
-                <div className={dt.casinoBar} />
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+            {/* Club Standings — Toornament clean table */}
+            {leaderboardSort === 'clubs' && (
+              <motion.div variants={item}>
+                <Card className={`${dt.casinoCard} overflow-hidden`}>
+                  <div className={dt.casinoBar} />
+                  <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
+                    <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Shield className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
-                    <h3 className="text-sm font-semibold">Club Standings</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider">Club Standings</h3>
                     <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.clubs?.length || 0} Clubs</Badge>
                   </div>
-                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                  <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                     <Table>
                       <TableHeader>
-                        <TableRow className={`hover:bg-transparent border-b ${dt.border}`}>
-                          <TableHead className="w-10 text-center text-[10px]">#</TableHead>
-                          <TableHead className="text-[10px]">Club</TableHead>
-                          <TableHead className="w-10 text-center text-[10px]">W</TableHead>
-                          <TableHead className="w-10 text-center text-[10px]">L</TableHead>
-                          <TableHead className="w-12 text-center text-[10px]">GD</TableHead>
-                          <TableHead className="w-14 text-right text-[10px]">Pts</TableHead>
+                        <TableRow className={`hover:bg-transparent border-b ${dt.border} bg-muted/30`}>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">#</TableHead>
+                          <TableHead className="text-[10px] font-semibold">Club</TableHead>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">W</TableHead>
+                          <TableHead className="w-10 text-center text-[10px] font-semibold">L</TableHead>
+                          <TableHead className="w-12 text-center text-[10px] font-semibold">GD</TableHead>
+                          <TableHead className="w-14 text-right text-[10px] font-semibold">Pts</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {data.clubs?.map((club, idx) => (
+                        {displayedClubs?.map((club, idx) => (
                           <TableRow
                             key={club.id}
-                            className={`cursor-pointer transition-colors ${
+                            className={`cursor-pointer transition-colors border-b ${dt.borderSubtle} ${
                               idx < 4 ? `${dt.bgSubtle}` : ''
                             }`}
                             onClick={() => setSelectedClub(club)}
@@ -617,45 +816,97 @@ export function Dashboard() {
                       </TableBody>
                     </Table>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+                  {data.clubs?.length > 6 && (
+                    <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
+                      <button
+                        onClick={() => setShowAllClubs(!showAllClubs)}
+                        className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
+                      >
+                        {showAllClubs ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({data.clubs.length})</>}
+                      </button>
+                    </div>
+                  )}
+                </Card>
+              </motion.div>
+            )}
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ MATCHES TAB ═══════════════ */}
+        {/* ═══════════════ MATCHES TAB — Toornament Bracket Style ═══════════════ */}
         <TabsContent value="matches" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Completed Matches — grouped by week */}
+            {/* Bracket View — when tournament has matches */}
+            {t?.matches && t.matches.length > 0 && (
+              <motion.div variants={item}>
+                <SectionCard title="Tournament Bracket" icon={Swords} badge={`${t.matches.length} Matches`}>
+                  {/* Horizontal scrolling bracket */}
+                  <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
+                    <div className="flex gap-8 min-w-max px-1">
+                      {Object.entries(
+                        t.matches.reduce((acc, m) => {
+                          const round = 'round' in m ? (m as any).round || 1 : 1;
+                          if (!acc[round]) acc[round] = [];
+                          acc[round].push(m);
+                          return acc;
+                        }, {} as Record<number, typeof t.matches>)
+                      ).map(([round, matches], roundIdx) => (
+                        <div key={round} className="flex flex-col">
+                          {/* Round header */}
+                          <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
+                            {roundIdx === 0 ? 'Quarter Final' : roundIdx === 1 ? 'Semi Final' : roundIdx === 2 ? 'Final' : `Round ${round}`}
+                          </div>
+                          {/* Match cards with spacing that doubles each round */}
+                          <div className="flex-1 flex flex-col justify-around" style={{ gap: `${Math.pow(2, roundIdx) * 16}px` }}>
+                            {matches.map((m, matchIdx) => (
+                              <BracketMatch
+                                key={m.id}
+                                team1={m.team1.name}
+                                team2={m.team2.name}
+                                score1={m.score1}
+                                score2={m.score2}
+                                status={m.status}
+                                round={roundIdx}
+                                matchIdx={matchIdx}
+                                isLast={matchIdx === matches.length - 1}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </SectionCard>
+              </motion.div>
+            )}
+
+            {/* Completed Matches — grouped by week (Toornament match list style) */}
             {Object.keys(matchesByWeek).length > 0 && (
               <motion.div variants={item}>
                 <SectionCard title="Match Results" icon={Trophy} badge={`${data.recentMatches?.length || 0} Matches`}>
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {Object.entries(matchesByWeek)
                       .sort(([a], [b]) => Number(b) - Number(a))
                       .map(([week, matches]) => (
                         <div key={week}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={`${dt.casinoBadge} text-[9px]`}>Week {week}</Badge>
+                          {/* Week header — toornament style */}
+                          <div className={`flex items-center gap-3 mb-2.5`}>
+                            <div className={`px-2.5 py-1 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
+                              Week {week}
+                            </div>
                             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+                            <span className="text-[9px] text-muted-foreground">{matches.length} matches</span>
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-2">
                             {matches.map(m => (
-                              <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} transition-colors`}>
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <span className={`text-xs font-semibold truncate flex-1 text-right ${m.score1 > m.score2 ? dt.neonText : 'text-muted-foreground'}`}>{m.club1.name}</span>
-                                  <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded ${dt.bg} shrink-0`}>
-                                    <span className={`text-sm font-bold ${m.score1 > m.score2 ? dt.neonText : 'text-foreground'}`}>{m.score1}</span>
-                                    <span className="text-[10px] text-muted-foreground">-</span>
-                                    <span className={`text-sm font-bold ${m.score2 > m.score1 ? dt.neonText : 'text-foreground'}`}>{m.score2}</span>
-                                  </div>
-                                  <span className={`text-xs font-semibold truncate flex-1 ${m.score2 > m.score1 ? dt.neonText : 'text-muted-foreground'}`}>{m.club2.name}</span>
-                                </div>
-                                <Badge className={`text-[9px] border-0 shrink-0 ${m.score1 !== m.score2 ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
-                                  Done
-                                </Badge>
-                              </div>
+                              <MatchRow
+                                key={m.id}
+                                club1={m.club1.name}
+                                club2={m.club2.name}
+                                score1={m.score1}
+                                score2={m.score2}
+                                status="completed"
+                              />
                             ))}
                           </div>
                         </div>
@@ -669,29 +920,28 @@ export function Dashboard() {
             {Object.keys(upcomingByWeek).length > 0 && (
               <motion.div variants={item}>
                 <SectionCard title="Upcoming" icon={Calendar} badge="SCHEDULE">
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     {Object.entries(upcomingByWeek)
                       .sort(([a], [b]) => Number(a) - Number(b))
                       .map(([week, matches]) => (
                         <div key={week}>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={`${dt.casinoBadge} text-[9px]`}>Week {week}</Badge>
+                          <div className="flex items-center gap-3 mb-2.5">
+                            <div className={`px-2.5 py-1 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
+                              Week {week}
+                            </div>
                             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+                            <span className="text-[9px] text-muted-foreground">{matches.length} matches</span>
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-2">
                             {matches.map(m => (
-                              <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} transition-colors`}>
-                                <div className="flex items-center gap-2 flex-1 min-w-0">
-                                  <span className="text-xs font-semibold truncate flex-1 text-right">{m.club1.name}</span>
-                                  <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded ${dt.bg} shrink-0`}>
-                                    <span className="text-sm font-bold text-muted-foreground">—</span>
-                                    <span className="text-[10px] text-muted-foreground">vs</span>
-                                    <span className="text-sm font-bold text-muted-foreground">—</span>
-                                  </div>
-                                  <span className="text-xs font-semibold truncate flex-1">{m.club2.name}</span>
-                                </div>
-                                <Badge className={`${dt.casinoBadge} text-[9px] shrink-0`}>BO3</Badge>
-                              </div>
+                              <MatchRow
+                                key={m.id}
+                                club1={m.club1.name}
+                                club2={m.club2.name}
+                                score1={0}
+                                score2={0}
+                                status="upcoming"
+                              />
                             ))}
                           </div>
                         </div>
@@ -712,68 +962,134 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ PARTICIPANTS TAB ═══════════════ */}
+        {/* ═══════════════ PARTICIPANTS TAB — Toornament Style ═══════════════ */}
         <TabsContent value="participants" className="mt-4">
-          <motion.div variants={container} initial="hidden" animate="show">
+          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>
-              <div className="flex items-center gap-2 mb-3">
-                <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                  <Gamepad2 className={`w-3 h-3 ${dt.neonText}`} />
+              <Card className={`${dt.casinoCard} overflow-hidden`}>
+                <div className={dt.casinoBar} />
+                {/* Toornament-style header with search + view toggle */}
+                <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
+                  <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                    <Gamepad2 className={`w-3 h-3 ${dt.neonText}`} />
+                  </div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider">Participants</h3>
+                  <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
                 </div>
-                <h3 className="text-sm font-semibold">Participants</h3>
-                <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.topPlayers?.length || 0} Players</Badge>
-              </div>
-              {/* Responsive grid of player mini-cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                {data.topPlayers?.map((p, idx) => (
-                  <motion.div
-                    key={p.id}
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    className={`cursor-pointer rounded-xl ${dt.casinoCard} ${idx < 3 ? dt.casinoGlow : ''} overflow-hidden`}
-                    onClick={() => setSelectedPlayer(p)}
-                  >
-                    <div className={idx < 3 ? dt.casinoBar : ''} />
-                    <div className="p-3 relative z-10">
-                      <div className="flex items-center gap-2.5 mb-2">
-                        {/* Avatar */}
-                        <div className={`w-9 h-9 rounded-full ${idx < 3
-                          ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light')
-                          : dt.iconBg
-                        } flex items-center justify-center text-[10px] font-bold ${idx < 3 ? 'text-white' : dt.text} shrink-0 shadow-sm`}>
-                          {p.gamertag.slice(0, 2).toUpperCase()}
-                        </div>
-                        {/* Rank badge */}
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                          idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                          idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                          idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                          `${dt.bgSubtle} text-muted-foreground`
-                        }`}>
-                          {idx + 1}
-                        </span>
-                      </div>
-                      {/* Name + Tier */}
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <p className="text-xs font-semibold truncate">{p.gamertag}</p>
-                      </div>
-                      <TierBadge tier={p.tier} />
-                      {/* Stats */}
-                      <div className="flex items-center gap-2 mt-2 text-[9px] text-muted-foreground">
-                        {p.club && (
-                          <span className="truncate flex items-center gap-0.5">
-                            <Shield className="w-2.5 h-2.5" />
-                            {p.club}
-                          </span>
-                        )}
-                      </div>
-                      <div className={`mt-1.5 pt-1.5 border-t ${dt.borderSubtle} flex items-center justify-between`}>
-                        <span className={`text-xs font-bold ${dt.neonText}`}>{p.points} pts</span>
-                        <span className="text-[9px] text-muted-foreground">{p.totalWins}W</span>
-                      </div>
+                {/* Search bar + View toggle */}
+                <div className={`flex items-center gap-2 px-4 py-2.5 border-b ${dt.borderSubtle}`}>
+                  <div className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
+                    <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search player or club..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    )}
+                  </div>
+                  {/* View toggle */}
+                  <div className={`flex items-center rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} p-0.5`}>
+                    <button
+                      onClick={() => setParticipantView('list')}
+                      className={`p-1.5 rounded-md transition-all ${participantView === 'list' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
+                      title="List view"
+                    >
+                      <List className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setParticipantView('grid')}
+                      className={`p-1.5 rounded-md transition-all ${participantView === 'grid' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
+                      title="Grid view"
+                    >
+                      <Grid3X3 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* List View — Toornament-style participant rows */}
+                {participantView === 'list' && (
+                  <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
+                    <div className="divide-y divide-transparent">
+                      {filteredPlayers.map((p, idx) => (
+                        <ParticipantRow
+                          key={p.id}
+                          player={p}
+                          rank={idx + 1}
+                          onClick={() => setSelectedPlayer(p)}
+                        />
+                      ))}
                     </div>
-                  </motion.div>
-                ))}
-              </div>
+                    {filteredPlayers.length === 0 && (
+                      <div className="py-8 text-center">
+                        <p className="text-sm text-muted-foreground">No players found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Grid View — Card grid */}
+                {participantView === 'grid' && (
+                  <div className="p-4 max-h-[600px] overflow-y-auto custom-scrollbar">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                      {filteredPlayers.map((p, idx) => (
+                        <motion.div
+                          key={p.id}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          className={`cursor-pointer rounded-xl ${dt.casinoCard} ${idx < 3 ? dt.casinoGlow : ''} overflow-hidden`}
+                          onClick={() => setSelectedPlayer(p)}
+                        >
+                          <div className={idx < 3 ? dt.casinoBar : ''} />
+                          <div className="p-3 relative z-10">
+                            <div className="flex items-center gap-2.5 mb-2">
+                              <div className={`w-9 h-9 rounded-full ${idx < 3
+                                ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light')
+                                : dt.iconBg
+                              } flex items-center justify-center text-[10px] font-bold ${idx < 3 ? 'text-white' : dt.text} shrink-0 shadow-sm`}>
+                                {p.gamertag.slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                                idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                `${dt.bgSubtle} text-muted-foreground`
+                              }`}>
+                                {idx + 1}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <p className="text-xs font-semibold truncate">{p.gamertag}</p>
+                            </div>
+                            <TierBadge tier={p.tier} />
+                            <div className="flex items-center gap-2 mt-2 text-[9px] text-muted-foreground">
+                              {p.club && (
+                                <span className="truncate flex items-center gap-0.5">
+                                  <Shield className="w-2.5 h-2.5" />
+                                  {p.club}
+                                </span>
+                              )}
+                            </div>
+                            <div className={`mt-1.5 pt-1.5 border-t ${dt.borderSubtle} flex items-center justify-between`}>
+                              <span className={`text-xs font-bold ${dt.neonText}`}>{p.points} pts</span>
+                              <span className="text-[9px] text-muted-foreground">{p.totalWins}W</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                    {filteredPlayers.length === 0 && (
+                      <div className="py-8 text-center">
+                        <p className="text-sm text-muted-foreground">No players found</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
             </motion.div>
           </motion.div>
         </TabsContent>

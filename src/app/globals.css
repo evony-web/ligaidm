@@ -360,6 +360,41 @@
   opacity: 0.4;
 }
 
+/* Toornament-style bracket connector lines */
+.bracket-round-col {
+  position: relative;
+}
+.bracket-round-col::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -16px;
+  width: 16px;
+}
+
+/* Toornament match row hover effect */
+.toornament-match-row {
+  transition: all 0.15s ease;
+}
+.toornament-match-row:hover {
+  transform: translateX(2px);
+}
+
+/* Bracket match card styles */
+.bracket-match-card {
+  transition: all 0.2s ease;
+  min-width: 180px;
+}
+.bracket-match-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+
+/* Toornament-style section header */
+.toornament-section-header {
+  letter-spacing: 0.05em;
+}
+
 /* Scrolling marquee */
 @keyframes marquee {
   0% { transform: translateX(0); }
