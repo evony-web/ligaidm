@@ -5,12 +5,15 @@ import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
   Heart, MapPin, Users, Trophy, Clock, Flame,
-  TrendingUp, Award, Gift, Zap, Crown
+  TrendingUp, Award, Gift, Zap, Crown, Sparkles
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TierBadge } from './tier-badge';
+import { CountdownTimer } from './countdown-timer';
+import { PlayerCard } from './player-card';
+import { useEffect, useCallback } from 'react';
 
 interface StatsData {
   hasData: boolean;
@@ -31,7 +34,7 @@ interface StatsData {
   totalPlayers: number;
   totalPrizePool: number;
   seasonDonationTotal: number;
-  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; totalMvp: number }[];
+  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; totalMvp: number; club?: string }[];
   recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
   upcomingMatches: { id: string; club1: { name: string }; club2: { name: string }; week: number }[];
   seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
@@ -53,18 +56,22 @@ function formatCurrency(amount: number) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; cls: string }> = {
+  const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
     setup: { label: 'Setup', cls: 'bg-muted text-muted-foreground' },
-    registration: { label: 'Registration Open', cls: 'bg-green-500/10 text-green-500' },
-    approval: { label: 'Approval', cls: 'bg-yellow-500/10 text-yellow-500' },
-    team_generation: { label: 'Teams Generated', cls: 'bg-blue-500/10 text-blue-500' },
-    bracket_generation: { label: 'Bracket Ready', cls: 'bg-blue-500/10 text-blue-500' },
-    main_event: { label: '🔴 LIVE', cls: 'bg-red-500/10 text-red-500' },
-    scoring: { label: 'Scoring', cls: 'bg-yellow-500/10 text-yellow-500' },
-    completed: { label: 'Completed', cls: 'bg-muted text-muted-foreground' },
+    registration: { label: '🟢 Registration Open', cls: 'bg-green-500/10 text-green-500' },
+    approval: { label: '⏳ Approval', cls: 'bg-yellow-500/10 text-yellow-500' },
+    team_generation: { label: '✅ Teams Ready', cls: 'bg-blue-500/10 text-blue-500' },
+    bracket_generation: { label: '✅ Bracket Ready', cls: 'bg-blue-500/10 text-blue-500' },
+    main_event: { label: '🔴 LIVE NOW', cls: 'bg-red-500/10 text-red-500', pulse: true },
+    scoring: { label: '📊 Scoring', cls: 'bg-yellow-500/10 text-yellow-500' },
+    completed: { label: '🏆 Completed', cls: 'bg-muted text-muted-foreground' },
   };
   const c = config[status] || { label: status, cls: 'bg-muted text-muted-foreground' };
-  return <Badge className={`${c.cls} text-[10px] font-semibold border-0`}>{c.label}</Badge>;
+  return (
+    <Badge className={`${c.cls} text-[10px] font-semibold border-0 ${c.pulse ? 'live-dot' : ''}`}>
+      {c.label}
+    </Badge>
+  );
 }
 
 export function Dashboard() {
@@ -76,6 +83,22 @@ export function Dashboard() {
       return res.json();
     },
   });
+
+  // Donation popup simulation
+  const showDonationPopup = useAppStore(s => s.showDonationPopup);
+
+  const simulateDonation = useCallback(() => {
+    const donors = ['Andi', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fitri', 'Galih', 'Hana'];
+    const amounts = [25000, 50000, 100000];
+    const donor = donors[Math.floor(Math.random() * donors.length)];
+    const amount = amounts[Math.floor(Math.random() * amounts.length)];
+    showDonationPopup(`🔥 Donasi masuk ${formatCurrency(amount)} dari ${donor}`);
+  }, [showDonationPopup]);
+
+  useEffect(() => {
+    const interval = setInterval(simulateDonation, 15000 + Math.random() * 10000);
+    return () => clearInterval(interval);
+  }, [simulateDonation]);
 
   if (isLoading || !data?.hasData) {
     return (
@@ -90,14 +113,27 @@ export function Dashboard() {
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
 
+      {/* HERO BANNER */}
+      <motion.div variants={item} className="relative rounded-2xl overflow-hidden">
+        <img src="/idm-hero.png" alt="IDM League Arena" className="w-full h-32 lg:h-48 object-cover opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
+        <div className="absolute bottom-3 left-4 right-4">
+          <h2 className="text-xl lg:text-2xl font-bold text-gradient-fury">IDM League Arena</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name} • {division === 'male' ? '⚔️ Male' : '🗡️ Female'} Division</p>
+        </div>
+      </motion.div>
+
       {/* HERO CARD */}
       <motion.div variants={item}>
-        <Card className="glass glow-pulse overflow-hidden border-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+        <Card className="glass glow-pulse overflow-hidden border-0 relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-idm-purple/5 pointer-events-none" />
           <CardContent className="relative p-4 lg:p-6">
             <div className="flex items-start justify-between mb-3">
               <div>
-                <p className="text-xs text-muted-foreground mb-1">WEEKLY TOURNAMENT</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Weekly Tournament</p>
+                </div>
                 <h2 className="text-xl lg:text-2xl font-bold text-gradient-fury">
                   {t?.name || `Week 5 Tournament`}
                 </h2>
@@ -105,7 +141,7 @@ export function Dashboard() {
               </div>
               <div className="text-right">
                 <div className="flex items-center gap-1 text-red-400">
-                  <Heart className="w-3 h-3" />
+                  <Heart className="w-3 h-3 live-dot" />
                   <span className="text-xs font-mono">{t?.bpm || 128} BPM</span>
                 </div>
               </div>
@@ -130,17 +166,48 @@ export function Dashboard() {
               </div>
             </div>
 
+            {/* Countdown Timer */}
+            {t?.scheduledAt && t.status !== 'completed' && (
+              <div className="mt-4 flex justify-center">
+                <CountdownTimer targetDate={t.scheduledAt} />
+              </div>
+            )}
+
             {/* Prize Pool */}
             <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/10">
               <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">Prize Pool</span>
+                <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
                 <span className="text-lg font-bold text-primary">{formatCurrency(t?.prizePool || 0)}</span>
               </div>
               <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
-              <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(data.totalPrizePool)}</p>
             </div>
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* TOP 3 PLAYER CARDS */}
+      <motion.div variants={item}>
+        <div className="flex items-center gap-2 mb-2">
+          <Crown className="w-4 h-4 text-yellow-500" />
+          <h3 className="text-sm font-semibold">Top Players</h3>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {data.topPlayers?.slice(0, 3).map((p, idx) => (
+            <PlayerCard
+              key={p.id}
+              gamertag={p.gamertag}
+              tier={p.tier}
+              points={p.points}
+              totalWins={p.totalWins}
+              totalMvp={p.totalMvp}
+              streak={p.streak}
+              rank={idx + 1}
+              isMvp={p.totalMvp > 0 && idx === 0}
+              club={p.club}
+            />
+          ))}
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -154,20 +221,22 @@ export function Dashboard() {
                 <h3 className="text-sm font-semibold">Latest Match Result</h3>
               </div>
               {t?.matches?.filter(m => m.status === 'completed').slice(-1).map(m => (
-                <div key={m.id} className="p-3 rounded-xl bg-muted/50">
+                <div key={m.id} className="p-4 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10">
                   <div className="flex items-center justify-between">
                     <div className="text-center flex-1">
                       <p className="text-sm font-semibold">{m.team1.name}</p>
-                      <p className="text-2xl font-bold text-primary">{m.score1}</p>
+                      <p className="text-3xl font-bold text-primary mt-1">{m.score1}</p>
                     </div>
-                    <div className="px-3 text-xs text-muted-foreground font-bold">VS</div>
+                    <div className="px-4 text-center">
+                      <span className="text-xs text-muted-foreground font-bold">VS</span>
+                    </div>
                     <div className="text-center flex-1">
                       <p className="text-sm font-semibold">{m.team2.name}</p>
-                      <p className="text-2xl font-bold text-primary">{m.score2}</p>
+                      <p className="text-3xl font-bold text-primary mt-1">{m.score2}</p>
                     </div>
                   </div>
                   {m.mvpPlayer && (
-                    <div className="mt-3 flex items-center justify-center gap-1.5">
+                    <div className="mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-yellow-500/5">
                       <Crown className="w-3.5 h-3.5 text-yellow-500" />
                       <span className="text-xs font-semibold text-yellow-500">MVP: {m.mvpPlayer.gamertag}</span>
                     </div>
@@ -190,23 +259,24 @@ export function Dashboard() {
               </div>
               <div className="space-y-3">
                 <div>
-                  <div className="flex justify-between text-xs mb-1">
+                  <div className="flex justify-between text-xs mb-1.5">
                     <span className="text-muted-foreground">{data.season?.name}</span>
-                    <span className="font-semibold">{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
+                    <span className="font-semibold text-primary">{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
                   </div>
-                  <Progress value={data.seasonProgress?.percentage || 0} className="h-2" />
+                  <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
+                  <p className="text-[10px] text-primary font-semibold mt-1">{data.seasonProgress?.percentage}% Complete</p>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mt-2">
-                  <div className="p-2 rounded-lg bg-muted/50 text-center">
+                  <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10">
                     <p className="text-lg font-bold text-primary">{data.totalPlayers}</p>
                     <p className="text-[10px] text-muted-foreground">Players</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-muted/50 text-center">
+                  <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10">
                     <p className="text-lg font-bold text-primary">{data.clubs?.length || 0}</p>
                     <p className="text-[10px] text-muted-foreground">Clubs</p>
                   </div>
-                  <div className="p-2 rounded-lg bg-muted/50 text-center">
-                    <p className="text-lg font-bold text-primary">{formatCurrency(data.seasonDonationTotal || 0)}</p>
+                  <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10">
+                    <p className="text-sm font-bold text-primary">{formatCurrency(data.seasonDonationTotal || 0)}</p>
                     <p className="text-[10px] text-muted-foreground">Funded</p>
                   </div>
                 </div>
@@ -224,12 +294,12 @@ export function Dashboard() {
                   <Award className="w-4 h-4 text-primary" />
                   <h3 className="text-sm font-semibold">Leaderboard</h3>
                 </div>
-                <span className="text-[10px] text-muted-foreground">Top 5</span>
+                <span className="text-[10px] text-primary font-semibold">TOP 5</span>
               </div>
-              <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+              <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
                 {data.topPlayers?.slice(0, 5).map((p, idx) => (
                   <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                       idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                       idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                       idx === 2 ? 'bg-amber-600/20 text-amber-600' :
@@ -237,6 +307,9 @@ export function Dashboard() {
                     }`}>
                       {idx + 1}
                     </span>
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                      {p.gamertag.slice(0, 2).toUpperCase()}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium truncate">{p.gamertag}</span>
@@ -263,6 +336,7 @@ export function Dashboard() {
               <div className="flex items-center gap-2 mb-3">
                 <Gift className="w-4 h-4 text-primary" />
                 <h3 className="text-sm font-semibold">Donation & Sawer</h3>
+                <span className="live-dot w-2 h-2 rounded-full bg-red-500 ml-auto" />
               </div>
               <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 mb-3">
                 <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
@@ -274,7 +348,11 @@ export function Dashboard() {
                 {data.topDonors?.slice(0, 3).map((d, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
                     <span className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">{i + 1}</span>
+                      <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                        i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                        i === 1 ? 'bg-gray-400/20 text-gray-400' :
+                        'bg-primary/10 text-primary'
+                      }`}>{i + 1}</span>
                       {d.donorName}
                     </span>
                     <span className="font-semibold text-primary">{formatCurrency(d.totalAmount)}</span>
@@ -297,10 +375,10 @@ export function Dashboard() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {data.upcomingMatches.map(m => (
-                  <div key={m.id} className="p-3 rounded-xl bg-muted/50 text-center card-hover">
+                  <div key={m.id} className="p-3 rounded-xl bg-muted/50 text-center card-hover border border-border/30">
                     <p className="text-[10px] text-muted-foreground mb-1">Week {m.week}</p>
                     <p className="text-sm font-semibold">{m.club1.name} <span className="text-muted-foreground">vs</span> {m.club2.name}</p>
-                    <Badge className="mt-1 bg-primary/10 text-primary text-[10px] border-0">BO3</Badge>
+                    <Badge className="mt-1.5 bg-primary/10 text-primary text-[10px] border-0">BO3</Badge>
                   </div>
                 ))}
               </div>

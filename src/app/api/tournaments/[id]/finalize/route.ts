@@ -32,7 +32,7 @@ export async function POST(
     }
   }
 
-  // Calculate and distribute points
+  // Calculate MVP points based on prize pool
   const mvpPoints = Math.floor(tournament.prizePool / 1000); // e.g. 50000 / 1000 = 50
 
   // Get all participants
@@ -43,12 +43,14 @@ export async function POST(
 
   for (const p of participations) {
     let pointsEarned = 10; // participation bonus
+    let isWinner = false;
 
     // Check if player is on winning team
     const winningTeams = tournament.teams.filter(t => t.isWinner);
     for (const wt of winningTeams) {
       const isOnWinningTeam = wt.teamPlayers.some(tp => tp.playerId === p.playerId);
       if (isOnWinningTeam) {
+        isWinner = true;
         pointsEarned += 2; // win bonus
 
         // Streak update
@@ -60,6 +62,12 @@ export async function POST(
         else if (newStreak === 3) pointsEarned += 20;
         else if (newStreak >= 4) pointsEarned += 30;
 
+        // MVP bonus (only add once)
+        const isMvp = mvpPlayerId && p.playerId === mvpPlayerId;
+        if (isMvp) {
+          pointsEarned += mvpPoints;
+        }
+
         await db.player.update({
           where: { id: p.playerId },
           data: {
@@ -68,42 +76,41 @@ export async function POST(
             streak: newStreak,
             maxStreak: newMaxStreak,
             matches: p.player.matches + 1,
-          },
-        });
-      } else {
-        // Losing team - reset streak
-        await db.player.update({
-          where: { id: p.playerId },
-          data: {
-            points: p.player.points + pointsEarned,
-            matches: p.player.matches + 1,
-            streak: 0,
+            ...(isMvp && { totalMvp: p.player.totalMvp + 1 }),
           },
         });
       }
     }
 
-    // MVP bonus
-    if (mvpPlayerId && p.playerId === mvpPlayerId) {
-      pointsEarned += mvpPoints;
+    // Losing team player
+    if (!isWinner) {
+      pointsEarned = 10; // just participation
+
+      // MVP can also be from losing team
+      const isMvp = mvpPlayerId && p.playerId === mvpPlayerId;
+      if (isMvp) {
+        pointsEarned += mvpPoints;
+      }
+
       await db.player.update({
         where: { id: p.playerId },
         data: {
-          points: { increment: mvpPoints },
-          totalMvp: { increment: 1 },
+          points: p.player.points + pointsEarned,
+          matches: p.player.matches + 1,
+          streak: 0,
+          ...(isMvp && { totalMvp: p.player.totalMvp + 1 }),
         },
-      });
-
-      await db.participation.update({
-        where: { id: p.id },
-        data: { isMvp: true },
       });
     }
 
-    // Update participation points
+    // Update participation record
     await db.participation.update({
       where: { id: p.id },
-      data: { pointsEarned },
+      data: {
+        pointsEarned,
+        ...(mvpPlayerId && p.playerId === mvpPlayerId && { isMvp: true }),
+        ...(isWinner && { isWinner: true }),
+      },
     });
   }
 

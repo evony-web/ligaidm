@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Swords,
-  Sun, Moon, Menu, X, Flame
+  Sun, Moon, Menu, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -85,9 +85,9 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 pb-2">
-        <div className="flex items-center gap-2 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Flame className="w-5 h-5 text-primary" />
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+            <img src="/idm-logo.png" alt="IDM" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-gradient-fury text-sm font-bold leading-tight">IDM League</h1>
@@ -154,7 +154,7 @@ export function AppShell() {
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 glass-strong px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Flame className="w-5 h-5 text-primary" />
+          <img src="/idm-logo.png" alt="IDM" className="w-6 h-6 rounded-md object-cover" />
           <span className="text-gradient-fury text-sm font-bold">IDM League</span>
         </div>
         <div className="flex items-center gap-2">
