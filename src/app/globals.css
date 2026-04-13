@@ -1911,3 +1911,68 @@ html {
   border: 1px solid rgba(168, 85, 247, 0.15);
   box-shadow: 0 0 12px rgba(168, 85, 247, 0.06);
 }
+
+/* ============================================
+   28. TOORNAMENT-STYLE DASHBOARD CARDS
+   ============================================ */
+
+/* Card with image header - toornament style */
+.card-image-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-image-header .card-cover {
+  transition: transform 0.5s ease;
+}
+
+.card-image-header:hover .card-cover {
+  transform: scale(1.05);
+}
+
+/* Match score tabular numbers */
+.match-score {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* Timeline activity feed */
+.timeline-item {
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 1.75rem;
+  bottom: -0.25rem;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--idm-gold), transparent);
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 0.25rem;
+  top: 0.75rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  border: 2px solid var(--idm-gold);
+  background: var(--card);
+  z-index: 1;
+}
+
+/* Card cover image zoom */
+.card-cover {
+  transition: transform 0.5s ease;
+}
+
+.group:hover .card-cover {
+  transform: scale(1.05);
+}
