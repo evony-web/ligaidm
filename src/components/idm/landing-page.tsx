@@ -319,7 +319,7 @@ export function LandingPage() {
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto bg-gradient-to-r from-[#d4a853] to-[#c9a84c] hover:from-[#c9a84c] hover:to-[#b8963d] text-[#0a0a14] px-10 py-7 text-base font-bold rounded-2xl gold-glow transition-all"
+                  className="w-full sm:w-auto btn-male px-10 py-7 text-base font-bold rounded-2xl transition-all"
                   onClick={() => enterApp('male')}
                 >
                   <Swords className="w-5 h-5 mr-2" />
@@ -331,7 +331,7 @@ export function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto border-[#d4a853]/30 text-[#e8d5a3] hover:bg-[#d4a853]/10 px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                  className="w-full sm:w-auto btn-female px-10 py-7 text-base font-bold rounded-2xl transition-all"
                   onClick={() => enterApp('female')}
                 >
                   <Shield className="w-5 h-5 mr-2" />
@@ -420,7 +420,7 @@ export function LandingPage() {
 
               {/* MALE CHAMPIONS */}
               <motion.div variants={fadeLeft} className="perspective-container">
-                <Card className="perspective-card card-premium glow-gold overflow-hidden group card-shine">
+                <Card className="perspective-card card-premium card-premium-male glow-male overflow-hidden group card-shine">
                   <CardContent className="p-0">
                     {/* Division Header */}
                     <div className="relative img-zoom h-32">
@@ -428,29 +428,29 @@ export function LandingPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/60 to-[#0d0d1a]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
                       <div className="absolute inset-0 flex items-center justify-between px-5">
                         <div className="flex items-center gap-2">
-                          <Swords className="w-5 h-5 text-[#d4a853]" />
-                          <h3 className="text-sm font-bold text-[#d4a853]">MALE DIVISION</h3>
+                          <Swords className="w-5 h-5 text-[#22d3ee]" />
+                          <h3 className="text-sm font-bold text-[#22d3ee]">MALE DIVISION</h3>
                         </div>
-                        <Badge className="bg-[#d4a853]/20 text-[#d4a853] text-[10px] border border-[#d4a853]/30">Active</Badge>
+                        <Badge className="bg-[#06b6d4]/20 text-[#22d3ee] text-[10px] border border-[#06b6d4]/30">Active</Badge>
                       </div>
                     </div>
 
                     {/* Top Club */}
                     {maleTopClub && (
-                      <div className="p-5 border-b border-[#d4a853]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...maleTopClub, division: 'male' })}>
+                      <div className="p-5 border-b border-[#06b6d4]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...maleTopClub, division: 'male' })}>
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-[#d4a853]/10 flex items-center justify-center glow-champion">
-                            <Trophy className="w-7 h-7 text-[#d4a853]" />
+                          <div className="w-14 h-14 rounded-xl bg-[#06b6d4]/10 flex items-center justify-center glow-champion">
+                            <Trophy className="w-7 h-7 text-[#22d3ee]" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-[#d4a853] font-semibold uppercase tracking-wider">League Champion</p>
-                            <p className="text-xl font-bold text-gradient-gold">{maleTopClub.name}</p>
+                            <p className="text-[10px] text-[#22d3ee] font-semibold uppercase tracking-wider">League Champion</p>
+                            <p className="text-xl font-bold text-gradient-male">{maleTopClub.name}</p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                               <span className="text-green-500 font-semibold">{maleTopClub.wins}W</span>
                               <span>-</span>
                               <span className="text-red-500 font-semibold">{maleTopClub.losses}L</span>
-                              <span className="text-[#d4a853]/40">|</span>
-                              <span className="text-[#d4a853] font-bold">{maleTopClub.points} pts</span>
+                              <span className="text-[#06b6d4]/40">|</span>
+                              <span className="text-[#22d3ee] font-bold">{maleTopClub.points} pts</span>
                             </div>
                           </div>
                         </div>
@@ -459,7 +459,7 @@ export function LandingPage() {
 
                     {/* Top 3 Players Podium */}
                     <div className="p-5">
-                      <p className="text-[10px] font-semibold text-[#e8d5a3]/50 mb-4 uppercase tracking-wider">Top Players</p>
+                      <p className="text-[10px] font-semibold text-[#67e8f9]/50 mb-4 uppercase tracking-wider">Top Players</p>
                       <div className="flex items-end justify-center gap-4">
                         {maleTop3[1] && (
                           <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...maleTop3[1], division: 'male' })}>
@@ -477,16 +477,16 @@ export function LandingPage() {
                         {maleTop3[0] && (
                           <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...maleTop3[0], division: 'male' })}>
                             <div className="relative">
-                              <Crown className="w-6 h-6 text-[#d4a853] mx-auto mb-1 animate-float" />
-                              <div className="w-20 h-20 mx-auto rounded-full bg-[#d4a853]/10 border-2 border-[#d4a853]/30 flex items-center justify-center text-lg font-bold text-[#d4a853] glow-champion">
+                              <Crown className="w-6 h-6 text-[#22d3ee] mx-auto mb-1 animate-float" />
+                              <div className="w-20 h-20 mx-auto rounded-full bg-[#06b6d4]/10 border-2 border-[#06b6d4]/30 flex items-center justify-center text-lg font-bold text-[#22d3ee] glow-champion">
                                 {maleTop3[0].gamertag.slice(0, 2).toUpperCase()}
                               </div>
                             </div>
-                            <p className="text-sm font-bold truncate mt-2 text-gradient-champion">{maleTop3[0].gamertag}</p>
+                            <p className="text-sm font-bold truncate mt-2 text-gradient-male">{maleTop3[0].gamertag}</p>
                             <TierBadge tier={maleTop3[0].tier} />
-                            <p className="text-xs text-[#d4a853] font-bold mt-0.5">{maleTop3[0].points} pts</p>
-                            <div className="mt-2 h-24 bg-[#d4a853]/10 rounded-t-lg flex items-center justify-center border border-[#d4a853]/10">
-                              <span className="text-3xl font-black text-gradient-gold">1</span>
+                            <p className="text-xs text-[#22d3ee] font-bold mt-0.5">{maleTop3[0].points} pts</p>
+                            <div className="mt-2 h-24 bg-[#06b6d4]/10 rounded-t-lg flex items-center justify-center border border-[#06b6d4]/10">
+                              <span className="text-3xl font-black text-gradient-male">1</span>
                             </div>
                           </div>
                         )}
@@ -511,41 +511,41 @@ export function LandingPage() {
 
               {/* FEMALE CHAMPIONS */}
               <motion.div variants={fadeRight} className="perspective-container">
-                <Card className="perspective-card card-premium glow-amber overflow-hidden group card-shine">
+                <Card className="perspective-card card-premium card-premium-female glow-female overflow-hidden group card-shine">
                   <CardContent className="p-0">
                     <div className="relative img-zoom h-32">
                       <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/60 to-[#0d0d1a]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
                       <div className="absolute inset-0 flex items-center justify-between px-5">
                         <div className="flex items-center gap-2">
-                          <Shield className="w-5 h-5 text-[#e8d5a3]" />
-                          <h3 className="text-sm font-bold text-[#e8d5a3]">FEMALE DIVISION</h3>
+                          <Shield className="w-5 h-5 text-[#c084fc]" />
+                          <h3 className="text-sm font-bold text-[#c084fc]">FEMALE DIVISION</h3>
                         </div>
-                        <Badge className="bg-[#d4a853]/20 text-[#e8d5a3] text-[10px] border border-[#d4a853]/30">Active</Badge>
+                        <Badge className="bg-[#a855f7]/20 text-[#c084fc] text-[10px] border border-[#a855f7]/30">Active</Badge>
                       </div>
                     </div>
                     {femaleTopClub && (
-                      <div className="p-5 border-b border-[#d4a853]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...femaleTopClub, division: 'female' })}>
+                      <div className="p-5 border-b border-[#a855f7]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...femaleTopClub, division: 'female' })}>
                         <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-[#d4a853]/10 flex items-center justify-center glow-champion">
-                            <Trophy className="w-7 h-7 text-[#d4a853]" />
+                          <div className="w-14 h-14 rounded-xl bg-[#a855f7]/10 flex items-center justify-center glow-champion">
+                            <Trophy className="w-7 h-7 text-[#c084fc]" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-[#d4a853] font-semibold uppercase tracking-wider">League Champion</p>
-                            <p className="text-xl font-bold text-gradient-gold">{femaleTopClub.name}</p>
+                            <p className="text-[10px] text-[#c084fc] font-semibold uppercase tracking-wider">League Champion</p>
+                            <p className="text-xl font-bold text-gradient-female">{femaleTopClub.name}</p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                               <span className="text-green-500 font-semibold">{femaleTopClub.wins}W</span>
                               <span>-</span>
                               <span className="text-red-500 font-semibold">{femaleTopClub.losses}L</span>
-                              <span className="text-[#d4a853]/40">|</span>
-                              <span className="text-[#d4a853] font-bold">{femaleTopClub.points} pts</span>
+                              <span className="text-[#a855f7]/40">|</span>
+                              <span className="text-[#c084fc] font-bold">{femaleTopClub.points} pts</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     )}
                     <div className="p-5">
-                      <p className="text-[10px] font-semibold text-[#e8d5a3]/50 mb-4 uppercase tracking-wider">Top Players</p>
+                      <p className="text-[10px] font-semibold text-[#e9d5ff]/50 mb-4 uppercase tracking-wider">Top Players</p>
                       <div className="flex items-end justify-center gap-4">
                         {femaleTop3[1] && (
                           <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...femaleTop3[1], division: 'female' })}>
@@ -563,16 +563,16 @@ export function LandingPage() {
                         {femaleTop3[0] && (
                           <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...femaleTop3[0], division: 'female' })}>
                             <div className="relative">
-                              <Crown className="w-6 h-6 text-[#d4a853] mx-auto mb-1 animate-float" />
-                              <div className="w-20 h-20 mx-auto rounded-full bg-[#d4a853]/10 border-2 border-[#d4a853]/30 flex items-center justify-center text-lg font-bold text-[#d4a853] glow-champion">
+                              <Crown className="w-6 h-6 text-[#c084fc] mx-auto mb-1 animate-float" />
+                              <div className="w-20 h-20 mx-auto rounded-full bg-[#a855f7]/10 border-2 border-[#a855f7]/30 flex items-center justify-center text-lg font-bold text-[#c084fc] glow-champion">
                                 {femaleTop3[0].gamertag.slice(0, 2).toUpperCase()}
                               </div>
                             </div>
-                            <p className="text-sm font-bold truncate mt-2 text-gradient-champion">{femaleTop3[0].gamertag}</p>
+                            <p className="text-sm font-bold truncate mt-2 text-gradient-female">{femaleTop3[0].gamertag}</p>
                             <TierBadge tier={femaleTop3[0].tier} />
-                            <p className="text-xs text-[#d4a853] font-bold mt-0.5">{femaleTop3[0].points} pts</p>
-                            <div className="mt-2 h-24 bg-[#d4a853]/10 rounded-t-lg flex items-center justify-center border border-[#d4a853]/10">
-                              <span className="text-3xl font-black text-gradient-gold">1</span>
+                            <p className="text-xs text-[#c084fc] font-bold mt-0.5">{femaleTop3[0].points} pts</p>
+                            <div className="mt-2 h-24 bg-[#a855f7]/10 rounded-t-lg flex items-center justify-center border border-[#a855f7]/10">
+                              <span className="text-3xl font-black text-gradient-female">1</span>
                             </div>
                           </div>
                         )}
@@ -739,11 +739,11 @@ export function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Male Leaderboard */}
               <motion.div variants={fadeLeft}>
-                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#d4a853]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
+                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#06b6d4]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#d4a853]/10 to-transparent border-b border-[#d4a853]/10">
-                      <Swords className="w-4 h-4 text-[#d4a853]" />
-                      <span className="text-xs font-bold text-[#d4a853] uppercase tracking-wider">Male Division</span>
+                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#06b6d4]/10 to-transparent border-b border-[#06b6d4]/10">
+                      <Swords className="w-4 h-4 text-[#22d3ee]" />
+                      <span className="text-xs font-bold text-[#22d3ee] uppercase tracking-wider">Male Division</span>
                     </div>
                     <div className="p-3 space-y-1">
                       {maleData?.topPlayers?.slice(0, 5).map((p, idx) => (
@@ -753,18 +753,18 @@ export function LandingPage() {
                           whileInView={{ opacity: 1, x: 0 }}
                           viewport={{ once: true }}
                           transition={{ delay: idx * 0.08 }}
-                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#d4a853]/5 hover:shadow-[0_0_15px_rgba(212,168,83,0.08)]"
+                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#06b6d4]/5 hover:shadow-[0_0_15px_rgba(6,182,212,0.08)]"
                           onClick={() => setSelectedPlayer({ ...p, division: 'male' })}
                         >
                           <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            idx === 0 ? 'bg-[#d4a853]/20 text-[#d4a853] glow-champion' :
+                            idx === 0 ? 'bg-[#06b6d4]/20 text-[#22d3ee] glow-champion' :
                             idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                             idx === 2 ? 'bg-amber-600/20 text-amber-600' :
                             'bg-muted text-muted-foreground'
                           }`}>
                             {idx === 0 ? '👑' : idx + 1}
                           </span>
-                          <div className="w-8 h-8 rounded-full bg-[#d4a853]/10 flex items-center justify-center text-[10px] font-bold text-[#d4a853] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#06b6d4]/10 flex items-center justify-center text-[10px] font-bold text-[#22d3ee] shrink-0">
                             {p.gamertag.slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -774,7 +774,7 @@ export function LandingPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-bold text-[#d4a853]">{p.points}</span>
+                            <span className="text-sm font-bold text-[#22d3ee]">{p.points}</span>
                             <span className="text-[10px] text-muted-foreground ml-1">pts</span>
                           </div>
                         </motion.div>
@@ -786,11 +786,11 @@ export function LandingPage() {
 
               {/* Female Leaderboard */}
               <motion.div variants={fadeRight}>
-                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#d4a853]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
+                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#a855f7]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#e8d5a3]/10 to-transparent border-b border-[#e8d5a3]/10">
-                      <Shield className="w-4 h-4 text-[#e8d5a3]" />
-                      <span className="text-xs font-bold text-[#e8d5a3] uppercase tracking-wider">Female Division</span>
+                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#a855f7]/10 to-transparent border-b border-[#a855f7]/10">
+                      <Shield className="w-4 h-4 text-[#c084fc]" />
+                      <span className="text-xs font-bold text-[#c084fc] uppercase tracking-wider">Female Division</span>
                     </div>
                     <div className="p-3 space-y-1">
                       {femaleData?.topPlayers?.slice(0, 5).map((p, idx) => (
@@ -800,18 +800,18 @@ export function LandingPage() {
                           whileInView={{ opacity: 1, x: 0 }}
                           viewport={{ once: true }}
                           transition={{ delay: idx * 0.08 }}
-                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#d4a853]/5 hover:shadow-[0_0_15px_rgba(212,168,83,0.08)]"
+                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#a855f7]/5 hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]"
                           onClick={() => setSelectedPlayer({ ...p, division: 'female' })}
                         >
                           <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            idx === 0 ? 'bg-[#d4a853]/20 text-[#d4a853] glow-champion' :
+                            idx === 0 ? 'bg-[#a855f7]/20 text-[#c084fc] glow-champion' :
                             idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                             idx === 2 ? 'bg-amber-600/20 text-amber-600' :
                             'bg-muted text-muted-foreground'
                           }`}>
                             {idx === 0 ? '👑' : idx + 1}
                           </span>
-                          <div className="w-8 h-8 rounded-full bg-[#e8d5a3]/10 flex items-center justify-center text-[10px] font-bold text-[#e8d5a3] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-[#a855f7]/10 flex items-center justify-center text-[10px] font-bold text-[#c084fc] shrink-0">
                             {p.gamertag.slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -821,7 +821,7 @@ export function LandingPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <span className="text-sm font-bold text-[#e8d5a3]">{p.points}</span>
+                            <span className="text-sm font-bold text-[#c084fc]">{p.points}</span>
                             <span className="text-[10px] text-muted-foreground ml-1">pts</span>
                           </div>
                         </motion.div>
@@ -915,7 +915,7 @@ export function LandingPage() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-gradient-to-r from-[#d4a853] to-[#c9a84c] hover:from-[#c9a84c] hover:to-[#b8963d] text-[#0a0a14] px-10 py-7 text-base font-bold rounded-2xl gold-glow transition-all"
+                className="w-full sm:w-auto btn-male px-10 py-7 text-base font-bold rounded-2xl transition-all"
                 onClick={() => enterApp('male')}
               >
                 Enter Male Division
@@ -926,7 +926,7 @@ export function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto border-[#d4a853]/30 text-[#e8d5a3] hover:bg-[#d4a853]/10 px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                className="w-full sm:w-auto btn-female px-10 py-7 text-base font-bold rounded-2xl transition-all"
                 onClick={() => enterApp('female')}
               >
                 Enter Female Division

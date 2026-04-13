@@ -50,6 +50,10 @@
   --color-idm-s-tier: var(--idm-s-tier);
   --color-idm-a-tier: var(--idm-a-tier);
   --color-idm-b-tier: var(--idm-b-tier);
+  --color-idm-male: var(--idm-male);
+  --color-idm-male-light: var(--idm-male-light);
+  --color-idm-female: var(--idm-female);
+  --color-idm-female-light: var(--idm-female-light);
 }
 
 /* ============================================
@@ -98,6 +102,15 @@
   --idm-s-tier: #dc2626;
   --idm-a-tier: #d97706;
   --idm-b-tier: #65a30d;
+  /* Division colors — Male: Cyan/Blue, Female: Purple/Soft Pink */
+  --idm-male: #0891b2;
+  --idm-male-light: #22d3ee;
+  --idm-male-glow: rgba(6, 182, 212, 0.3);
+  --idm-male-bg: rgba(6, 182, 212, 0.08);
+  --idm-female: #a855f7;
+  --idm-female-light: #d8b4fe;
+  --idm-female-glow: rgba(168, 85, 247, 0.3);
+  --idm-female-bg: rgba(168, 85, 247, 0.08);
 }
 
 /* ============================================
@@ -145,6 +158,15 @@
   --idm-s-tier: #f87171;
   --idm-a-tier: #fbbf24;
   --idm-b-tier: #86efac;
+  /* Division colors — Male: Cyan/Blue, Female: Purple/Soft Pink (brighter in dark) */
+  --idm-male: #22d3ee;
+  --idm-male-light: #67e8f9;
+  --idm-male-glow: rgba(34, 211, 238, 0.35);
+  --idm-male-bg: rgba(34, 211, 238, 0.08);
+  --idm-female: #c084fc;
+  --idm-female-light: #e9d5ff;
+  --idm-female-glow: rgba(192, 132, 252, 0.35);
+  --idm-female-bg: rgba(192, 132, 252, 0.08);
 }
 
 @layer base {
@@ -1480,4 +1502,131 @@ html {
 
 .spotlight:hover::before {
   left: 150%;
+}
+
+/* ============================================
+   27. DIVISION COLORS — Male (Cyan) / Female (Purple)
+   ============================================ */
+
+/* Male Division — Cyan/Blue */
+.glow-male {
+  box-shadow: 0 0 20px var(--idm-male-glow), 0 0 60px rgba(6, 182, 212, 0.1);
+}
+
+.text-gradient-male {
+  background: linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9, #22d3ee, #06b6d4);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+.card-premium-male::before {
+  background: linear-gradient(
+    135deg,
+    #06b6d4,
+    #22d3ee,
+    #67e8f9,
+    #22d3ee,
+    #06b6d4
+  ) !important;
+  background-size: 200% 200% !important;
+}
+
+/* Female Division — Purple/Soft Pink */
+.glow-female {
+  box-shadow: 0 0 20px var(--idm-female-glow), 0 0 60px rgba(168, 85, 247, 0.1);
+}
+
+.text-gradient-female {
+  background: linear-gradient(135deg, #a855f7, #c084fc, #e9d5ff, #d946ef, #a855f7);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+.card-premium-female::before {
+  background: linear-gradient(
+    135deg,
+    #a855f7,
+    #c084fc,
+    #e9d5ff,
+    #d946ef,
+    #a855f7
+  ) !important;
+  background-size: 200% 200% !important;
+}
+
+/* Division gradient overlays for hero sections */
+.bg-gradient-male {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(34, 211, 238, 0.05), transparent);
+}
+
+.bg-gradient-female {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(192, 132, 252, 0.05), transparent);
+}
+
+/* Division buttons */
+.btn-male {
+  background: linear-gradient(135deg, #0891b2, #06b6d4);
+  color: white;
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 40px rgba(6, 182, 212, 0.1);
+}
+
+.btn-male:hover {
+  background: linear-gradient(135deg, #0e7490, #0891b2);
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5), 0 0 60px rgba(6, 182, 212, 0.2);
+}
+
+.btn-female {
+  background: linear-gradient(135deg, #9333ea, #a855f7);
+  color: white;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3), 0 0 40px rgba(168, 85, 247, 0.1);
+}
+
+.btn-female:hover {
+  background: linear-gradient(135deg, #7e22ce, #9333ea);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), 0 0 60px rgba(168, 85, 247, 0.2);
+}
+
+/* Division ambient light variants */
+.ambient-light-male {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: ambient-orbit 20s linear infinite;
+}
+
+.ambient-light-female {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(192, 132, 252, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  animation: ambient-orbit 20s linear infinite;
+}
+
+/* Division border colors */
+.border-male {
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+.border-female {
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+/* Division header gradient bar */
+.division-bar-male {
+  background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), transparent);
+}
+
+.division-bar-female {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.15), transparent);
 }

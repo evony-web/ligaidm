@@ -93,3 +93,44 @@ Stage Summary:
 - Added section-level parallax to Champions and Features sections
 - Added new Community Stats section with animated counters
 - All hooks properly declared at component top level
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix banner (3 female characters, white hair males) + implement division color coding (Male=Cyan, Female=Purple)
+
+Work Log:
+- User feedback: only 1 female character on desktop banner, wants 3 females; males should have white hair; wants division-specific colors like idolmeta website
+- Regenerated bg-default.jpg (1344x768) with 3 male + 3 female characters:
+  - Males: white spiky hair + techwear hoodie, white medium hair + navy jersey, dark hair + red bomber
+  - Females: long hair + pink kpop crop top, twin tails + purple gothic lolita, short bob + emerald blazer
+  - Background: obsidian black with cyan + purple ambient light glows + gold sparkles
+- Regenerated bg-mobiledefault.jpg (768x1344): white-haired male in techwear + female in purple gothic lolita
+- Added division color CSS variables to globals.css (both light/dark themes):
+  - Male: --idm-male (#0891b2 light / #22d3ee dark), --idm-male-light, --idm-male-glow, --idm-male-bg
+  - Female: --idm-female (#a855f7 light / #c084fc dark), --idm-female-light, --idm-female-glow, --idm-female-bg
+- Added @theme inline variables for division colors
+- Added Section 27 CSS classes for division colors:
+  - .glow-male, .glow-female (glow effects)
+  - .text-gradient-male, .text-gradient-female (animated gradient text)
+  - .card-premium-male, .card-premium-female (card border overrides)
+  - .btn-male, .btn-female (division buttons with glow)
+  - .ambient-light-male, .ambient-light-female (ambient lights)
+  - .border-male, .border-female (border colors)
+  - .division-bar-male, .division-bar-female (header gradient bars)
+  - .bg-gradient-male, .bg-gradient-female (gradient overlays)
+- Updated landing-page.tsx with division colors:
+  - Hero buttons: Male → btn-male (cyan), Female → btn-female (purple)
+  - Male Champion card: All gold → cyan/blue (#22d3ee, #06b6d4)
+  - Female Champion card: All amber → purple/pink (#c084fc, #a855f7)
+  - Leaderboard: Male rows cyan, Female rows purple
+  - CTA buttons: Same division button styling
+- Lint passes clean, dev server running successfully
+
+Stage Summary:
+- Desktop banner now has 3 male + 3 female characters with diverse fashion
+- Mobile banner has white-haired male + purple-dressed female
+- Division color coding fully implemented: Male=Cyan/Blue, Female=Purple/Soft Pink
+- 15+ new CSS classes for division-specific styling
+- All champion cards, leaderboard, buttons use division-specific colors
+- Gold brand theme preserved for non-division elements
