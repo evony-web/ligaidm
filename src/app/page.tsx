@@ -48,7 +48,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm">Preparing arena...</span>
+          <span className="text-sm">Preparing stage...</span>
         </div>
       </div>
     );

@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Swords, Trophy, Crown, Radio, Clock, Flame, Zap,
-  Shield, Users, TrendingUp, Star, ChevronRight,
+  Trophy, Crown, Radio, Clock, Flame, Zap,
+  Users, TrendingUp, Star, ChevronRight,
   Vote, BarChart3, Activity, Eye, MessageSquare, ThumbsUp,
   ArrowRight, Circle, CheckCircle2, XCircle, Timer
 } from 'lucide-react';
@@ -77,7 +77,7 @@ function LivePulse() {
 /* ─── Match Event for Timeline ─── */
 interface MatchEvent {
   time: string;
-  type: 'kill' | 'objective' | 'tower' | 'mvp' | 'start' | 'end';
+  type: 'perfect' | 'special_move' | 'combo' | 'mvp' | 'start' | 'end';
   team: 'team1' | 'team2' | 'neutral';
   description: string;
   player?: string;
@@ -212,9 +212,9 @@ function H2HStatRow({ label, team1Val, team2Val, highlight = 'higher' }: {
 function TimelineEvent({ event, idx }: { event: MatchEvent; idx: number }) {
   const dt = useDivisionTheme();
   const iconMap = {
-    kill: <Swords className="w-3 h-3 text-red-400" />,
-    objective: <Star className="w-3 h-3 text-yellow-400" />,
-    tower: <Shield className="w-3 h-3 text-orange-400" />,
+    perfect: <Star className="w-3 h-3 text-emerald-400" />,
+    special_move: <Zap className="w-3 h-3 text-amber-400" />,
+    combo: <Flame className="w-3 h-3 text-orange-400" />,
     mvp: <Crown className="w-3 h-3 text-yellow-500" />,
     start: <Activity className="w-3 h-3 text-green-400" />,
     end: <Trophy className="w-3 h-3 text-[#d4a853]" />,
@@ -300,11 +300,11 @@ export function MatchDayCenter() {
     const match = t.matches[selectedMatchIdx] || t.matches[0];
     return [
       { time: '0:00', type: 'start', team: 'neutral', description: 'Match Started' },
-      { time: '3:24', type: 'kill', team: 'team1', description: `First Blood! ${match.team1.name} gets the kill`, player: 'Player 1' },
-      { time: '7:15', type: 'objective', team: 'team2', description: `${match.team2.name} takes the first objective` },
-      { time: '11:42', type: 'tower', team: 'team1', description: `${match.team1.name} destroys outer tower` },
-      { time: '15:30', type: 'kill', team: 'team2', description: `Team fight win for ${match.team2.name}` },
-      { time: '19:05', type: 'objective', team: 'team1', description: `${match.team1.name} secures major objective` },
+      { time: '3:24', type: 'perfect', team: 'team1', description: `First Perfect! ${match.team1.name} lands a perfect combo`, player: 'Player 1' },
+      { time: '7:15', type: 'special_move', team: 'team2', description: `${match.team2.name} hits a special move` },
+      { time: '11:42', type: 'combo', team: 'team1', description: `${match.team1.name} builds a massive combo streak` },
+      { time: '15:30', type: 'perfect', team: 'team2', description: `Synchronized perfect for ${match.team2.name}` },
+      { time: '19:05', type: 'special_move', team: 'team1', description: `${match.team1.name} nails a freestyle sequence` },
       { time: '22:18', type: 'mvp', team: 'neutral', description: 'MVP Performance', player: match.mvpPlayer?.gamertag || 'Outstanding Player' },
     ];
   }, [data?.activeTournament, selectedMatchIdx]);
@@ -370,16 +370,16 @@ export function MatchDayCenter() {
     losses: Math.floor(Math.random() * 3) + 1,
     gameDiff: Math.floor(Math.random() * 6) + 2,
     points: Math.floor(Math.random() * 10) + 8,
-    killAvg: (Math.random() * 5 + 10).toFixed(1),
-    objRate: (Math.random() * 30 + 50).toFixed(0),
+    scoreAvg: (Math.random() * 5 + 10).toFixed(1),
+    perfectRate: (Math.random() * 30 + 50).toFixed(0),
   } : null;
   const team2Stats = selectedMatch ? {
     wins: Math.floor(Math.random() * 5) + 2,
     losses: Math.floor(Math.random() * 3) + 2,
     gameDiff: Math.floor(Math.random() * 4),
     points: Math.floor(Math.random() * 8) + 5,
-    killAvg: (Math.random() * 5 + 8).toFixed(1),
-    objRate: (Math.random() * 30 + 40).toFixed(0),
+    scoreAvg: (Math.random() * 5 + 8).toFixed(1),
+    perfectRate: (Math.random() * 30 + 40).toFixed(0),
   } : null;
 
   return (
@@ -481,7 +481,7 @@ export function MatchDayCenter() {
                         </motion.span>
                         <div className="flex flex-col items-center">
                           <div className={`w-10 h-10 lg:w-14 lg:h-14 rounded-full ${dt.bgSubtle} ${dt.border} border flex items-center justify-center`}>
-                            <Swords className={`w-5 h-5 lg:w-7 lg:h-7 ${dt.neonText}`} />
+                            <Star className={`w-5 h-5 lg:w-7 lg:h-7 ${dt.neonText}`} />
                           </div>
                           <span className="text-[8px] text-muted-foreground mt-1 font-semibold uppercase">
                             {selectedMatch.status === 'completed' ? 'Final' : 'BO3'}
@@ -587,7 +587,7 @@ export function MatchDayCenter() {
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             {[
               { value: 'prediction', label: 'Prediction', icon: ThumbsUp },
-              { value: 'h2h', label: 'Head to Head', icon: Swords },
+              { value: 'h2h', label: 'Head to Head', icon: Users },
               { value: 'timeline', label: 'Timeline', icon: Activity },
               { value: 'results', label: 'Results', icon: Trophy },
             ].map(tab => (
@@ -710,7 +710,7 @@ export function MatchDayCenter() {
             {selectedMatch && team1Stats && team2Stats && (
               <>
                 <motion.div variants={item}>
-                  <SectionCard title="Head to Head Comparison" icon={Swords} badge="Stats">
+                  <SectionCard title="Head to Head Comparison" icon={Users} badge="Stats">
                     {/* Team Headers */}
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex-1 text-center">
@@ -724,7 +724,7 @@ export function MatchDayCenter() {
                         <p className="text-xs font-bold mt-1.5">{selectedMatch.team1.name}</p>
                       </div>
                       <div className={`w-10 h-10 rounded-full ${dt.bgSubtle} ${dt.border} border flex items-center justify-center shrink-0`}>
-                        <Swords className={`w-4 h-4 ${dt.neonText}`} />
+                        <Users className={`w-4 h-4 ${dt.neonText}`} />
                       </div>
                       <div className="flex-1 text-center">
                         <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center text-lg font-bold ${
@@ -744,8 +744,8 @@ export function MatchDayCenter() {
                       <H2HStatRow label="Losses" team1Val={team1Stats.losses} team2Val={team2Stats.losses} highlight="lower" />
                       <H2HStatRow label="Points" team1Val={team1Stats.points} team2Val={team2Stats.points} />
                       <H2HStatRow label="Game Diff" team1Val={team1Stats.gameDiff} team2Val={team2Stats.gameDiff} />
-                      <H2HStatRow label="Kill Avg" team1Val={team1Stats.killAvg} team2Val={team2Stats.killAvg} />
-                      <H2HStatRow label="Obj Rate" team1Val={`${team1Stats.objRate}%`} team2Val={`${team2Stats.objRate}%`} />
+                      <H2HStatRow label="Score Avg" team1Val={team1Stats.scoreAvg} team2Val={team2Stats.scoreAvg} />
+                      <H2HStatRow label="Perfect Rate" team1Val={`${team1Stats.perfectRate}%`} team2Val={`${team2Stats.perfectRate}%`} />
                     </div>
                   </SectionCard>
                 </motion.div>
@@ -811,9 +811,9 @@ export function MatchDayCenter() {
               <SectionCard title="Key Moments" icon={Star} badge="Highlights">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { time: '03:24', title: 'First Blood', desc: 'Opening kill sets the tempo', icon: Swords, color: 'text-red-400' },
-                    { time: '11:42', title: 'Tower Down', desc: 'Outer tower destroyed', icon: Shield, color: 'text-orange-400' },
-                    { time: '19:05', title: 'Objective Secured', desc: 'Major objective taken', icon: Star, color: 'text-yellow-400' },
+                    { time: '03:24', title: 'First Perfect', desc: 'Opening perfect combo sets the tempo', icon: Star, color: 'text-emerald-400' },
+                    { time: '11:42', title: 'Combo Streak', desc: 'Massive combo streak achieved', icon: Flame, color: 'text-orange-400' },
+                    { time: '19:05', title: 'Special Move', desc: 'Freestyle sequence nailed perfectly', icon: Zap, color: 'text-amber-400' },
                     { time: '22:18', title: 'MVP Performance', desc: 'Outstanding individual play', icon: Crown, color: 'text-[#d4a853]' },
                   ].map((moment, idx) => (
                     <motion.div

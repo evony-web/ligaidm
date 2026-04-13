@@ -139,7 +139,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
                 transition={{ delay: 1.6 }}
                 className="text-[10px] text-white/40 text-center mt-2 tracking-wider"
               >
-                ENTERING THE ARENA
+                ENTERING THE STAGE
               </motion.p>
             </motion.div>
           </div>

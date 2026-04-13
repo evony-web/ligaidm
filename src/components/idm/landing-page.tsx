@@ -292,7 +292,7 @@ export function LandingPage() {
             <motion.div variants={fadeUp} className="flex items-center justify-center gap-2.5 mt-6 flex-wrap">
               {[
                 { text: 'Season 1', glow: true },
-                { text: 'Premium Esports', glow: false },
+                { text: 'Dance Tournament', glow: false },
                 { text: 'MPL-Style', glow: false },
               ].map((badge, i) => (
                 <motion.div
@@ -680,7 +680,7 @@ export function LandingPage() {
                   { step: '01', title: 'Register', desc: 'Solo registration for weekly tournament', icon: Users, color: 'bg-[#d4a853]/10 text-[#d4a853]', ring: 'border-[#d4a853]/40' },
                   { step: '02', title: 'Get Approved', desc: 'Admin assigns your tier (S / A / B)', icon: Star, color: 'bg-[#e8d5a3]/10 text-[#e8d5a3]', ring: 'border-[#e8d5a3]/40' },
                   { step: '03', title: 'Team Up', desc: 'Auto-balanced teams with S+A+B composition', icon: Gamepad2, color: 'bg-green-500/10 text-green-500', ring: 'border-green-500/40' },
-                  { step: '04', title: 'Compete', desc: '1 main event match per week', icon: Swords, color: 'bg-red-500/10 text-red-500', ring: 'border-red-500/40' },
+                  { step: '04', title: 'Compete', desc: '1 main event dance-off per week', icon: Gamepad2, color: 'bg-red-500/10 text-red-500', ring: 'border-red-500/40' },
                   { step: '05', title: 'Win & Rank', desc: 'Earn points, climb leaderboard, become MVP', icon: Crown, color: 'bg-[#d4a853]/10 text-[#d4a853]', ring: 'border-[#d4a853]/40' },
                 ].map((s, i) => (
                   <motion.div
@@ -909,7 +909,7 @@ export function LandingPage() {
             Ready to Compete?
           </motion.h2>
           <motion.p variants={fadeUp} className="text-sm text-muted-foreground mb-12 max-w-md mx-auto leading-relaxed">
-            Join the arena. Register for weekly tournaments, climb the leaderboard, and become the next IDM League champion.
+            Join the stage. Register for weekly tournaments, climb the leaderboard, and become the next IDM League champion.
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
@@ -950,7 +950,7 @@ export function LandingPage() {
               <img src="/logo1.webp" alt="IDM" className="w-8 h-8 rounded-lg object-cover" />
               <span className="text-lg text-gradient-fury font-bold">IDM League</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">Idol Meta Fan Made Edition — Premium Esports Platform</p>
+            <p className="text-xs text-muted-foreground mb-4">Idol Meta Fan Made Edition — Dance Tournament Platform</p>
             <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground flex-wrap">
               <span>Weekly Tournaments</span>
               <span className="text-[#d4a853]/30">|</span>

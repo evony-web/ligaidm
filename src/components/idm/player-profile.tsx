@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Trophy, Flame, Crown, Shield, Swords, Target,
+  X, Trophy, Flame, Crown, Shield, Target,
   TrendingUp, Award, Zap, Calendar, Star, BarChart3,
   ChevronRight, Activity, Gamepad2, MapPin, Users, Crosshair, CircleDot
 } from 'lucide-react';
@@ -83,7 +83,7 @@ function MatchHistoryRow({ match }: { match: { week: number; result: string; sco
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span>Wk {match.week}</span>
           <span className="text-border">•</span>
-          <span>KDA {match.kda}</span>
+          <span>Score {match.kda}</span>
         </div>
       </div>
       {/* Score */}
@@ -104,9 +104,9 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
   const isTop3 = rank !== undefined && rank <= 3;
 
   const tierConfig: Record<string, { label: string; color: string; desc: string }> = {
-    S: { label: 'S Tier', color: 'text-red-500', desc: 'Elite Player — Top competitor with exceptional skills' },
-    A: { label: 'A Tier', color: 'text-yellow-500', desc: 'Advanced Player — Strong competitor with proven records' },
-    B: { label: 'B Tier', color: 'text-green-500', desc: 'Rising Player — Developing competitor with potential' },
+    S: { label: 'S Tier', color: 'text-red-500', desc: 'Elite Dancer — Top performer with exceptional rhythm' },
+    A: { label: 'A Tier', color: 'text-yellow-500', desc: 'Advanced Dancer — Strong performer with proven records' },
+    B: { label: 'B Tier', color: 'text-green-500', desc: 'Rising Dancer — Developing performer with potential' },
   };
   const tier = tierConfig[player.tier] || tierConfig.B;
 
@@ -114,11 +114,11 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
 
   // Generate match history for demo
   const recentMatches = [
-    { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', kda: '8/2/5' },
-    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Wolves', kda: '5/4/7' },
-    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Elite', kda: '3/6/4' },
-    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Raiders', kda: '9/1/6' },
-    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Squad', kda: '6/3/8' },
+    { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', kda: '985K' },
+    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Wolves', kda: '872K' },
+    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Elite', kda: '756K' },
+    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Raiders', kda: '1.1M' },
+    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Squad', kda: '923K' },
   ];
 
   // Performance chart data (simulated)
@@ -348,7 +348,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
                 )}
                 {player.tier === 'S' && (
                   <Badge className="bg-red-500/10 text-red-500 text-[10px] border-0">
-                    <Swords className="w-3 h-3 mr-1" /> Elite
+                    <Star className="w-3 h-3 mr-1" /> Elite
                   </Badge>
                 )}
                 {rank === 1 && (

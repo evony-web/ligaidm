@@ -426,7 +426,7 @@ export function Dashboard() {
               {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
             </Badge>
           </div>
-          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Arena'}</h2>
+          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Stage'}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
