@@ -77,7 +77,7 @@ function LivePulse() {
 /* ─── Match Event for Timeline ─── */
 interface MatchEvent {
   time: string;
-  type: 'round_start' | 'round_end' | 'score_update' | 'mvp' | 'match_start' | 'match_end';
+  type: 'session_open' | 'score_input' | 'mvp_selected' | 'match_end' | 'match_scheduled' | 'round_result';
   team: 'team1' | 'team2' | 'neutral';
   description: string;
   player?: string;
@@ -212,11 +212,11 @@ function H2HStatRow({ label, team1Val, team2Val, highlight = 'higher' }: {
 function TimelineEvent({ event, idx }: { event: MatchEvent; idx: number }) {
   const dt = useDivisionTheme();
   const iconMap = {
-    round_start: <Activity className="w-3 h-3 text-green-400" />,
-    round_end: <CheckCircle2 className="w-3 h-3 text-blue-400" />,
-    score_update: <Star className="w-3 h-3 text-emerald-400" />,
-    mvp: <Crown className="w-3 h-3 text-yellow-500" />,
-    match_start: <Flame className="w-3 h-3 text-amber-400" />,
+    session_open: <Activity className="w-3 h-3 text-green-400" />,
+    round_result: <CheckCircle2 className="w-3 h-3 text-blue-400" />,
+    score_input: <Star className="w-3 h-3 text-emerald-400" />,
+    mvp_selected: <Crown className="w-3 h-3 text-yellow-500" />,
+    match_scheduled: <Clock className="w-3 h-3 text-amber-400" />,
     match_end: <Trophy className="w-3 h-3 text-[#d4a853]" />,
   };
 
@@ -293,52 +293,60 @@ export function MatchDayCenter() {
     },
   });
 
-  // Timeline events derived from actual match data (admin-input scores & MVP)
+  // Timeline events — only shows what admin actually inputs into the system.
+  // No fake auto-detected game events, no simulated round timestamps.
+  // The game is NOT integrated with the server, so we only display
+  // organizer-input data: scores, MVP selection, match status.
   const matchEvents: MatchEvent[] = useMemo(() => {
     const t = data?.activeTournament;
     if (!t?.matches?.length) return [];
     const match = t.matches[selectedMatchIdx] || t.matches[0];
     const events: MatchEvent[] = [];
 
-    // Match start — always shown
-    events.push({ time: '0:00', type: 'match_start', team: 'neutral', description: 'Match Started — Admin begins the session' });
+    // Match scheduled — shown for upcoming matches
+    if (match.status === 'scheduled' || match.status === 'upcoming') {
+      events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'TBD', type: 'match_scheduled', team: 'neutral', description: 'Match scheduled — awaiting session start' });
+      return events;
+    }
 
-    // Round progression — derived from scores (admin inputs these)
+    // Session opened by admin
+    events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Start', type: 'session_open', team: 'neutral', description: 'Session opened by organizer' });
+
+    // Round results — derived from the admin-input scores (not auto-detected)
     const s1 = match.score1 ?? 0;
     const s2 = match.score2 ?? 0;
-    const totalRounds = s1 + s2;
 
-    if (totalRounds > 0) {
-      // Simulate round-by-round based on final score
-      let t1Wins = 0, t2Wins = 0;
-      for (let r = 1; r <= totalRounds; r++) {
-        // Alternate wins to match final score
-        if (r % 2 === 1 && t1Wins < s1) {
-          t1Wins++;
-          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team1', description: `Round ${r}: ${match.team1.name} wins` });
-        } else if (t2Wins < s2) {
-          t2Wins++;
-          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team2', description: `Round ${r}: ${match.team2.name} wins` });
-        } else if (t1Wins < s1) {
-          t1Wins++;
-          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team1', description: `Round ${r}: ${match.team1.name} wins` });
+    if (s1 > 0 || s2 > 0) {
+      // Show round-by-round result based on the final score input by admin
+      // Each score point represents a round/dance-off win
+      let roundNum = 0;
+      const t1Rounds = s1;
+      const t2Rounds = s2;
+      // Interleave round wins to create a realistic sequence
+      const maxRounds = Math.max(t1Rounds, t2Rounds);
+      for (let i = 0; i < maxRounds; i++) {
+        if (i < t1Rounds) {
+          roundNum++;
+          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team1', description: `Round ${roundNum}: ${match.team1.name} wins the dance-off` });
+        }
+        if (i < t2Rounds) {
+          roundNum++;
+          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team2', description: `Round ${roundNum}: ${match.team2.name} wins the dance-off` });
         }
       }
+
+      // Final score submitted by admin
+      events.push({ time: 'Final', type: 'score_input', team: s1 > s2 ? 'team1' : 'team2', description: `Final score submitted: ${s1} - ${s2}` });
     }
 
-    // Score update event — admin inputs the final score
-    if (s1 > 0 || s2 > 0) {
-      events.push({ time: 'Final', type: 'score_update', team: s1 > s2 ? 'team1' : 'team2', description: `Score submitted by admin: ${s1} - ${s2}` });
-    }
-
-    // MVP — admin-selected
+    // MVP — selected by admin/organizer
     if (match.mvpPlayer) {
-      events.push({ time: 'Final', type: 'mvp', team: 'neutral', description: `MVP selected by admin`, player: match.mvpPlayer.gamertag });
+      events.push({ time: 'Final', type: 'mvp_selected', team: 'neutral', description: 'MVP selected by organizer', player: match.mvpPlayer.gamertag });
     }
 
     // Match end
     if (match.status === 'completed') {
-      events.push({ time: 'Final', type: 'match_end', team: 'neutral', description: 'Match Completed' });
+      events.push({ time: 'Final', type: 'match_end', team: 'neutral', description: 'Match completed — results finalized' });
     }
 
     return events;
@@ -399,75 +407,71 @@ export function MatchDayCenter() {
   const selectedMatch = tournamentMatches[selectedMatchIdx] || tournamentMatches[0];
   const predState = selectedMatch ? predictions.get(selectedMatch.id) : null;
 
-  // Generate H2H stats from actual tournament data (admin-input results)
-  // These stats are derived from what the system actually tracks:
-  // wins, losses, points, MVP count — all from admin score input
+  // Generate H2H stats from actual tournament data (admin-input results only).
+  // No fake fallback data — if no matches have been played, stats show 0.
+  // All data comes from organizer score input, not from game integration.
   const team1Stats = selectedMatch ? (() => {
-    // Count actual wins from tournament matches for team1
     const team1Name = selectedMatch.team1.name;
     const tMatches = data?.activeTournament?.matches || [];
-    let wins = 0, losses = 0, mvpCount = 0, totalScore = 0, roundsPlayed = 0;
+    let wins = 0, losses = 0, draws = 0, mvpCount = 0, totalRoundsWon = 0, totalRoundsLost = 0;
     tMatches.forEach(m => {
       if (m.team1.name === team1Name) {
         if (m.score1 !== null && m.score2 !== null) {
-          if (m.score1 > m.score2) wins++; else losses++;
-          totalScore += m.score1; roundsPlayed += m.score1 + m.score2;
+          if (m.score1 > m.score2) wins++; else if (m.score1 < m.score2) losses++; else draws++;
+          totalRoundsWon += m.score1; totalRoundsLost += m.score2;
         }
         if (m.mvpPlayer && m.team1.name === team1Name) mvpCount++;
       } else if (m.team2.name === team1Name) {
         if (m.score1 !== null && m.score2 !== null) {
-          if (m.score2 > m.score1) wins++; else losses++;
-          totalScore += m.score2; roundsPlayed += m.score1 + m.score2;
+          if (m.score2 > m.score1) wins++; else if (m.score2 < m.score1) losses++; else draws++;
+          totalRoundsWon += m.score2; totalRoundsLost += m.score1;
         }
         if (m.mvpPlayer && m.team2.name === team1Name) mvpCount++;
       }
     });
-    // Fallback to seed data if no completed matches found
-    if (wins === 0 && losses === 0) {
-      const t1Power = data?.activeTournament?.teams?.find(t => t.name === team1Name)?.power || 70;
-      wins = Math.floor(t1Power / 20) + 1;
-      losses = Math.max(4 - wins, 1);
-    }
     return {
       wins,
       losses,
-      roundDiff: totalScore > 0 ? selectedMatch.score1 ?? 0 : wins - losses,
-      points: wins * 3 + mvpCount * 2,
+      draws,
+      roundDiff: totalRoundsWon - totalRoundsLost,
+      points: wins * 3 + draws * 1 + mvpCount * 2,
       mvpCount,
-      winRate: (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0,
+      winRate: (wins + losses + draws) > 0 ? Math.round((wins / (wins + losses + draws)) * 100) : 0,
+      totalRoundsWon,
+      totalRoundsLost,
+      hasData: (wins + losses + draws) > 0,
     };
   })() : null;
   const team2Stats = selectedMatch ? (() => {
     const team2Name = selectedMatch.team2.name;
     const tMatches = data?.activeTournament?.matches || [];
-    let wins = 0, losses = 0, mvpCount = 0, totalScore = 0, roundsPlayed = 0;
+    let wins = 0, losses = 0, draws = 0, mvpCount = 0, totalRoundsWon = 0, totalRoundsLost = 0;
     tMatches.forEach(m => {
       if (m.team1.name === team2Name) {
         if (m.score1 !== null && m.score2 !== null) {
-          if (m.score1 > m.score2) wins++; else losses++;
-          totalScore += m.score1; roundsPlayed += m.score1 + m.score2;
+          if (m.score1 > m.score2) wins++; else if (m.score1 < m.score2) losses++; else draws++;
+          totalRoundsWon += m.score1; totalRoundsLost += m.score2;
         }
         if (m.mvpPlayer && m.team1.name === team2Name) mvpCount++;
       } else if (m.team2.name === team2Name) {
         if (m.score1 !== null && m.score2 !== null) {
-          if (m.score2 > m.score1) wins++; else losses++;
-          totalScore += m.score2; roundsPlayed += m.score1 + m.score2;
+          if (m.score2 > m.score1) wins++; else if (m.score2 < m.score1) losses++; else draws++;
+          totalRoundsWon += m.score2; totalRoundsLost += m.score1;
         }
         if (m.mvpPlayer && m.team2.name === team2Name) mvpCount++;
       }
     });
-    if (wins === 0 && losses === 0) {
-      const t2Power = data?.activeTournament?.teams?.find(t => t.name === team2Name)?.power || 60;
-      wins = Math.floor(t2Power / 25);
-      losses = Math.max(4 - wins, 2);
-    }
     return {
       wins,
       losses,
-      roundDiff: totalScore > 0 ? selectedMatch.score2 ?? 0 : wins - losses,
-      points: wins * 3 + mvpCount * 2,
+      draws,
+      roundDiff: totalRoundsWon - totalRoundsLost,
+      points: wins * 3 + draws * 1 + mvpCount * 2,
       mvpCount,
-      winRate: (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0,
+      winRate: (wins + losses + draws) > 0 ? Math.round((wins / (wins + losses + draws)) * 100) : 0,
+      totalRoundsWon,
+      totalRoundsLost,
+      hasData: (wins + losses + draws) > 0,
     };
   })() : null;
 
@@ -827,46 +831,67 @@ export function MatchDayCenter() {
                       </div>
                     </div>
 
-                    {/* Stats Rows — all from admin-input data */}
+                    {/* Stats Rows — all from organizer-input data, no fake stats */}
                     <div className="space-y-1.5">
                       <H2HStatRow label="Wins" team1Val={team1Stats.wins} team2Val={team2Stats.wins} />
                       <H2HStatRow label="Losses" team1Val={team1Stats.losses} team2Val={team2Stats.losses} highlight="lower" />
                       <H2HStatRow label="Win Rate" team1Val={`${team1Stats.winRate}%`} team2Val={`${team2Stats.winRate}%`} />
-                      <H2HStatRow label="Round Diff" team1Val={team1Stats.roundDiff} team2Val={team2Stats.roundDiff} />
+                      <H2HStatRow label="Rounds Won" team1Val={team1Stats.totalRoundsWon} team2Val={team2Stats.totalRoundsWon} />
+                      <H2HStatRow label="Round Diff" team1Val={team1Stats.roundDiff > 0 ? `+${team1Stats.roundDiff}` : team1Stats.roundDiff} team2Val={team2Stats.roundDiff > 0 ? `+${team2Stats.roundDiff}` : team2Stats.roundDiff} />
                       <H2HStatRow label="Points" team1Val={team1Stats.points} team2Val={team2Stats.points} />
-                      <H2HStatRow label="MVP Count" team1Val={team1Stats.mvpCount} team2Val={team2Stats.mvpCount} />
+                      <H2HStatRow label="MVP Awards" team1Val={team1Stats.mvpCount} team2Val={team2Stats.mvpCount} />
                     </div>
+                    {!team1Stats.hasData && !team2Stats.hasData && (
+                      <p className="text-[10px] text-muted-foreground text-center mt-3 italic">No match data yet — stats will appear after organizer submits results</p>
+                    )}
                   </SectionCard>
                 </motion.div>
 
-                {/* Win Probability */}
+                {/* Win Probability — calculated from actual stats, not hardcoded */}
                 <motion.div variants={item}>
                   <SectionCard title="Win Probability" icon={TrendingUp} badge="Based on Stats">
                     <div className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border} border`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold">{selectedMatch.team1.name}</span>
-                        <span className="text-xs font-semibold">{selectedMatch.team2.name}</span>
-                      </div>
-                      <div className={`h-3 rounded-full ${dt.bg} overflow-hidden flex`}>
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: '60%' }}
-                          transition={{ duration: 1, ease: 'easeOut' }}
-                          className={`h-full rounded-l-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`}
-                        />
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: '40%' }}
-                          transition={{ duration: 1, ease: 'easeOut' }}
-                          className={`h-full rounded-r-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male-light to-idm-male' : 'from-idm-female-light to-idm-female'}`}
-                          style={{ opacity: 0.5 }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-1.5">
-                        <span className={`text-sm font-black ${dt.neonText}`}>60%</span>
-                        <span className="text-[9px] text-muted-foreground">Based on team stats & recent form</span>
-                        <span className="text-sm font-black text-muted-foreground">40%</span>
-                      </div>
+                      {team1Stats.hasData || team2Stats.hasData ? (() => {
+                        // Calculate probability from actual win rates and round differentials
+                        const t1Score = team1Stats.winRate + Math.max(team1Stats.roundDiff, 0) * 5 + team1Stats.mvpCount * 3;
+                        const t2Score = team2Stats.winRate + Math.max(team2Stats.roundDiff, 0) * 5 + team2Stats.mvpCount * 3;
+                        const totalScore = t1Score + t2Score || 1;
+                        const t1Prob = Math.round((t1Score / totalScore) * 100);
+                        const t2Prob = 100 - t1Prob;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-semibold">{selectedMatch.team1.name}</span>
+                              <span className="text-xs font-semibold">{selectedMatch.team2.name}</span>
+                            </div>
+                            <div className={`h-3 rounded-full ${dt.bg} overflow-hidden flex`}>
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${t1Prob}%` }}
+                                transition={{ duration: 1, ease: 'easeOut' }}
+                                className={`h-full rounded-l-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`}
+                              />
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${t2Prob}%` }}
+                                transition={{ duration: 1, ease: 'easeOut' }}
+                                className={`h-full rounded-r-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male-light to-idm-male' : 'from-idm-female-light to-idm-female'}`}
+                                style={{ opacity: 0.5 }}
+                              />
+                            </div>
+                            <div className="flex items-center justify-between mt-1.5">
+                              <span className={`text-sm font-black ${t1Prob >= t2Prob ? dt.neonText : 'text-muted-foreground'}`}>{t1Prob}%</span>
+                              <span className="text-[9px] text-muted-foreground">Based on win rate & round diff</span>
+                              <span className={`text-sm font-black ${t2Prob > t1Prob ? dt.neonText : 'text-muted-foreground'}`}>{t2Prob}%</span>
+                            </div>
+                          </>
+                        );
+                      })() : (
+                        <div className="text-center py-4">
+                          <TrendingUp className={`w-6 h-6 mx-auto ${dt.text} mb-2`} />
+                          <p className="text-[10px] text-muted-foreground italic">Probability will be calculated after match results are submitted</p>
+                        </div>
+                      )}
                     </div>
                   </SectionCard>
                 </motion.div>
@@ -895,34 +920,128 @@ export function MatchDayCenter() {
               </SectionCard>
             </motion.div>
 
-            {/* Key Moments */}
+            {/* Key Moments — derived from actual match data, not hardcoded */}
             <motion.div variants={item}>
               <SectionCard title="Key Moments" icon={Star} badge="Highlights">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { time: 'Start', title: 'Session Opened', desc: 'Admin starts the match session', icon: Activity, color: 'text-green-400' },
-                    { time: 'R1', title: 'Round 1 Result', desc: 'Admin inputs round 1 score', icon: Star, color: 'text-emerald-400' },
-                    { time: 'R2', title: 'Round 2 Result', desc: 'Admin inputs round 2 score', icon: Star, color: 'text-emerald-400' },
-                    { time: 'Final', title: 'MVP Selected', desc: 'Admin selects MVP of the match', icon: Crown, color: 'text-[#d4a853]' },
-                  ].map((moment, idx) => (
-                    <motion.div
-                      key={idx}
-                      whileHover={{ scale: 1.02 }}
-                      className={`flex items-start gap-3 p-3 rounded-xl ${dt.bgSubtle} ${dt.borderSubtle} border cursor-pointer transition-all hover:${dt.border}`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg ${dt.bgSubtle} flex items-center justify-center shrink-0`}>
-                        <moment.icon className={`w-4 h-4 ${moment.color}`} />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] font-semibold">{moment.title}</span>
-                          <Badge className={`${dt.casinoBadge} text-[8px] px-1`}>{moment.time}</Badge>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{moment.desc}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                {selectedMatch ? (() => {
+                  // Build key moments from actual match data
+                  const moments: { time: string; title: string; desc: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [];
+
+                  // Session opened
+                  if (selectedMatch.status !== 'scheduled' && selectedMatch.status !== 'upcoming') {
+                    moments.push({
+                      time: 'Start',
+                      title: 'Session Opened',
+                      desc: 'Organizer starts the match session',
+                      icon: Activity,
+                      color: 'text-green-400',
+                    });
+                  }
+
+                  // Round results from actual score
+                  const s1 = selectedMatch.score1 ?? 0;
+                  const s2 = selectedMatch.score2 ?? 0;
+                  if (s1 > 0 || s2 > 0) {
+                    // Show dominant performance
+                    if (s1 > s2) {
+                      moments.push({
+                        time: 'Final',
+                        title: `${selectedMatch.team1.name} Dominates`,
+                        desc: `Wins ${s1}-${s2} with a +${s1 - s2} round differential`,
+                        icon: Star,
+                        color: 'text-emerald-400',
+                      });
+                    } else if (s2 > s1) {
+                      moments.push({
+                        time: 'Final',
+                        title: `${selectedMatch.team2.name} Dominates`,
+                        desc: `Wins ${s2}-${s1} with a +${s2 - s1} round differential`,
+                        icon: Star,
+                        color: 'text-emerald-400',
+                      });
+                    } else {
+                      moments.push({
+                        time: 'Final',
+                        title: 'Evenly Matched',
+                        desc: `Draw at ${s1}-${s2} — both teams equal`,
+                        icon: Star,
+                        color: 'text-emerald-400',
+                      });
+                    }
+
+                    // Close match indicator
+                    if (Math.abs(s1 - s2) === 1) {
+                      moments.push({
+                        time: 'Final',
+                        title: 'Close Match',
+                        desc: 'Decided by just 1 round difference',
+                        icon: Flame,
+                        color: 'text-amber-400',
+                      });
+                    }
+                  }
+
+                  // MVP selection
+                  if (selectedMatch.mvpPlayer) {
+                    moments.push({
+                      time: 'Final',
+                      title: 'MVP Awarded',
+                      desc: `${selectedMatch.mvpPlayer.gamertag} selected as MVP`,
+                      icon: Crown,
+                      color: 'text-[#d4a853]',
+                    });
+                  }
+
+                  // Match completed
+                  if (selectedMatch.status === 'completed') {
+                    moments.push({
+                      time: 'Final',
+                      title: 'Match Finalized',
+                      desc: 'Results confirmed by organizer',
+                      icon: Trophy,
+                      color: 'text-[#d4a853]',
+                    });
+                  }
+
+                  // If no moments yet (upcoming match)
+                  if (moments.length === 0) {
+                    moments.push({
+                      time: 'TBD',
+                      title: 'Match Scheduled',
+                      desc: 'Key moments will appear after session starts',
+                      icon: Clock,
+                      color: 'text-muted-foreground',
+                    });
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {moments.map((moment, idx) => (
+                        <motion.div
+                          key={idx}
+                          whileHover={{ scale: 1.02 }}
+                          className={`flex items-start gap-3 p-3 rounded-xl ${dt.bgSubtle} ${dt.borderSubtle} border cursor-pointer transition-all hover:${dt.border}`}
+                        >
+                          <div className={`w-8 h-8 rounded-lg ${dt.bgSubtle} flex items-center justify-center shrink-0`}>
+                            <moment.icon className={`w-4 h-4 ${moment.color}`} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-semibold">{moment.title}</span>
+                              <Badge className={`${dt.casinoBadge} text-[8px] px-1`}>{moment.time}</Badge>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">{moment.desc}</p>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  );
+                })() : (
+                  <div className="text-center py-8">
+                    <Star className={`w-8 h-8 mx-auto ${dt.text} mb-2`} />
+                    <p className="text-xs text-muted-foreground">Select a match to see key moments</p>
+                  </div>
+                )}
               </SectionCard>
             </motion.div>
           </motion.div>
