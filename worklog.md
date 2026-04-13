@@ -295,3 +295,88 @@ Stage Summary:
 - Sidebar and mobile elements use division-tinted glass-strong
 - Warm obsidian character preserved while division colors permeate through the entire UI layer
 - The "menyatu" (blending) effect achieved: cards feel like they emerge from the background
+
+---
+Task ID: 9
+Agent: Main Agent
+Task: Redesign Dashboard component with Toornament layout concepts (keep existing color scheme)
+
+Work Log:
+- Read worklog.md to understand full project history and design system evolution
+- Analyzed current dashboard.tsx (731 lines) — identified old layout: Hero + Tournament Info Card + Quick Stats + Recent Match Cards + Top 3 + 4-tab (Overview/Leaderboard/Clubs/Activity)
+- Identified Toornament layout patterns to implement: sub-nav underline tabs, compact match rows, proper tables, participant grid
+- Completely rewrote dashboard.tsx with Toornament-inspired layout:
+
+  Layout Structure Changes:
+  - Merged Hero Banner + Tournament Info Card into a single compact hero (min-h-[180px] vs min-h-[220px])
+  - Added quick info row inside hero (date, location, week, BPM) — eliminated separate tournament info card
+  - Added Countdown + Prize Pool as compact 2-column row below hero
+  - Replaced old 4-tab structure (Overview/Leaderboard/Clubs/Activity) with Toornament-style tabs: Overview | Standings | Matches | Participants
+  - Changed tab style from pill-style (rounded-xl bg containers) to underline-style tabs with bottom border indicator
+
+  Overview Tab:
+  - Recent Results: compact horizontal match rows (Week badge | Club1 Score - Score Club2 | Status badge) — replaced image-header casino cards
+  - Top 3 Podium: kept PlayerCard component unchanged
+  - Donation & Season Progress: 2-column layout using new SectionCard component (no image headers) — replaced CasinoHeaderCard
+  - Featured Match: kept CasinoHeaderCard for the one highlight match
+
+  Standings Tab:
+  - Player Leaderboard: proper TABLE with columns: Rank | Player (avatar+name+club) | Tier | Pts | W | L | Streak | MVP
+    - Uses shadcn Table/TableHeader/TableBody/TableRow/TableCell components
+    - Top 3 rows highlighted with dt.bgSubtle
+    - Sticky header, max-h-96 overflow scroll
+  - Club Standings: TABLE with columns: Rank | Club (shield+name) | W | L | GD | Pts
+    - Top 4 rows highlighted
+    - GD column shows green/red color for positive/negative
+
+  Matches Tab:
+  - Matches grouped by week using useMemo
+  - Completed matches: sorted by week descending, each week group has badge header + divider
+  - Upcoming matches: sorted by week ascending, BO3 badge
+  - Compact match rows identical to Recent Results style
+
+  Participants Tab:
+  - Responsive grid (2/3/4 columns) of player mini-cards
+  - Each card shows: avatar, rank badge, gamertag, TierBadge, club, points, wins
+  - Top 3 cards get division glow and casino bar accent
+
+  New Sub-components:
+  - SectionCard: Clean card without image header (icon, title, badge, children) — Toornament-style data display
+  - Kept CasinoHeaderCard but only used for Featured Match highlight
+
+  Preserved unchanged:
+  - All dt.* division theme classes (color scheme identical)
+  - StatsData interface (same API data structure)
+  - formatCurrency, StatusBadge functions
+  - Donation simulation (simulateDonation + useEffect)
+  - PlayerProfile / ClubProfile modal integration
+  - Quick Stats casino pills
+  - Hero banner (casinoCard + neonPulse + casino-shimmer)
+
+  Removed:
+  - Activity Feed tab (timeline with events) — info distributed to other sections
+  - CasinoHeaderCard overuse (4 instances → 1 instance)
+  - Image headers on match cards
+  - Old 4-tab structure
+  - Tournament Info as separate card (merged into hero)
+
+  Animation changes:
+  - Stagger reduced from 0.06s to 0.04s
+  - Y movement reduced from 12px to 6px
+  - Duration reduced from 0.3s to 0.25s
+
+- Fixed React Compiler memoization error:
+  - Changed useMemo dependencies from [data?.recentMatches] to [recentMatches] using intermediate const
+  - Extracted `const recentMatches = data?.recentMatches ?? []` before useMemo
+- Lint passes clean, dev server running successfully with no errors
+
+Stage Summary:
+- Dashboard completely redesigned with Toornament layout patterns
+- Underline-style sub-navigation tabs (Overview/Standings/Matches/Participants)
+- Proper TABLE-based standings with column alignment (shadcn Table component)
+- Compact match rows grouped by week (no image headers)
+- Responsive participant grid with mini-cards
+- CasinoHeaderCard reduced from 4 to 1 instance (only for featured match)
+- All dt.* color classes preserved — no color changes
+- Subtler animations (faster stagger, less movement)
+- Activity feed removed; relevant info distributed to other sections

@@ -6,21 +6,25 @@ import { motion } from 'framer-motion';
 import {
   Heart, MapPin, Users, Trophy, Clock, Flame,
   TrendingUp, Award, Gift, Zap, Crown, Sparkles,
-  Activity, Radio, Shield, Swords, BarChart3,
+  Radio, Shield, Swords,
   Gamepad2, Calendar, Target, Wallet
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TierBadge } from './tier-badge';
 import { CountdownTimer } from './countdown-timer';
 import { PlayerCard } from './player-card';
 import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
-import { useEffect, useCallback, useState } from 'react';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 
+/* ─── Data Interfaces (unchanged) ─── */
 interface StatsData {
   hasData: boolean;
   division: string;
@@ -48,19 +52,21 @@ interface StatsData {
   clubs: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number }[];
 }
 
+/* ─── Animation variants (subtler) ─── */
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.06 } }
+  show: { opacity: 1, transition: { staggerChildren: 0.04 } }
 };
 const item = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.25 } }
 };
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
 
+/* ─── StatusBadge (unchanged) ─── */
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
     setup: { label: 'Setup', cls: 'bg-muted text-muted-foreground' },
@@ -81,7 +87,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-/* Casino-style card with image header — SpinWin inspired */
+/* ─── CasinoHeaderCard — kept but used only for hero area ─── */
 function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
@@ -92,13 +98,10 @@ function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }
   const dt = useDivisionTheme();
   return (
     <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer overflow-hidden group ${className}`}>
-      {/* Neon accent bar */}
       <div className={dt.casinoBar} />
-      {/* Image Header */}
       <div className="relative img-zoom h-28 sm:h-32">
         <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover card-cover" aria-hidden="true" />
         <div className="casino-img-overlay" />
-        {/* Corner accents */}
         <div className={`absolute top-2 left-2 ${dt.cornerAccent}`} />
         <div className={`absolute top-2 right-2 rotate-90 ${dt.cornerAccent}`} />
         {badge && <Badge className={`absolute top-3 right-3 ${dt.casinoBadge} backdrop-blur-sm`}>{badge}</Badge>}
@@ -109,12 +112,38 @@ function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }
           <h3 className={`text-sm font-bold ${dt.neonText}`}>{title}</h3>
         </div>
       </div>
-      {/* Content */}
       <CardContent className="p-4 relative z-10">{children}</CardContent>
     </Card>
   );
 }
 
+/* ─── Simple section card — no image header, clean Toornament style ─── */
+function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const dt = useDivisionTheme();
+  return (
+    <Card className={`${dt.casinoCard} overflow-hidden ${className}`}>
+      <div className={dt.casinoBar} />
+      <CardContent className="p-4 relative z-10">
+        <div className="flex items-center gap-2 mb-3">
+          <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+            <Icon className={`w-3 h-3 ${dt.neonText}`} />
+          </div>
+          <h3 className="text-sm font-semibold">{title}</h3>
+          {badge && <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{badge}</Badge>}
+        </div>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Main Dashboard Component ─── */
 export function Dashboard() {
   const { division } = useAppStore();
   const dt = useDivisionTheme();
@@ -145,6 +174,28 @@ export function Dashboard() {
     return () => clearInterval(interval);
   }, [simulateDonation]);
 
+  /* Group matches by week for the Matches tab */
+  const recentMatches = data?.recentMatches ?? [];
+  const upcomingMatches = data?.upcomingMatches ?? [];
+
+  const matchesByWeek = useMemo(() => {
+    if (recentMatches.length === 0) return {} as Record<number, StatsData['recentMatches']>;
+    return recentMatches.reduce((acc, m) => {
+      if (!acc[m.week]) acc[m.week] = [];
+      acc[m.week].push(m);
+      return acc;
+    }, {} as Record<number, StatsData['recentMatches']>);
+  }, [recentMatches]);
+
+  const upcomingByWeek = useMemo(() => {
+    if (upcomingMatches.length === 0) return {} as Record<number, StatsData['upcomingMatches']>;
+    return upcomingMatches.reduce((acc, m) => {
+      if (!acc[m.week]) acc[m.week] = [];
+      acc[m.week].push(m);
+      return acc;
+    }, {} as Record<number, StatsData['upcomingMatches']>);
+  }, [upcomingMatches]);
+
   if (isLoading || !data?.hasData) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -159,24 +210,23 @@ export function Dashboard() {
     <>
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-5 max-w-5xl mx-auto">
 
-      {/* ========== HERO BANNER — Casino Immersive ========== */}
-      <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.casinoCard} ${dt.neonPulse} min-h-[220px] casino-shimmer`}>
-        {/* Neon bar */}
+      {/* ========== HERO BANNER (kept, slightly more compact) ========== */}
+      <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.casinoCard} ${dt.neonPulse} min-h-[180px] casino-shimmer`}>
         <div className={dt.casinoBar} />
-        {/* Banner Background */}
         <div className="absolute inset-0 hidden sm:block">
           <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
         </div>
         <div className="absolute inset-0 sm:hidden">
           <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
         </div>
-        {/* Casino overlay */}
         <div className="casino-img-overlay" />
-        {/* Division ambient light */}
         <div className={`absolute top-1/3 right-1/4 w-64 h-64 rounded-full blur-3xl ${dt.bg} opacity-30`} />
-        {/* Corner accents */}
         <div className={`absolute top-3 left-3 ${dt.cornerAccent}`} />
         <div className={`absolute top-3 right-3 rotate-90 ${dt.cornerAccent}`} />
+        {/* Tournament info overlay */}
+        <div className="absolute top-3 right-3 z-10">
+          <StatusBadge status={t?.status || 'registration'} />
+        </div>
         <div className="absolute bottom-4 left-5 right-5 z-10">
           <div className="flex items-center gap-2 mb-1">
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
@@ -186,85 +236,38 @@ export function Dashboard() {
               {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
             </Badge>
           </div>
-          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>IDM League Arena</h2>
+          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Arena'}</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
+          {/* Quick info row inside hero */}
+          <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
+            <span className="flex items-center gap-1"><MapPin className={`w-3 h-3 ${dt.neonText}`} />{t?.location || 'Online'}</span>
+            <span className="flex items-center gap-1"><Flame className={`w-3 h-3 ${dt.neonText}`} />Week {t?.weekNumber || 5}</span>
+            {t?.bpm && <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-red-400 live-dot" />{t.bpm} BPM</span>}
+          </div>
         </div>
       </motion.div>
 
-      {/* ========== TOURNAMENT INFO — Casino Card ========== */}
-      <motion.div variants={item}>
-        <Card className={`${dt.casinoCard} ${dt.casinoGlow} overflow-hidden casino-shimmer group`}>
-          {/* Neon bar */}
-          <div className={dt.casinoBar} />
-          {/* Image Header Section */}
-          <div className="relative img-zoom h-36 sm:h-44">
-            <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover card-cover" aria-hidden="true" />
-            <div className="casino-img-overlay" />
-            {/* Corner accents */}
-            <div className={`absolute top-2 left-2 ${dt.cornerAccent}`} />
-            <div className={`absolute top-2 right-2 rotate-90 ${dt.cornerAccent}`} />
-            {/* Status badge */}
-            <div className="absolute top-3 right-3 z-10">
-              <StatusBadge status={t?.status || 'registration'} />
-            </div>
-            {/* Tournament title on image */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-              <div className="flex items-center gap-2 mb-1">
-                <Sparkles className={`w-3.5 h-3.5 ${dt.neonText}`} />
-                <span className={`text-[10px] font-semibold ${dt.neonText} uppercase tracking-wider`}>Weekly Tournament</span>
-              </div>
-              <h2 className={`text-xl lg:text-2xl font-bold ${dt.neonGradient}`}>
-                {t?.name || `Week 5 Tournament`}
-              </h2>
-              <div className="flex items-center gap-1 text-red-400 mt-1">
-                <Heart className="w-3 h-3 live-dot" />
-                <span className="text-xs font-mono">{t?.bpm || 128} BPM</span>
-              </div>
-            </div>
+      {/* ========== COUNTDOWN + PRIZE POOL (compact row) ========== */}
+      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        {/* Countdown */}
+        {t?.scheduledAt && t.status !== 'completed' && (
+          <div className={`flex items-center justify-center rounded-xl ${dt.bgSubtle} ${dt.border} p-3`}>
+            <CountdownTimer targetDate={t.scheduledAt} />
           </div>
-          {/* Content Below Image */}
-          <CardContent className="p-4 lg:p-5 space-y-4 relative z-10">
-            {/* Info Row */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className={`w-3.5 h-3.5 ${dt.neonText}`} />
-                <span>{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className={`w-3.5 h-3.5 ${dt.neonText}`} />
-                <span>{t?.location || 'Online'}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Users className={`w-3.5 h-3.5 ${dt.neonText}`} />
-                <span>{data.totalPlayers} Players</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Flame className={`w-3.5 h-3.5 ${dt.neonText}`} />
-                <span>Week {t?.weekNumber || 5}</span>
-              </div>
-            </div>
-
-            {/* Countdown Timer */}
-            {t?.scheduledAt && t.status !== 'completed' && (
-              <div className="flex justify-center">
-                <CountdownTimer targetDate={t.scheduledAt} />
-              </div>
-            )}
-
-            {/* Prize Pool */}
-            <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
-                <span className={`text-lg font-bold ${dt.neonGradient}`}>{formatCurrency(t?.prizePool || 0)}</span>
-              </div>
-              <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
-              <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(data.totalPrizePool)}</p>
-            </div>
-          </CardContent>
-        </Card>
+        )}
+        {/* Prize Pool */}
+        <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
+            <span className={`text-lg font-bold ${dt.neonGradient}`}>{formatCurrency(t?.prizePool || 0)}</span>
+          </div>
+          <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
+          <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(data.totalPrizePool)}</p>
+        </div>
       </motion.div>
 
-      {/* ========== QUICK STATS — Casino Pills ========== */}
+      {/* ========== QUICK STATS — Casino Pills (kept) ========== */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { icon: Users, value: `${data.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
@@ -290,154 +293,91 @@ export function Dashboard() {
         ))}
       </motion.div>
 
-      {/* ========== MATCH RESULTS — Casino Match Cards ========== */}
-      {data.recentMatches?.length > 0 && (
-        <motion.div variants={item}>
-          <div className="flex items-center gap-2 mb-3">
-            <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-              <Radio className={`w-3.5 h-3.5 ${dt.neonText}`} />
-            </div>
-            <h3 className="text-sm font-semibold">Recent Results</h3>
-            <Badge className={`${dt.casinoBadge} ml-auto`}>LIVE</Badge>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {data.recentMatches.slice(0, 6).map(m => (
-              <motion.div key={m.id} whileHover={{ scale: 1.02 }} className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer rounded-xl overflow-hidden`}>
-                {/* Neon bar */}
-                <div className={dt.casinoBar} />
-                {/* Mini image header */}
-                <div className="relative h-16 overflow-hidden">
-                  <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                  <div className="casino-img-overlay" />
-                  <Badge className="absolute top-2 right-2 text-[9px] bg-black/60 backdrop-blur-sm text-foreground border-0">W{m.week}</Badge>
-                </div>
-                {/* Score */}
-                <div className="p-3 flex items-center justify-between relative z-10">
-                  <div className="text-center flex-1">
-                    <p className={`text-xs font-semibold truncate ${m.score1 > m.score2 ? dt.neonText : 'text-muted-foreground'}`}>{m.club1.name}</p>
-                  </div>
-                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-lg ${dt.bg}`}>
-                    <span className={`text-sm font-bold ${dt.neonText} casino-score`}>{m.score1}</span>
-                    <span className="text-[10px] text-muted-foreground">-</span>
-                    <span className={`text-sm font-bold ${dt.neonText} casino-score`}>{m.score2}</span>
-                  </div>
-                  <div className="text-center flex-1">
-                    <p className={`text-xs font-semibold truncate ${m.score2 > m.score1 ? dt.neonText : 'text-muted-foreground'}`}>{m.club2.name}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ========== TOP 3 PLAYER CARDS ========== */}
-      <motion.div variants={item}>
-        <div className="flex items-center gap-2 mb-3">
-          <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-            <Crown className={`w-3.5 h-3.5 ${dt.neonText}`} />
-          </div>
-          <h3 className="text-sm font-semibold">Top Players</h3>
-          <Badge className={`${dt.casinoBadge} ml-auto`}>LEADERBOARD</Badge>
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {data.topPlayers?.slice(0, 3).map((p, idx) => (
-            <PlayerCard
-              key={p.id}
-              gamertag={p.gamertag}
-              tier={p.tier}
-              points={p.points}
-              totalWins={p.totalWins}
-              totalMvp={p.totalMvp}
-              streak={p.streak}
-              rank={idx + 1}
-              isMvp={p.totalMvp > 0 && idx === 0}
-              club={p.club}
-              onClick={() => setSelectedPlayer(p)}
-            />
-          ))}
-        </div>
-      </motion.div>
-
-      {/* SECTION DIVIDER */}
-      <div className="section-divider" />
-
-      {/* ========== MAIN CONTENT WITH TABS ========== */}
+      {/* ========== SUB-NAVIGATION TABS — Toornament underline style ========== */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className={`w-full grid grid-cols-4 ${dt.bgSubtle} ${dt.border} h-auto p-1 rounded-xl`}>
-          <TabsTrigger value="overview" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Overview</TabsTrigger>
-          <TabsTrigger value="leaderboard" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Leaderboard</TabsTrigger>
-          <TabsTrigger value="clubs" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Clubs</TabsTrigger>
-          <TabsTrigger value="activity" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Activity</TabsTrigger>
-        </TabsList>
+        <div className={`border-b ${dt.border}`}>
+          <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
+            {[
+              { value: 'overview', label: 'Overview', icon: Trophy },
+              { value: 'standings', label: 'Standings', icon: Award },
+              { value: 'matches', label: 'Matches', icon: Swords },
+              { value: 'participants', label: 'Participants', icon: Gamepad2 },
+            ].map(tab => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={`relative px-4 py-2.5 text-xs font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-current data-[state=active]:bg-transparent data-[state=active]:shadow-none ${dt.text} data-[state=active]:${dt.text} text-muted-foreground hover:text-foreground transition-colors`}
+              >
+                <tab.icon className="w-3.5 h-3.5 mr-1.5 inline" />
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
-        {/* OVERVIEW TAB */}
-        <TabsContent value="overview" className="mt-4">
-          <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Latest Match */}
-            <motion.div variants={item}>
-              <CasinoHeaderCard icon={Trophy} title="Latest Match" badge="RESULT">
-                {t?.matches?.filter(m => m.status === 'completed').slice(-1).map(m => (
-                  <div key={m.id} className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="text-center flex-1">
-                        <p className="text-sm font-semibold">{m.team1.name}</p>
-                        <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score1}</p>
-                      </div>
-                      <div className="px-4 text-center">
-                        <span className="text-xs text-muted-foreground font-bold">VS</span>
-                      </div>
-                      <div className="text-center flex-1">
-                        <p className="text-sm font-semibold">{m.team2.name}</p>
-                        <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score2}</p>
-                      </div>
-                    </div>
-                    {m.mvpPlayer && (
-                      <div className={`mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg ${dt.bgSubtle}`}>
-                        <Crown className="w-3.5 h-3.5 text-yellow-500" />
-                        <span className={`text-xs font-semibold ${dt.neonText}`}>MVP: {m.mvpPlayer.gamertag}</span>
-                      </div>
-                    )}
-                  </div>
-                )) || (
-                  <p className="text-sm text-muted-foreground text-center py-6">No matches yet</p>
-                )}
-              </CasinoHeaderCard>
-            </motion.div>
+        {/* ═══════════════ OVERVIEW TAB ═══════════════ */}
+        <TabsContent value="overview" className="mt-4 space-y-4">
+          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Season Progress */}
+            {/* Recent Results — compact match rows (Toornament style) */}
+            {data.recentMatches?.length > 0 && (
+              <motion.div variants={item}>
+                <SectionCard title="Recent Results" icon={Radio} badge="LIVE">
+                  <div className="space-y-1.5">
+                    {data.recentMatches.slice(0, 6).map(m => (
+                      <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} hover:${dt.bgSubtle} transition-colors`}>
+                        <Badge variant="outline" className={`text-[9px] shrink-0 ${dt.casinoBadge}`}>W{m.week}</Badge>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <span className={`text-xs font-semibold truncate flex-1 text-right ${m.score1 > m.score2 ? dt.neonText : 'text-muted-foreground'}`}>{m.club1.name}</span>
+                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded ${dt.bg} shrink-0`}>
+                            <span className={`text-sm font-bold ${m.score1 > m.score2 ? dt.neonText : 'text-foreground'}`}>{m.score1}</span>
+                            <span className="text-[10px] text-muted-foreground">-</span>
+                            <span className={`text-sm font-bold ${m.score2 > m.score1 ? dt.neonText : 'text-foreground'}`}>{m.score2}</span>
+                          </div>
+                          <span className={`text-xs font-semibold truncate flex-1 ${m.score2 > m.score1 ? dt.neonText : 'text-muted-foreground'}`}>{m.club2.name}</span>
+                        </div>
+                        <Badge className={`text-[9px] border-0 shrink-0 ${m.score1 !== m.score2 ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
+                          {m.score1 !== m.score2 ? 'Completed' : 'Draw'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </SectionCard>
+              </motion.div>
+            )}
+
+            {/* Top 3 Podium — keep PlayerCard component */}
             <motion.div variants={item}>
-              <CasinoHeaderCard icon={TrendingUp} title="Season Progress" badge={`${data.seasonProgress?.percentage}%`}>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-muted-foreground">{data.season?.name}</span>
-                      <span className={`font-semibold ${dt.neonText}`}>{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
-                    </div>
-                    <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
-                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.totalPlayers}</p>
-                      <p className="text-[10px] text-muted-foreground">Players</p>
-                    </div>
-                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.clubs?.length || 0}</p>
-                      <p className="text-[10px] text-muted-foreground">Clubs</p>
-                    </div>
-                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
-                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
-                      <p className="text-[10px] text-muted-foreground">Funded</p>
-                    </div>
-                  </div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                  <Crown className={`w-3.5 h-3.5 ${dt.neonText}`} />
                 </div>
-              </CasinoHeaderCard>
+                <h3 className="text-sm font-semibold">Top Players</h3>
+                <Badge className={`${dt.casinoBadge} ml-auto`}>PODIUM</Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {data.topPlayers?.slice(0, 3).map((p, idx) => (
+                  <PlayerCard
+                    key={p.id}
+                    gamertag={p.gamertag}
+                    tier={p.tier}
+                    points={p.points}
+                    totalWins={p.totalWins}
+                    totalMvp={p.totalMvp}
+                    streak={p.streak}
+                    rank={idx + 1}
+                    isMvp={p.totalMvp > 0 && idx === 0}
+                    club={p.club}
+                    onClick={() => setSelectedPlayer(p)}
+                  />
+                ))}
+              </div>
             </motion.div>
 
-            {/* Donation Tracker */}
-            <motion.div variants={item}>
-              <CasinoHeaderCard icon={Gift} title="Donation & Sawer" badge="LIVE">
+            {/* Donation & Season Progress — 2-column, simpler cards without image headers */}
+            <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Donation Tracker */}
+              <SectionCard title="Donation & Sawer" icon={Gift} badge="LIVE">
                 <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} mb-3`}>
                   <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
                   <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(data.totalPrizePool)}</p>
@@ -446,7 +386,7 @@ export function Dashboard() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground">Top Contributors</p>
                   {data.topDonors?.slice(0, 3).map((d, i) => (
-                    <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} interactive-scale`}>
+                    <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                       <span className="flex items-center gap-2">
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                           i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
@@ -459,137 +399,223 @@ export function Dashboard() {
                     </div>
                   ))}
                 </div>
-              </CasinoHeaderCard>
+              </SectionCard>
+
+              {/* Season Progress */}
+              <SectionCard title="Season Progress" icon={TrendingUp} badge={`${data.seasonProgress?.percentage}%`}>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5">
+                      <span className="text-muted-foreground">{data.season?.name}</span>
+                      <span className={`font-semibold ${dt.neonText}`}>{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
+                    </div>
+                    <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
+                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.totalPlayers}</p>
+                      <p className="text-[10px] text-muted-foreground">Players</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.clubs?.length || 0}</p>
+                      <p className="text-[10px] text-muted-foreground">Clubs</p>
+                    </div>
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
+                      <p className="text-[10px] text-muted-foreground">Funded</p>
+                    </div>
+                  </div>
+                </div>
+              </SectionCard>
             </motion.div>
 
-            {/* Upcoming Matches */}
-            <motion.div variants={item}>
-              <CasinoHeaderCard icon={Zap} title="Upcoming Matches" badge="SCHEDULE">
-                {data.upcomingMatches?.length > 0 ? (
-                  <div className="space-y-2">
-                    {data.upcomingMatches.slice(0, 3).map(m => (
-                      <div key={m.id} className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
-                        <div className="flex items-center gap-2 justify-center">
-                          <Calendar className={`w-3 h-3 ${dt.neonText}`} />
-                          <p className="text-[10px] text-muted-foreground">Week {m.week}</p>
+            {/* Latest completed match highlight (from tournament matches) */}
+            {t?.matches?.filter(m => m.status === 'completed').length > 0 && (
+              <motion.div variants={item}>
+                <CasinoHeaderCard icon={Trophy} title="Featured Match" badge="RESULT">
+                  {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
+                    <div key={m.id} className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="text-center flex-1">
+                          <p className="text-sm font-semibold">{m.team1.name}</p>
+                          <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score1}</p>
                         </div>
-                        <p className="text-sm font-semibold mt-1">{m.club1.name} <span className="text-muted-foreground">vs</span> {m.club2.name}</p>
-                        <Badge className={`mt-1.5 ${dt.casinoBadge}`}>BO3</Badge>
+                        <div className="px-4 text-center">
+                          <span className="text-xs text-muted-foreground font-bold">VS</span>
+                        </div>
+                        <div className="text-center flex-1">
+                          <p className="text-sm font-semibold">{m.team2.name}</p>
+                          <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score2}</p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-6">No upcoming matches</p>
-                )}
-              </CasinoHeaderCard>
-            </motion.div>
+                      {m.mvpPlayer && (
+                        <div className={`mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg ${dt.bgSubtle}`}>
+                          <Crown className="w-3.5 h-3.5 text-yellow-500" />
+                          <span className={`text-xs font-semibold ${dt.neonText}`}>MVP: {m.mvpPlayer.gamertag}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </CasinoHeaderCard>
+              </motion.div>
+            )}
           </motion.div>
         </TabsContent>
 
-        {/* LEADERBOARD TAB */}
-        <TabsContent value="leaderboard" className="mt-4">
-          <motion.div variants={container} initial="hidden" animate="show">
+        {/* ═══════════════ STANDINGS TAB ═══════════════ */}
+        <TabsContent value="standings" className="mt-4 space-y-4">
+          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
+
+            {/* Player Leaderboard TABLE */}
             <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} ${dt.casinoGlow}`}>
+              <Card className={`${dt.casinoCard} overflow-hidden`}>
                 <div className={dt.casinoBar} />
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                      <Award className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                    <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Award className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
-                    <h3 className="text-sm font-semibold">Leaderboard</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto`}>TOP 10</Badge>
+                    <h3 className="text-sm font-semibold">Player Leaderboard</h3>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>TOP {Math.min(data.topPlayers?.length || 10, 10)}</Badge>
                   </div>
-                  <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
-                    {data.topPlayers?.slice(0, 10).map((p, idx) => (
-                      <div key={p.id} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer interactive-scale ${
-                        idx < 3 ? `${dt.bgSubtle} ${dt.border}` : `hover:${dt.bgSubtle} border border-transparent`
-                      }`} onClick={() => setSelectedPlayer(p)}>
-                        <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                          idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                          idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                          idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                          `${dt.bgSubtle} text-muted-foreground`
-                        }`}>
-                          {idx + 1}
-                        </span>
-                        <div className={`w-8 h-8 rounded-full ${dt.iconBg} flex items-center justify-center text-[10px] font-bold ${dt.text} shrink-0`}>
-                          {p.gamertag.slice(0, 2).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium truncate">{p.gamertag}</span>
-                            <TierBadge tier={p.tier} />
-                          </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span>{p.points} pts</span>
-                            <span>•</span>
-                            <span>{p.totalWins}W</span>
-                            {p.streak > 1 && <span className="text-orange-400 font-semibold">🔥{p.streak}</span>}
-                          </div>
-                        </div>
-                        {idx < 3 && (
-                          <div className="shrink-0">
-                            <BarChart3 className={`w-4 h-4 ${idx === 0 ? 'text-yellow-500' : idx === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div className="max-h-96 overflow-y-auto custom-scrollbar">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className={`hover:bg-transparent border-b ${dt.border}`}>
+                          <TableHead className="w-10 text-center text-[10px]">#</TableHead>
+                          <TableHead className="text-[10px]">Player</TableHead>
+                          <TableHead className="w-14 text-center text-[10px]">Tier</TableHead>
+                          <TableHead className="w-14 text-right text-[10px]">Pts</TableHead>
+                          <TableHead className="w-10 text-center text-[10px]">W</TableHead>
+                          <TableHead className="w-10 text-center text-[10px]">L</TableHead>
+                          <TableHead className="w-14 text-center text-[10px]">Streak</TableHead>
+                          <TableHead className="w-10 text-center text-[10px]">MVP</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {data.topPlayers?.slice(0, 10).map((p, idx) => {
+                          const losses = p.matches - p.totalWins;
+                          return (
+                            <TableRow
+                              key={p.id}
+                              className={`cursor-pointer transition-colors ${
+                                idx < 3 ? `${dt.bgSubtle}` : ''
+                              }`}
+                              onClick={() => setSelectedPlayer(p)}
+                            >
+                              <TableCell className="text-center">
+                                <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
+                                  idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                  idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                  idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                  'text-muted-foreground'
+                                }`}>
+                                  {idx + 1}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-7 h-7 rounded-full ${dt.iconBg} flex items-center justify-center text-[9px] font-bold ${dt.text} shrink-0`}>
+                                    {p.gamertag.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-xs font-medium truncate">{p.gamertag}</p>
+                                    {p.club && <p className="text-[9px] text-muted-foreground truncate">{p.club}</p>}
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell className="text-center"><TierBadge tier={p.tier} /></TableCell>
+                              <TableCell className={`text-right font-bold text-xs ${idx < 3 ? dt.neonText : ''}`}>{p.points}</TableCell>
+                              <TableCell className="text-center text-xs text-green-500 font-medium">{p.totalWins}</TableCell>
+                              <TableCell className="text-center text-xs text-red-500 font-medium">{losses > 0 ? losses : 0}</TableCell>
+                              <TableCell className="text-center text-xs">
+                                {p.streak > 1 ? (
+                                  <span className="text-orange-400 font-semibold">🔥{p.streak}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-center text-xs">
+                                {p.totalMvp > 0 ? (
+                                  <span className="text-yellow-500 font-semibold">{p.totalMvp}</span>
+                                ) : (
+                                  <span className="text-muted-foreground">0</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          </motion.div>
-        </TabsContent>
 
-        {/* CLUBS TAB */}
-        <TabsContent value="clubs" className="mt-4">
-          <motion.div variants={container} initial="hidden" animate="show">
+            {/* Club Standings TABLE */}
             <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} ${dt.casinoGlow}`}>
+              <Card className={`${dt.casinoCard} overflow-hidden`}>
                 <div className={dt.casinoBar} />
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                      <Shield className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                    <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Shield className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-sm font-semibold">Club Standings</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto`}>{data.clubs?.length || 0} Clubs</Badge>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.clubs?.length || 0} Clubs</Badge>
                   </div>
-                  <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
-                    {data.clubs?.map((club, idx) => (
-                      <div key={club.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer interactive-scale ${
-                        idx === 0 ? `${dt.bgSubtle} border ${dt.borderSubtle} ${dt.casinoGlow}` :
-                        idx < 4 ? `${dt.bgSubtle} ${dt.border}` :
-                        `hover:${dt.bgSubtle} border border-transparent`
-                      }`} onClick={() => setSelectedClub(club)}>
-                        <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
-                          idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                          idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                          idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                          `${dt.bgSubtle} text-muted-foreground`
-                        }`}>
-                          {idx + 1}
-                        </span>
-                        <div className={`w-10 h-10 rounded-xl ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                          <Shield className={`w-5 h-5 ${dt.text}`} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate">{club.name}</p>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <span className="text-green-500 font-medium">{club.wins}W</span>
-                            <span>-</span>
-                            <span className="text-red-500 font-medium">{club.losses}L</span>
-                            <span>•</span>
-                            <span>GD: {club.gameDiff > 0 ? '+' : ''}{club.gameDiff}</span>
-                          </div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className={`text-lg font-bold ${idx === 0 ? dt.neonGradient : dt.neonText}`}>{club.points}</p>
-                          <p className="text-[9px] text-muted-foreground">points</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="max-h-80 overflow-y-auto custom-scrollbar">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className={`hover:bg-transparent border-b ${dt.border}`}>
+                          <TableHead className="w-10 text-center text-[10px]">#</TableHead>
+                          <TableHead className="text-[10px]">Club</TableHead>
+                          <TableHead className="w-10 text-center text-[10px]">W</TableHead>
+                          <TableHead className="w-10 text-center text-[10px]">L</TableHead>
+                          <TableHead className="w-12 text-center text-[10px]">GD</TableHead>
+                          <TableHead className="w-14 text-right text-[10px]">Pts</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {data.clubs?.map((club, idx) => (
+                          <TableRow
+                            key={club.id}
+                            className={`cursor-pointer transition-colors ${
+                              idx < 4 ? `${dt.bgSubtle}` : ''
+                            }`}
+                            onClick={() => setSelectedClub(club)}
+                          >
+                            <TableCell className="text-center">
+                              <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
+                                idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                'text-muted-foreground'
+                              }`}>
+                                {idx + 1}
+                              </span>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                                  <Shield className={`w-3.5 h-3.5 ${dt.text}`} />
+                                </div>
+                                <span className="text-xs font-semibold truncate">{club.name}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center text-xs text-green-500 font-medium">{club.wins}</TableCell>
+                            <TableCell className="text-center text-xs text-red-500 font-medium">{club.losses}</TableCell>
+                            <TableCell className="text-center text-xs">
+                              <span className={club.gameDiff > 0 ? 'text-green-500' : club.gameDiff < 0 ? 'text-red-500' : 'text-muted-foreground'}>
+                                {club.gameDiff > 0 ? '+' : ''}{club.gameDiff}
+                              </span>
+                            </TableCell>
+                            <TableCell className={`text-right font-bold text-xs ${idx === 0 ? dt.neonGradient : idx < 4 ? dt.neonText : ''}`}>{club.points}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                 </CardContent>
               </Card>
@@ -597,122 +623,157 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ACTIVITY TAB */}
-        <TabsContent value="activity" className="mt-4">
+        {/* ═══════════════ MATCHES TAB ═══════════════ */}
+        <TabsContent value="matches" className="mt-4 space-y-4">
+          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
+
+            {/* Completed Matches — grouped by week */}
+            {Object.keys(matchesByWeek).length > 0 && (
+              <motion.div variants={item}>
+                <SectionCard title="Match Results" icon={Trophy} badge={`${data.recentMatches?.length || 0} Matches`}>
+                  <div className="space-y-4">
+                    {Object.entries(matchesByWeek)
+                      .sort(([a], [b]) => Number(b) - Number(a))
+                      .map(([week, matches]) => (
+                        <div key={week}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={`${dt.casinoBadge} text-[9px]`}>Week {week}</Badge>
+                            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+                          </div>
+                          <div className="space-y-1">
+                            {matches.map(m => (
+                              <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} transition-colors`}>
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <span className={`text-xs font-semibold truncate flex-1 text-right ${m.score1 > m.score2 ? dt.neonText : 'text-muted-foreground'}`}>{m.club1.name}</span>
+                                  <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded ${dt.bg} shrink-0`}>
+                                    <span className={`text-sm font-bold ${m.score1 > m.score2 ? dt.neonText : 'text-foreground'}`}>{m.score1}</span>
+                                    <span className="text-[10px] text-muted-foreground">-</span>
+                                    <span className={`text-sm font-bold ${m.score2 > m.score1 ? dt.neonText : 'text-foreground'}`}>{m.score2}</span>
+                                  </div>
+                                  <span className={`text-xs font-semibold truncate flex-1 ${m.score2 > m.score1 ? dt.neonText : 'text-muted-foreground'}`}>{m.club2.name}</span>
+                                </div>
+                                <Badge className={`text-[9px] border-0 shrink-0 ${m.score1 !== m.score2 ? 'bg-green-500/10 text-green-500' : 'bg-muted text-muted-foreground'}`}>
+                                  Done
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </SectionCard>
+              </motion.div>
+            )}
+
+            {/* Upcoming Matches — grouped by week */}
+            {Object.keys(upcomingByWeek).length > 0 && (
+              <motion.div variants={item}>
+                <SectionCard title="Upcoming" icon={Calendar} badge="SCHEDULE">
+                  <div className="space-y-4">
+                    {Object.entries(upcomingByWeek)
+                      .sort(([a], [b]) => Number(a) - Number(b))
+                      .map(([week, matches]) => (
+                        <div key={week}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={`${dt.casinoBadge} text-[9px]`}>Week {week}</Badge>
+                            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+                          </div>
+                          <div className="space-y-1">
+                            {matches.map(m => (
+                              <div key={m.id} className={`flex items-center gap-2 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} transition-colors`}>
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <span className="text-xs font-semibold truncate flex-1 text-right">{m.club1.name}</span>
+                                  <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded ${dt.bg} shrink-0`}>
+                                    <span className="text-sm font-bold text-muted-foreground">—</span>
+                                    <span className="text-[10px] text-muted-foreground">vs</span>
+                                    <span className="text-sm font-bold text-muted-foreground">—</span>
+                                  </div>
+                                  <span className="text-xs font-semibold truncate flex-1">{m.club2.name}</span>
+                                </div>
+                                <Badge className={`${dt.casinoBadge} text-[9px] shrink-0`}>BO3</Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </SectionCard>
+              </motion.div>
+            )}
+
+            {Object.keys(matchesByWeek).length === 0 && Object.keys(upcomingByWeek).length === 0 && (
+              <motion.div variants={item}>
+                <div className={`p-8 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                  <Gamepad2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">No matches yet</p>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        </TabsContent>
+
+        {/* ═══════════════ PARTICIPANTS TAB ═══════════════ */}
+        <TabsContent value="participants" className="mt-4">
           <motion.div variants={container} initial="hidden" animate="show">
             <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} ${dt.casinoGlow}`}>
-                <div className={dt.casinoBar} />
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                      <Activity className={`w-3.5 h-3.5 ${dt.neonText}`} />
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-6 h-6 rounded-md ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                  <Gamepad2 className={`w-3 h-3 ${dt.neonText}`} />
+                </div>
+                <h3 className="text-sm font-semibold">Participants</h3>
+                <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.topPlayers?.length || 0} Players</Badge>
+              </div>
+              {/* Responsive grid of player mini-cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {data.topPlayers?.map((p, idx) => (
+                  <motion.div
+                    key={p.id}
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    className={`cursor-pointer rounded-xl ${dt.casinoCard} ${idx < 3 ? dt.casinoGlow : ''} overflow-hidden`}
+                    onClick={() => setSelectedPlayer(p)}
+                  >
+                    <div className={idx < 3 ? dt.casinoBar : ''} />
+                    <div className="p-3 relative z-10">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        {/* Avatar */}
+                        <div className={`w-9 h-9 rounded-full ${idx < 3
+                          ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light')
+                          : dt.iconBg
+                        } flex items-center justify-center text-[10px] font-bold ${idx < 3 ? 'text-white' : dt.text} shrink-0 shadow-sm`}>
+                          {p.gamertag.slice(0, 2).toUpperCase()}
+                        </div>
+                        {/* Rank badge */}
+                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
+                          idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                          idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                          idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                          `${dt.bgSubtle} text-muted-foreground`
+                        }`}>
+                          {idx + 1}
+                        </span>
+                      </div>
+                      {/* Name + Tier */}
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <p className="text-xs font-semibold truncate">{p.gamertag}</p>
+                      </div>
+                      <TierBadge tier={p.tier} />
+                      {/* Stats */}
+                      <div className="flex items-center gap-2 mt-2 text-[9px] text-muted-foreground">
+                        {p.club && (
+                          <span className="truncate flex items-center gap-0.5">
+                            <Shield className="w-2.5 h-2.5" />
+                            {p.club}
+                          </span>
+                        )}
+                      </div>
+                      <div className={`mt-1.5 pt-1.5 border-t ${dt.borderSubtle} flex items-center justify-between`}>
+                        <span className={`text-xs font-bold ${dt.neonText}`}>{p.points} pts</span>
+                        <span className="text-[9px] text-muted-foreground">{p.totalWins}W</span>
+                      </div>
                     </div>
-                    <h3 className="text-sm font-semibold">Activity Feed</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto`}>LIVE</Badge>
-                  </div>
-                  <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-                    {/* Recent Match Events */}
-                    {data.recentMatches?.slice(0, 3).map((m) => (
-                      <div key={`match-${m.id}`} className="timeline-item">
-                        <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                          <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                            <Trophy className={`w-4 h-4 ${dt.neonText}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">
-                              <span className={dt.neonText}>{m.club1.name}</span> vs <span className={dt.neonText}>{m.club2.name}</span>
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">Week {m.week} • League Match</p>
-                          </div>
-                          <Badge className={`text-[10px] border-0 ${
-                            m.score1 > m.score2 ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'
-                          }`}>
-                            {m.score1}-{m.score2}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Top Player Events */}
-                    {data.topPlayers?.slice(0, 2).map((p) => (
-                      <div key={`player-${p.id}`} className="timeline-item">
-                        <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                          <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
-                            <Crown className="w-4 h-4 text-yellow-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">
-                              <span className={dt.neonText}>{p.gamertag}</span> earned MVP
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">{p.points} pts • {p.totalMvp}x MVP this season</p>
-                          </div>
-                          <TierBadge tier={p.tier} />
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Streak Events */}
-                    {data.topPlayers?.filter(p => p.streak >= 2).slice(0, 1).map((p) => (
-                      <div key={`streak-${p.id}`} className="timeline-item">
-                        <div className="timeline-dot" style={{ borderColor: '#f97316' }} />
-                        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-orange-500/5 border border-orange-500/10">
-                          <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
-                            <Flame className="w-4 h-4 text-orange-500" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">
-                              <span className="text-orange-500">{p.gamertag}</span> is on a {p.streak}-win streak!
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">+{Math.min(p.streak * 5, 30)} bonus pts</p>
-                          </div>
-                          <Badge className="bg-orange-500/10 text-orange-500 text-[10px] border-0">🔥{p.streak}</Badge>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Donation Events */}
-                    {data.topDonors?.slice(0, 1).map((d, i) => (
-                      <div key={`donation-${i}`} className="timeline-item">
-                        <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                          <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                            <Gift className={`w-4 h-4 ${dt.neonText}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">
-                              <span className={dt.neonText}>{d.donorName}</span> donated
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">{d.donationCount} contributions this season</p>
-                          </div>
-                          <span className={`text-xs font-bold ${dt.neonText}`}>{formatCurrency(d.totalAmount)}</span>
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Upcoming Match Event */}
-                    {data.upcomingMatches?.slice(0, 1).map((m) => (
-                      <div key={`upcoming-${m.id}`} className="timeline-item">
-                        <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                          <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                            <Zap className={`w-4 h-4 ${dt.neonText}`} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">
-                              <span className={dt.neonText}>{m.club1.name}</span> vs <span className={dt.neonText}>{m.club2.name}</span>
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">Week {m.week} • Upcoming</p>
-                          </div>
-                          <Badge className={`${dt.casinoBadge}`}>SOON</Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         </TabsContent>
