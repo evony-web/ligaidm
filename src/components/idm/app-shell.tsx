@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Swords,
-  Sun, Moon, Menu, X, Home
+  Sun, Moon, Menu, X, Home, Flame
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -72,7 +72,7 @@ function ThemeToggle() {
     >
       <div className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center text-xs ${
         isDark
-          ? 'left-9 bg-teal-500 text-white'
+          ? 'left-9 bg-teal-500 text-white glow-teal'
           : 'left-1 bg-violet-500 text-white'
       }`}>
         {isDark ? '🌙' : '🐉'}
@@ -82,18 +82,18 @@ function ThemeToggle() {
 }
 
 function SidebarContent({ onNav }: { onNav?: () => void }) {
-  const { currentView, setCurrentView, division, setDivision } = useAppStore();
+  const { currentView, setCurrentView, division } = useAppStore();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-dragon-pattern bg-noise">
       {/* Logo */}
-      <div className="p-4 pb-2">
+      <div className="p-4 pb-3">
         <div className="flex items-center gap-2.5 mb-1">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-primary/10 flex items-center justify-center shrink-0">
+          <div className="w-11 h-11 rounded-xl overflow-hidden glow-pulse shrink-0">
             <img src="/idm-logo.png" alt="IDM" className="w-full h-full object-cover" />
           </div>
           <div>
-            <h1 className="text-gradient-fury text-sm font-bold leading-tight">IDM League</h1>
+            <h1 className="text-gradient-fury text-base font-bold leading-tight">IDM League</h1>
             <p className="text-[10px] text-muted-foreground">Fan Made Edition</p>
           </div>
         </div>
@@ -104,16 +104,26 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
         <DivisionToggle />
       </div>
 
+      <div className="section-divider !my-0" />
+
       {/* Navigation */}
-      <nav className="flex-1 px-2 space-y-1">
+      <nav className="flex-1 px-2 py-3 space-y-1">
         <button
           onClick={() => { setCurrentView('landing'); onNav?.(); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300"
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+            currentView === 'landing'
+              ? 'bg-primary/10 text-primary glow-pulse'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
         >
           <Home className="w-4 h-4" />
           Home
         </button>
-        <Separator className="my-1" />
+
+        <div className="px-3 py-1">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Navigation</p>
+        </div>
+
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -127,12 +137,27 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className={`w-4 h-4 ${isActive ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
               {item.label}
+              {isActive && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+              )}
             </button>
           );
         })}
       </nav>
+
+      {/* Season Status */}
+      <div className="mx-3 p-3 rounded-xl card-premium mb-3">
+        <div className="flex items-center gap-2 mb-2">
+          <Flame className="w-3 h-3 text-primary" />
+          <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Season 1</span>
+        </div>
+        <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+          <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-primary to-idm-purple" />
+        </div>
+        <p className="text-[9px] text-muted-foreground mt-1.5">60% Complete • Week 5/8</p>
+      </div>
 
       {/* Theme Toggle */}
       <div className="p-4 pt-2 border-t border-border">
@@ -177,11 +202,13 @@ export function AppShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background bg-dragon-pattern">
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 glass-strong px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <img src="/idm-logo.png" alt="IDM" className="w-6 h-6 rounded-md object-cover" />
+          <div className="w-7 h-7 rounded-lg overflow-hidden glow-pulse">
+            <img src="/idm-logo.png" alt="IDM" className="w-full h-full object-cover" />
+          </div>
           <span className="text-gradient-fury text-sm font-bold">IDM League</span>
         </div>
         <div className="flex items-center gap-2">
@@ -201,12 +228,12 @@ export function AppShell() {
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 border-r border-border glass-strong sticky top-0 h-screen">
+        <aside className="hidden lg:block w-64 border-r border-border glass-strong sticky top-0 h-screen overflow-y-auto custom-scrollbar">
           <SidebarContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 bg-mesh-fury">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -222,16 +249,16 @@ export function AppShell() {
         </main>
       </div>
 
-      {/* Mobile Bottom Nav */}
+      {/* Mobile Bottom Nav - Premium */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-border safe-area-bottom">
-        <div className="flex justify-around py-1.5 px-1">
+        <div className="flex justify-around py-1 px-1">
           <button
             onClick={() => useAppStore.getState().setCurrentView('landing')}
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
               currentView === 'landing' ? 'text-primary' : 'text-muted-foreground'
             }`}
           >
-            <Home className="w-5 h-5" />
+            <Home className={`w-5 h-5 ${currentView === 'landing' ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
             <span className="text-[10px] font-medium">Home</span>
             {currentView === 'landing' && (
               <motion.div layoutId="mobileNav" className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />

@@ -20,24 +20,27 @@ interface PlayerCardProps {
 export function PlayerCard({
   gamertag, tier, points, totalWins, totalMvp, streak, rank, isMvp, club, onClick
 }: PlayerCardProps) {
-  const rankColors: Record<number, string> = {
-    1: 'from-yellow-500/20 to-yellow-500/5 border-yellow-500/30',
-    2: 'from-gray-400/20 to-gray-400/5 border-gray-400/30',
-    3: 'from-amber-600/20 to-amber-600/5 border-amber-600/30',
-  };
-
-  const rankBg = rank && rank <= 3 ? rankColors[rank] : 'from-muted/50 to-transparent border-border/30';
+  const isChampion = rank === 1;
 
   return (
     <motion.div
       whileHover={{ scale: 1.03 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className={`relative p-3 rounded-xl bg-gradient-to-br ${rankBg} border cursor-pointer transition-shadow hover:shadow-lg ${isMvp ? 'glow-gold' : ''}`}
+      className={`relative p-3 rounded-xl cursor-pointer transition-all ${
+        isChampion ? 'card-champion' :
+        rank === 2 ? 'card-premium' :
+        rank === 3 ? 'card-premium' :
+        'card-glow-hover bg-muted/20 border border-border/30'
+      }`}
     >
       {/* Rank badge */}
       {rank && rank <= 3 && (
-        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground shadow-md">
+        <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md ${
+          rank === 1 ? 'bg-yellow-500 text-white glow-champion' :
+          rank === 2 ? 'bg-gray-400 text-white' :
+          'bg-amber-600 text-white'
+        }`}>
           {rank}
         </div>
       )}
@@ -45,18 +48,23 @@ export function PlayerCard({
       {/* MVP indicator */}
       {isMvp && (
         <div className="absolute -top-1 -left-1">
-          <Crown className="w-4 h-4 text-yellow-500" />
+          <Crown className="w-4 h-4 text-yellow-500 animate-float" />
         </div>
       )}
 
       {/* Avatar */}
-      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary mx-auto mb-2">
+      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2 ${
+        isChampion ? 'bg-yellow-500/10 text-yellow-500 glow-champion' :
+        tier === 'S' ? 'bg-red-500/10 text-red-500' :
+        tier === 'A' ? 'bg-yellow-500/10 text-yellow-500' :
+        'bg-green-500/10 text-green-500'
+      }`}>
         {gamertag.slice(0, 2).toUpperCase()}
       </div>
 
       {/* Info */}
       <div className="text-center">
-        <p className="text-sm font-semibold truncate">{gamertag}</p>
+        <p className={`text-sm font-semibold truncate ${isChampion ? 'text-gradient-gold' : ''}`}>{gamertag}</p>
         <div className="flex items-center justify-center gap-1.5 mt-1">
           <TierBadge tier={tier} />
         </div>
@@ -68,11 +76,11 @@ export function PlayerCard({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-border/30">
         <div className="text-center">
-          <p className="text-xs font-bold text-primary">{points}</p>
+          <p className={`text-xs font-bold ${isChampion ? 'text-gradient-gold' : 'text-primary'}`}>{points}</p>
           <p className="text-[9px] text-muted-foreground">PTS</p>
         </div>
         <div className="text-center">
-          <p className="text-xs font-bold">{totalWins}</p>
+          <p className="text-xs font-bold text-green-500">{totalWins}</p>
           <p className="text-[9px] text-muted-foreground">WINS</p>
         </div>
         <div className="text-center">

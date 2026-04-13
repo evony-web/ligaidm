@@ -158,14 +158,14 @@ export function TournamentView() {
           {tournaments?.map(t => (
             <motion.div key={t.id} variants={item}>
               <Card
-                className="glass card-hover border-0 cursor-pointer"
+                className={`card-premium card-lift cursor-pointer ${t.status === 'main_event' ? 'glow-pulse' : t.status === 'completed' ? '' : 'card-glow-hover'}`}
                 onClick={() => setSelectedId(t.id)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-xs text-muted-foreground">Week {t.weekNumber}</p>
-                      <p className="text-sm font-semibold">{t.name}</p>
+                      <p className="text-[10px] text-primary font-semibold uppercase tracking-wider">Week {t.weekNumber}</p>
+                      <p className="text-sm font-bold">{t.name}</p>
                     </div>
                     <StatusBadge status={t.status} />
                   </div>
@@ -196,16 +196,19 @@ export function TournamentView() {
         <>
           {/* Header */}
           <motion.div variants={item}>
-            <Card className="glass glow-pulse border-0">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gradient-fury">{selected.name}</h2>
-                    <p className="text-xs text-muted-foreground mt-1">Week {selected.weekNumber} • {selected.location}</p>
+            <Card className="card-premium overflow-hidden">
+              <CardContent className="p-0">
+                <div className="relative p-4 bg-gradient-to-r from-primary/10 via-transparent to-idm-purple/5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-1">Week {selected.weekNumber}</p>
+                      <h2 className="text-xl font-bold text-gradient-fury">{selected.name}</h2>
+                      <p className="text-xs text-muted-foreground mt-1">📍 {selected.location} • {selected.bpm} BPM</p>
+                    </div>
+                    <StatusBadge status={selected.status} />
                   </div>
-                  <StatusBadge status={selected.status} />
                 </div>
-                <div className="flex gap-2 mt-3 flex-wrap">
+                <div className="flex gap-2 p-4 pt-3 flex-wrap">
                   {selected.status === 'setup' && (
                     <Button size="sm" onClick={() => advanceStatusMutation.mutate('registration')}>
                       <Play className="w-3 h-3 mr-1" /> Open Registration
@@ -239,11 +242,14 @@ export function TournamentView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Registered Players */}
             <motion.div variants={item}>
-              <Card className="glass border-0 h-full">
+              <Card className="card-premium h-full">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Users className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold">Registered Players ({selected.participations?.length || 0})</h3>
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Users className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-semibold section-header-line">Registered Players</h3>
+                    <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{selected.participations?.length || 0}</Badge>
                   </div>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
                     {selected.participations?.map(p => (
@@ -276,11 +282,14 @@ export function TournamentView() {
 
             {/* Teams */}
             <motion.div variants={item}>
-              <Card className="glass border-0 h-full">
+              <Card className="card-premium h-full">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Swords className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold">Teams ({selected.teams?.length || 0})</h3>
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Swords className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-semibold section-header-line">Teams</h3>
+                    <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{selected.teams?.length || 0}</Badge>
                   </div>
                   {selected.teams?.length > 0 ? (
                     <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
@@ -315,11 +324,13 @@ export function TournamentView() {
           {/* Matches */}
           {selected.matches?.length > 0 && (
             <motion.div variants={item}>
-              <Card className="glass border-0">
+              <Card className="card-premium">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Trophy className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold">Match Results</h3>
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Trophy className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    <h3 className="text-sm font-semibold section-header-line">Match Results</h3>
                   </div>
                   {selected.matches.map(m => (
                     <div key={m.id} className="p-4 rounded-xl bg-muted/50 mb-2">

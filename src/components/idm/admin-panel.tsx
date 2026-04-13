@@ -260,7 +260,7 @@ export function AdminPanel() {
         <TabsContent value="players">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
             {/* Add new player */}
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <UserPlus className="w-4 h-4 text-primary" /> Add New Player
@@ -329,7 +329,7 @@ export function AdminPanel() {
         <TabsContent value="tournaments">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* Create tournament */}
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Plus className="w-4 h-4 text-primary" /> Create Tournament
@@ -350,7 +350,7 @@ export function AdminPanel() {
             <div className="space-y-2">
               {tournaments?.map((t: { id: string; name: string; weekNumber: number; status: string; prizePool: number; _count?: { teams: number; participations: number } }) => (
                 <motion.div key={t.id} variants={item}>
-                  <Card className={`glass border-0 card-hover cursor-pointer ${selectedTournamentId === t.id ? 'ring-1 ring-primary' : ''}`}
+                  <Card className={`card-premium card-hover cursor-pointer ${selectedTournamentId === t.id ? 'ring-1 ring-primary' : ''}`}
                     onClick={() => setSelectedTournamentId(selectedTournamentId === t.id ? null : t.id)}>
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -389,7 +389,7 @@ export function AdminPanel() {
 
             {/* Selected Tournament Detail */}
             {selectedTournament && (
-              <Card className="glass border-0">
+              <Card className="card-premium">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">{selectedTournament.name} — Management</h3>
@@ -478,7 +478,7 @@ export function AdminPanel() {
         <TabsContent value="matches">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* League Match Scoring */}
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Trophy className="w-4 h-4 text-primary" /> League Match Scoring
@@ -518,7 +518,7 @@ export function AdminPanel() {
             </Card>
 
             {/* Playoff Match Scoring */}
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Crown className="w-4 h-4 text-yellow-500" /> Playoff Match Scoring
@@ -561,7 +561,7 @@ export function AdminPanel() {
         {/* ====== CLUBS TAB ====== */}
         <TabsContent value="clubs">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Plus className="w-4 h-4 text-primary" /> Create Club
@@ -575,7 +575,7 @@ export function AdminPanel() {
             <div className="space-y-2">
               {clubs?.map((c: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number; _count?: { members: number } }) => (
                 <motion.div key={c.id} variants={item}>
-                  <Card className="glass border-0 card-hover">
+                  <Card className="card-premium card-hover">
                     <CardContent className="p-3 flex items-center justify-between">
                       <div>
                         <p className="text-sm font-semibold">{c.name}</p>
@@ -599,7 +599,7 @@ export function AdminPanel() {
         {/* ====== DONATIONS TAB ====== */}
         <TabsContent value="donations">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-            <Card className="glass border-0">
+            <Card className="card-premium">
               <CardContent className="p-4">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Plus className="w-4 h-4 text-primary" /> Add Donation
