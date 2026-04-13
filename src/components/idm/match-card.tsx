@@ -1,9 +1,10 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Swords, Radio, Clock, Flame, Zap, ChevronRight } from 'lucide-react';
+import { Crown, Swords, Radio, Clock, Flame, Zap, ChevronRight, Trophy, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
+import { useAppStore } from '@/lib/store';
 import { useState } from 'react';
 
 /* ─── Match data interface ─── */
@@ -36,17 +37,35 @@ function getStatusConfig(status: string): { label: string; cls: string; pulse?: 
   }
 }
 
-/* ─── MPL-style Match Card ─── */
+/* ─── Team Logo Component ─── */
+function TeamLogo({ name, isWinner, size = 'md' }: { name: string; isWinner: boolean; size?: 'sm' | 'md' | 'lg' }) {
+  const dt = useDivisionTheme();
+  const division = useAppStore(s => s.division);
+  const sizeClasses = size === 'lg' ? 'w-12 h-12 text-base' : size === 'md' ? 'w-10 h-10 text-sm' : 'w-8 h-8 text-[10px]';
+  return (
+    <div className={`${sizeClasses} rounded-lg flex items-center justify-center font-bold shrink-0 transition-all duration-300 ${
+      isWinner
+        ? `bg-gradient-to-br ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg`
+        : `${dt.iconBg} ${dt.text}`
+    }`}>
+      {name.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
+/* ─── Pinterest Esports Match Card — Tournament Infographic Banner Style ─── */
 export function EsportsMatchCard({
   team1, team2, score1, score2, status, week, mvpPlayer, onClick
 }: EsportsMatchCardProps) {
   const dt = useDivisionTheme();
+  const division = useAppStore(s => s.division);
   const [expanded, setExpanded] = useState(false);
   const hasScore = score1 !== null && score2 !== null;
   const winner1 = hasScore && score1! > score2!;
   const winner2 = hasScore && score2! > score1!;
   const isLive = status === 'live' || status === 'main_event';
   const isCompleted = status === 'completed' || status === 'scoring';
+  const isUpcoming = !isLive && !isCompleted;
   const statusConfig = getStatusConfig(status);
 
   const handleClick = () => {
@@ -56,10 +75,10 @@ export function EsportsMatchCard({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.01 }}
+      whileHover={{ scale: 1.01, y: -2 }}
       whileTap={{ scale: 0.99 }}
       onClick={handleClick}
-      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${
+      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
         dt.casinoCard
       } ${isLive ? dt.neonPulse : ''} ${dt.casinoGlow} casino-shimmer`}
     >
@@ -70,9 +89,9 @@ export function EsportsMatchCard({
       <div className={`absolute top-0 left-0 ${dt.cornerAccent}`} />
       <div className={`absolute top-0 right-0 rotate-90 ${dt.cornerAccent}`} />
 
-      <div className="relative z-10 p-4">
-        {/* Header: Week + Status */}
-        <div className="flex items-center justify-between mb-4">
+      <div className="relative z-10">
+        {/* ═══ Header: Week + Status ═══ */}
+        <div className="flex items-center justify-between px-4 pt-3 pb-1">
           {week && (
             <Badge className={`${dt.casinoBadge} text-[9px]`}>
               <Clock className="w-2.5 h-2.5 mr-1" />
@@ -80,103 +99,136 @@ export function EsportsMatchCard({
             </Badge>
           )}
           <div className="ml-auto">
-            <Badge className={`${statusConfig.cls} text-[9px] font-bold border ${statusConfig.pulse ? 'live-dot' : ''}`}>
-              {statusConfig.pulse && <span className="w-1.5 h-1.5 rounded-full bg-current mr-1" />}
+            <Badge className={`${statusConfig.cls} text-[9px] font-black border ${statusConfig.pulse ? 'live-dot' : ''}`}>
+              {statusConfig.pulse && <span className="w-1.5 h-1.5 rounded-full bg-current mr-1.5 inline-block" />}
               {statusConfig.label}
             </Badge>
           </div>
         </div>
 
-        {/* MPL-style Match Layout: Team vs Team with score */}
-        <div className="space-y-1">
-          {/* Team 1 Row */}
-          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-            winner1 ? `${dt.bgSubtle} border ${dt.border}` : ''
-          }`}>
-            {/* Team Logo/Avatar */}
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-              winner1 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg` :
-              `${dt.iconBg} ${dt.text}`
-            }`}>
-              {team1.name.slice(0, 2).toUpperCase()}
+        {/* ═══ Match Layout — Esports Infographic Banner Style ═══ */}
+        <div className="px-4 pb-3 pt-2">
+          <div className="flex items-center gap-3">
+            {/* Team 1 — Left Side */}
+            <div className={`flex-1 min-w-0 transition-all duration-300 ${winner1 ? '' : 'opacity-70'}`}>
+              <div className="flex items-center gap-2.5">
+                <TeamLogo name={team1.name} isWinner={winner1} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-bold truncate ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
+                    {team1.name || 'TBD'}
+                  </p>
+                  {winner1 && (
+                    <p className={`text-[9px] ${dt.text} font-semibold flex items-center gap-0.5 mt-0.5`}>
+                      <Zap className="w-2.5 h-2.5" /> WINNER
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-            {/* Team Name */}
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold truncate ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
-                {team1.name || 'TBD'}
-              </p>
-              {winner1 && (
-                <p className={`text-[9px] ${dt.text} font-medium flex items-center gap-0.5`}>
-                  <Zap className="w-2.5 h-2.5" /> Winner
-                </p>
+
+            {/* ═══ Score Center — Esports Scoreboard Style ═══ */}
+            <div className="flex flex-col items-center shrink-0 px-2">
+              {/* Score display */}
+              <div className="flex items-center gap-2">
+                <span className={`text-2xl font-black tabular-nums w-8 text-right ${
+                  winner1 ? dt.neonGradient : 'text-foreground/30'
+                }`}>
+                  {hasScore ? score1 : '-'}
+                </span>
+                <div className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isLive ? 'bg-red-500/10' : isCompleted ? `${dt.bgSubtle}` : `${dt.iconBg}`
+                  }`}>
+                    {isLive ? (
+                      <Radio className="w-4 h-4 text-red-500 live-dot" />
+                    ) : isCompleted ? (
+                      <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                    ) : (
+                      <Swords className={`w-3.5 h-3.5 ${dt.text}`} />
+                    )}
+                  </div>
+                </div>
+                <span className={`text-2xl font-black tabular-nums w-8 text-left ${
+                  winner2 ? dt.neonGradient : 'text-foreground/30'
+                }`}>
+                  {hasScore ? score2 : '-'}
+                </span>
+              </div>
+              {/* BO format label */}
+              {isCompleted && (
+                <span className="text-[8px] text-muted-foreground font-semibold mt-0.5 uppercase">Final</span>
+              )}
+              {isLive && (
+                <span className="text-[8px] text-red-500 font-bold mt-0.5 uppercase animate-pulse">In Progress</span>
+              )}
+              {isUpcoming && (
+                <span className="text-[8px] text-muted-foreground font-semibold mt-0.5 uppercase">vs</span>
               )}
             </div>
-            {/* Score */}
-            <div className={`text-2xl font-black tabular-nums w-10 text-right ${
-              winner1 ? dt.neonGradient : 'text-foreground/40'
-            }`}>
-              {hasScore ? score1 : '-'}
+
+            {/* Team 2 — Right Side */}
+            <div className={`flex-1 min-w-0 text-right transition-all duration-300 ${winner2 ? '' : 'opacity-70'}`}>
+              <div className="flex items-center gap-2.5 justify-end">
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm font-bold truncate ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
+                    {team2.name || 'TBD'}
+                  </p>
+                  {winner2 && (
+                    <p className={`text-[9px] ${dt.text} font-semibold flex items-center gap-0.5 mt-0.5 justify-end`}>
+                      WINNER <Zap className="w-2.5 h-2.5" />
+                    </p>
+                  )}
+                </div>
+                <TeamLogo name={team2.name} isWinner={winner2} size="lg" />
+              </div>
             </div>
           </div>
 
-          {/* VS Divider */}
-          <div className="flex items-center gap-2 px-3 py-1">
-            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-            <div className={`w-7 h-7 rounded-full ${dt.iconBg} flex items-center justify-center`}>
-              <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+          {/* ═══ Score Bar — Visual representation ═══ */}
+          {hasScore && (score1! + score2!) > 0 && (
+            <div className="mt-3">
+              <div className={`h-1.5 rounded-full ${dt.bgSubtle} overflow-hidden flex`}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(score1! / (score1! + score2!)) * 100}%` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className={`h-full rounded-l-full ${winner1
+                    ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`
+                    : 'bg-muted-foreground/20'
+                  }`}
+                />
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(score2! / (score1! + score2!)) * 100}%` }}
+                  transition={{ duration: 0.6, ease: 'easeOut' }}
+                  className={`h-full rounded-r-full ${winner2
+                    ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male-light to-idm-male' : 'from-idm-female-light to-idm-female'}`
+                    : 'bg-muted-foreground/20'
+                  }`}
+                />
+              </div>
             </div>
-            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-          </div>
-
-          {/* Team 2 Row */}
-          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
-            winner2 ? `${dt.bgSubtle} border ${dt.border}` : ''
-          }`}>
-            {/* Team Logo/Avatar */}
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-              winner2 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg` :
-              `${dt.iconBg} ${dt.text}`
-            }`}>
-              {team2.name.slice(0, 2).toUpperCase()}
-            </div>
-            {/* Team Name */}
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-semibold truncate ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
-                {team2.name || 'TBD'}
-              </p>
-              {winner2 && (
-                <p className={`text-[9px] ${dt.text} font-medium flex items-center gap-0.5`}>
-                  <Zap className="w-2.5 h-2.5" /> Winner
-                </p>
-              )}
-            </div>
-            {/* Score */}
-            <div className={`text-2xl font-black tabular-nums w-10 text-right ${
-              winner2 ? dt.neonGradient : 'text-foreground/40'
-            }`}>
-              {hasScore ? score2 : '-'}
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* MVP Indicator */}
+        {/* ═══ MVP Indicator ═══ */}
         {mvpPlayer && (
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center justify-center gap-1.5 mt-3 p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} border`}
+            className={`flex items-center justify-center gap-1.5 mx-4 mb-3 p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} border`}
           >
             <Crown className="w-3.5 h-3.5 text-yellow-500" />
             <span className={`text-[10px] font-semibold ${dt.neonText}`}>MVP: {mvpPlayer.gamertag}</span>
           </motion.div>
         )}
 
-        {/* Expanded details */}
+        {/* ═══ Expanded Details ═══ */}
         {expanded && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="mt-3"
+            className="mx-4 mb-3"
           >
             <div className={`p-3 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} border space-y-2`}>
               <div className="flex items-center justify-between text-[10px]">
@@ -204,7 +256,7 @@ export function EsportsMatchCard({
         )}
 
         {/* Expand indicator */}
-        <div className="flex items-center justify-center mt-2">
+        <div className="flex items-center justify-center pb-2">
           <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </div>
       </div>

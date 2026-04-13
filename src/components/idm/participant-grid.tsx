@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Flame, Search, List, Grid3X3, Trophy, Zap, Target, Users, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
+import { Shield, Flame, Search, List, Grid3X3, Trophy, Zap, Target, Users, ChevronDown, ChevronUp, Crown, Star, Swords } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { TierBadge } from './tier-badge';
@@ -30,7 +30,7 @@ interface ParticipantGridProps {
   onPlayerClick: (player: Player) => void;
 }
 
-/* ─── Esports Poster-style Participant Card ─── */
+/* ─── Esports Poster-style Participant Card — Pinterest PUBGM Roster Style ─── */
 function ParticipantCard({ player, rank, onClick }: {
   player: Player;
   rank: number;
@@ -40,13 +40,14 @@ function ParticipantCard({ player, rank, onClick }: {
   const division = useAppStore(s => s.division);
   const isTop3 = rank <= 3;
   const isChampion = rank === 1;
+  const winRate = player.matches > 0 ? Math.round((player.totalWins / player.matches) * 100) : 0;
 
   return (
     <motion.div
-      whileHover={{ scale: 1.03, y: -4 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.04, y: -6 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className={`relative rounded-xl cursor-pointer overflow-hidden transition-all ${
+      className={`relative rounded-xl cursor-pointer overflow-hidden transition-all duration-300 ${
         dt.casinoCard
       } ${isChampion ? dt.neonPulse : ''} ${isTop3 ? dt.casinoGlow : ''} casino-shimmer`}
     >
@@ -61,47 +62,57 @@ function ParticipantCard({ player, rank, onClick }: {
         </>
       )}
 
-      {/* Rank badge — top-right corner */}
-      <div className={`absolute top-1.5 right-1.5 z-20 w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black shadow-lg ${
-        rank === 1 ? 'bg-yellow-500 text-white' :
-        rank === 2 ? 'bg-gray-400 text-white' :
-        rank === 3 ? 'bg-amber-600 text-white' :
-        `${dt.bgSubtle} ${dt.text}`
-      }`}>
-        {rank <= 3 ? (
-          rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'
-        ) : (
-          rank
-        )}
+      {/* Rank number — large background number like esports poster */}
+      <div className="absolute top-1 right-1 z-0 select-none">
+        <span className={`text-4xl font-black leading-none ${
+          isChampion ? 'text-yellow-500/10' :
+          rank === 2 ? 'text-gray-400/10' :
+          rank === 3 ? 'text-amber-600/10' :
+          'text-muted-foreground/5'
+        }`}>
+          {rank}
+        </span>
       </div>
 
-      <div className="relative z-10 p-3 pt-2">
-        {/* Large Avatar Circle with Division Gradient */}
-        <div className="relative w-16 h-16 mx-auto mb-2.5">
-          {/* Glow ring for top players */}
+      {/* Rank badge overlay — top-left */}
+      <div className={`absolute top-2 left-2 z-20 flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black ${
+        rank === 1 ? 'bg-yellow-500/90 text-white shadow-lg shadow-yellow-500/20' :
+        rank === 2 ? 'bg-gray-400/90 text-white' :
+        rank === 3 ? 'bg-amber-600/90 text-white' :
+        `${dt.bgSubtle} ${dt.text}`
+      }`}>
+        {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
+      </div>
+
+      <div className="relative z-10 p-3 pt-8">
+        {/* Large Avatar with esports frame */}
+        <div className="relative w-18 h-18 mx-auto mb-3" style={{ width: '72px', height: '72px' }}>
+          {/* Outer glow ring for top players */}
           {isTop3 && (
-            <div className={`absolute inset-0 rounded-full ${
-              isChampion ? 'bg-yellow-500/20 animate-pulse' : dt.iconBg
-            }`} />
+            <div className={`absolute -inset-1 rounded-full border-2 ${
+              isChampion ? 'border-yellow-500/40 animate-pulse' :
+              `border-current opacity-30`
+            }`} style={{ borderColor: isChampion ? undefined : 'var(--idm-male, var(--idm-female))' }} />
           )}
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center text-lg font-black relative z-10 shadow-lg ${
-            isChampion ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white' :
-            isTop3 ? `bg-gradient-to-br ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white` :
-            player.tier === 'S' ? 'bg-red-500/10 text-red-500' :
-            player.tier === 'A' ? 'bg-yellow-500/10 text-yellow-500' :
-            `${dt.iconBg} ${dt.text}`
+          {/* Avatar circle */}
+          <div className={`w-full h-full rounded-full flex items-center justify-center text-xl font-black relative z-10 shadow-lg border-2 ${
+            isChampion ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white border-yellow-400/50' :
+            isTop3 ? `bg-gradient-to-br ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white border-current/20` :
+            player.tier === 'S' ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+            player.tier === 'A' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+            `${dt.iconBg} ${dt.text} border-transparent`
           }`}>
             {player.gamertag.slice(0, 2).toUpperCase()}
           </div>
-          {/* Tier badge on avatar */}
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-20">
+          {/* Tier badge pinned to bottom of avatar */}
+          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 z-20">
             <TierBadge tier={player.tier} />
           </div>
         </div>
 
-        {/* Player Gamertag — bold and large */}
+        {/* Player Gamertag — bold esports style */}
         <div className="text-center">
-          <p className={`text-sm font-black truncate ${
+          <p className={`text-sm font-black truncate leading-tight ${
             isChampion ? dt.neonGradient :
             isTop3 ? dt.neonText :
             'text-foreground'
@@ -118,24 +129,43 @@ function ParticipantCard({ player, rank, onClick }: {
           )}
         </div>
 
-        {/* Quick Stats Row: Points | Wins | Streak */}
-        <div className={`grid grid-cols-3 gap-1 mt-2.5 pt-2 border-t ${dt.borderSubtle}`}>
+        {/* Stats row — esports HUD style */}
+        <div className={`grid grid-cols-3 gap-1 mt-3 pt-2.5 border-t ${dt.borderSubtle}`}>
           <div className="text-center">
-            <p className={`text-xs font-bold ${rank <= 3 ? dt.neonText : ''}`}>{player.points}</p>
-            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">PTS</p>
+            <p className={`text-xs font-black ${rank <= 3 ? dt.neonText : ''}`}>{player.points}</p>
+            <p className="text-[7px] text-muted-foreground uppercase tracking-widest font-semibold">PTS</p>
           </div>
           <div className="text-center">
-            <p className="text-xs font-bold text-green-500">{player.totalWins}</p>
-            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">WINS</p>
+            <p className="text-xs font-black text-green-500">{player.totalWins}<span className="text-muted-foreground font-medium">/{player.matches}</span></p>
+            <p className="text-[7px] text-muted-foreground uppercase tracking-widest font-semibold">W/M</p>
           </div>
           <div className="text-center">
             <div className="flex items-center justify-center gap-0.5">
               {player.streak > 1 && <Flame className="w-2.5 h-2.5 text-orange-400" />}
-              <span className="text-xs font-bold">{player.streak > 1 ? player.streak : player.totalMvp}</span>
+              <span className="text-xs font-black">{player.streak > 1 ? player.streak : player.totalMvp}</span>
             </div>
-            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">
+            <p className="text-[7px] text-muted-foreground uppercase tracking-widest font-semibold">
               {player.streak > 1 ? 'STREAK' : 'MVP'}
             </p>
+          </div>
+        </div>
+
+        {/* Win rate bar — esports HUD */}
+        <div className="mt-2">
+          <div className="flex items-center justify-between mb-0.5">
+            <span className="text-[7px] text-muted-foreground uppercase tracking-widest font-semibold">Win Rate</span>
+            <span className={`text-[10px] font-black ${winRate >= 60 ? 'text-green-500' : winRate >= 40 ? 'text-yellow-500' : 'text-red-500'}`}>{winRate}%</span>
+          </div>
+          <div className={`h-1.5 rounded-full ${dt.bgSubtle} overflow-hidden`}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${winRate}%` }}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
+              className={`h-full rounded-full ${
+                winRate >= 60 ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}` :
+                winRate >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+            />
           </div>
         </div>
       </div>
@@ -143,7 +173,7 @@ function ParticipantCard({ player, rank, onClick }: {
   );
 }
 
-/* ─── MPL-style Participant Table Row ─── */
+/* ─── Esports Roster-style Participant Row — Pinterest Tournament List ─── */
 function ParticipantTableRow({ player, rank, onClick }: {
   player: Player;
   rank: number;
@@ -152,94 +182,82 @@ function ParticipantTableRow({ player, rank, onClick }: {
   const dt = useDivisionTheme();
   const division = useAppStore(s => s.division);
   const isTop3 = rank <= 3;
+  const isChampion = rank === 1;
   const winRate = player.matches > 0 ? Math.round((player.totalWins / player.matches) * 100) : 0;
 
   return (
-    <motion.tr
-      whileHover={{ scale: 1.005 }}
-      className={`cursor-pointer transition-colors border-b ${dt.borderSubtle} ${
-        isTop3 ? dt.bgSubtle : ''
-      } hover:${dt.bgSubtle}`}
+    <motion.div
+      whileHover={{ x: 4, scale: 1.002 }}
       onClick={onClick}
+      className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 border-b ${
+        dt.borderSubtle
+      } ${isChampion ? `${dt.bgSubtle} border-l-2 border-l-yellow-500` : isTop3 ? `${dt.bgSubtle} border-l-2 border-l-current` : `hover:${dt.bgSubtle}`}`}
+      style={!isChampion && isTop3 ? { borderLeftColor: 'var(--idm-male, var(--idm-female))' } as React.CSSProperties : undefined}
     >
-      {/* Rank */}
-      <td className="py-2.5 px-2 text-center">
-        <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
-          rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
-          rank === 2 ? 'bg-gray-400/20 text-gray-400' :
-          rank === 3 ? 'bg-amber-600/20 text-amber-600' :
-          'text-muted-foreground'
-        }`}>
-          {rank}
-        </span>
-      </td>
-      {/* Player */}
-      <td className="py-2.5 px-3">
-        <div className="flex items-center gap-2.5">
-          <div className={`w-8 h-8 rounded-lg ${isTop3
-            ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light') + ' text-white'
-            : dt.iconBg + ' ' + dt.text
-          } flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm`}>
-            {player.gamertag.slice(0, 2).toUpperCase()}
-          </div>
-          <div className="min-w-0">
-            <p className={`text-xs font-semibold truncate ${isTop3 ? dt.neonText : ''}`}>{player.gamertag}</p>
-            {player.club && (
-              <p className="text-[9px] text-muted-foreground truncate flex items-center gap-0.5">
-                <Shield className="w-2.5 h-2.5" />
-                {player.club}
-              </p>
-            )}
-          </div>
+      {/* Rank — esports poster style large number */}
+      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black shrink-0 ${
+        rank === 1 ? 'bg-yellow-500/20 text-yellow-500' :
+        rank === 2 ? 'bg-gray-400/15 text-gray-400' :
+        rank === 3 ? 'bg-amber-600/15 text-amber-600' :
+        `${dt.bgSubtle} text-muted-foreground`
+      }`}>
+        {rank}
+      </div>
+
+      {/* Avatar + Info */}
+      <div className={`w-9 h-9 rounded-lg ${isTop3
+        ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light') + ' text-white'
+        : dt.iconBg + ' ' + dt.text
+      } flex items-center justify-center text-[10px] font-bold shrink-0 shadow-sm`}>
+        {player.gamertag.slice(0, 2).toUpperCase()}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className={`text-xs font-bold truncate ${isTop3 ? dt.neonText : ''}`}>{player.gamertag}</p>
+          {isChampion && <Crown className="w-3 h-3 text-yellow-500 shrink-0" />}
+          {player.streak > 2 && <Flame className="w-3 h-3 text-orange-400 shrink-0" />}
         </div>
-      </td>
-      {/* Tier */}
-      <td className="py-2.5 px-2 text-center">
-        <TierBadge tier={player.tier} />
-      </td>
-      {/* Points */}
-      <td className={`py-2.5 px-2 text-right text-xs font-bold ${isTop3 ? dt.neonText : ''}`}>
-        {player.points}
-      </td>
-      {/* Win Rate */}
-      <td className="py-2.5 px-2 text-center">
-        <div className="flex items-center gap-1.5 justify-center">
-          <div className={`w-12 h-1.5 rounded-full ${dt.bgSubtle} overflow-hidden`}>
-            <div
-              className={`h-full rounded-full ${winRate >= 60 ? 'bg-green-500' : winRate >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
-              style={{ width: `${winRate}%` }}
-            />
-          </div>
-          <span className="text-[10px] font-semibold text-muted-foreground w-7 text-right">{winRate}%</span>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {player.club && (
+            <span className="text-[9px] text-muted-foreground truncate flex items-center gap-0.5">
+              <Shield className="w-2.5 h-2.5" />
+              {player.club}
+            </span>
+          )}
+          <TierBadge tier={player.tier} />
         </div>
-      </td>
-      {/* W/L */}
-      <td className="py-2.5 px-2 text-center">
-        <span className="text-[10px]">
-          <span className="text-green-500 font-semibold">{player.totalWins}</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-red-500 font-semibold">{player.matches - player.totalWins}</span>
-        </span>
-      </td>
-      {/* Streak */}
-      <td className="py-2.5 px-2 text-center">
-        {player.streak > 1 ? (
-          <span className="text-[10px] font-semibold text-orange-400 flex items-center justify-center gap-0.5">
-            <Flame className="w-3 h-3" />{player.streak}
-          </span>
-        ) : (
-          <span className="text-[10px] text-muted-foreground">—</span>
-        )}
-      </td>
-      {/* MVP */}
-      <td className="py-2.5 px-2 text-center">
-        {player.totalMvp > 0 ? (
-          <span className="text-[10px] font-semibold text-yellow-500">{player.totalMvp}</span>
-        ) : (
-          <span className="text-[10px] text-muted-foreground">0</span>
-        )}
-      </td>
-    </motion.tr>
+      </div>
+
+      {/* Win Rate mini bar */}
+      <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+        <div className={`w-14 h-1.5 rounded-full ${dt.bgSubtle} overflow-hidden`}>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${winRate}%` }}
+            transition={{ duration: 0.5 }}
+            className={`h-full rounded-full ${winRate >= 60 ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}` : winRate >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`}
+          />
+        </div>
+        <span className={`text-[9px] font-bold w-7 text-right ${winRate >= 60 ? dt.neonText : 'text-muted-foreground'}`}>{winRate}%</span>
+      </div>
+
+      {/* Quick stats pills */}
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="text-center">
+          <p className={`text-[10px] font-black ${isTop3 ? dt.neonText : ''}`}>{player.points}</p>
+          <p className="text-[7px] text-muted-foreground">PTS</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] font-black text-green-500">{player.totalWins}</p>
+          <p className="text-[7px] text-muted-foreground">W</p>
+        </div>
+        <div className="text-center">
+          <p className="text-[10px] font-black text-yellow-500">{player.totalMvp}</p>
+          <p className="text-[7px] text-muted-foreground">MVP</p>
+        </div>
+      </div>
+    </motion.div>
   );
 }
 
@@ -280,13 +298,19 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
   return (
     <Card className={`${dt.casinoCard} overflow-hidden`}>
       <div className={dt.casinoBar} />
-      {/* Header with search + view toggle */}
-      <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
-        <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
-          <Users className={`w-3 h-3 ${dt.neonText}`} />
+
+      {/* Header — Esports tournament roster banner style */}
+      <div className={`relative px-4 py-3 border-b ${dt.borderSubtle}`}>
+        <div className="flex items-center gap-2.5">
+          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} flex items-center justify-center shrink-0 shadow-md`}>
+            <Users className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider">Participant Roster</h3>
+            <p className="text-[9px] text-muted-foreground">{division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}</p>
+          </div>
+          <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
         </div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider">Participants</h3>
-        <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
       </div>
 
       {/* Search bar + View toggle + Sort */}
@@ -344,44 +368,30 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
         </div>
       </div>
 
-      {/* Table View — MPL/Esports Style */}
+      {/* List View — Esports Roster Style */}
       {viewMode === 'list' && (
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className={`border-b ${dt.border} bg-muted/20`}>
-                <th className="w-10 text-center py-2 text-[10px] font-semibold">#</th>
-                <th className="text-left py-2 px-3 text-[10px] font-semibold">Player</th>
-                <th className="w-14 text-center py-2 text-[10px] font-semibold">Tier</th>
-                <th className="w-14 text-right py-2 px-2 text-[10px] font-semibold">Pts</th>
-                <th className="w-24 text-center py-2 text-[10px] font-semibold hidden sm:table-cell">Win Rate</th>
-                <th className="w-14 text-center py-2 text-[10px] font-semibold">W/L</th>
-                <th className="w-14 text-center py-2 text-[10px] font-semibold">Streak</th>
-                <th className="w-10 text-center py-2 text-[10px] font-semibold">MVP</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedPlayers.map((p, idx) => (
-                <ParticipantTableRow
-                  key={p.id}
-                  player={p}
-                  rank={idx + 1}
-                  onClick={() => onPlayerClick(p)}
-                />
-              ))}
-            </tbody>
-          </table>
-          {filteredPlayers.length === 0 && (
+        <div className="max-h-[520px] overflow-y-auto custom-scrollbar">
+          {displayedPlayers.length > 0 ? (
+            displayedPlayers.map((p, idx) => (
+              <ParticipantTableRow
+                key={p.id}
+                player={p}
+                rank={idx + 1}
+                onClick={() => onPlayerClick(p)}
+              />
+            ))
+          ) : (
             <div className="py-8 text-center">
+              <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No players found</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Grid View — Esports Poster Style */}
+      {/* Grid View — Esports Poster/Roster Card Style */}
       {viewMode === 'grid' && (
-        <div className="p-4 max-h-[600px] overflow-y-auto custom-scrollbar">
+        <div className="p-3 max-h-[600px] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {displayedPlayers.map((p, idx) => (
               <ParticipantCard
@@ -394,6 +404,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           </div>
           {filteredPlayers.length === 0 && (
             <div className="py-8 text-center">
+              <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-sm text-muted-foreground">No players found</p>
             </div>
           )}
