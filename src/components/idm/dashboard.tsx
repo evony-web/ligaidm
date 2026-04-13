@@ -21,6 +21,9 @@ import { CountdownTimer } from './countdown-timer';
 import { PlayerCard } from './player-card';
 import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
+import { BracketView } from './bracket-view';
+import { ParticipantGrid } from './participant-grid';
+import { EsportsMatchCard } from './match-card';
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 
@@ -312,6 +315,7 @@ export function Dashboard() {
   const [leaderboardSort, setLeaderboardSort] = useState<'players' | 'clubs'>('players');
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [showAllClubs, setShowAllClubs] = useState(false);
+  const [bracketType, setBracketType] = useState<string>('single_elimination');
 
   const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['stats', division],
@@ -601,34 +605,28 @@ export function Dashboard() {
               </SectionCard>
             </motion.div>
 
-            {/* Featured Match */}
+            {/* Featured Match — EsportsMatchCard style */}
             {t?.matches?.filter(m => m.status === 'completed').length > 0 && (
               <motion.div variants={item}>
-                <CasinoHeaderCard icon={Trophy} title="Featured Match" badge="RESULT">
-                  {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
-                    <div key={m.id} className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="text-center flex-1">
-                          <p className="text-sm font-semibold">{m.team1.name}</p>
-                          <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score1}</p>
-                        </div>
-                        <div className="px-4 text-center">
-                          <span className="text-xs text-muted-foreground font-bold">VS</span>
-                        </div>
-                        <div className="text-center flex-1">
-                          <p className="text-sm font-semibold">{m.team2.name}</p>
-                          <p className={`text-3xl font-bold ${dt.neonText} mt-1 casino-score`}>{m.score2}</p>
-                        </div>
-                      </div>
-                      {m.mvpPlayer && (
-                        <div className={`mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg ${dt.bgSubtle}`}>
-                          <Crown className="w-3.5 h-3.5 text-yellow-500" />
-                          <span className={`text-xs font-semibold ${dt.neonText}`}>MVP: {m.mvpPlayer.gamertag}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </CasinoHeaderCard>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                    <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                  </div>
+                  <h3 className="text-sm font-semibold">Featured Match</h3>
+                  <Badge className={`${dt.casinoBadge} ml-auto`}>RESULT</Badge>
+                </div>
+                {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
+                  <EsportsMatchCard
+                    key={m.id}
+                    team1={m.team1}
+                    team2={m.team2}
+                    score1={m.score1}
+                    score2={m.score2}
+                    status={m.status}
+                    week={t.weekNumber}
+                    mvpPlayer={m.mvpPlayer}
+                  />
+                ))}
               </motion.div>
             )}
           </motion.div>
@@ -832,132 +830,71 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ MATCHES TAB — Toornament Bracket Style ═══════════════ */}
+        {/* ═══════════════ MATCHES TAB — MPL-Style Bracket ═══════════════ */}
         <TabsContent value="matches" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Bracket View — always visible, uses tournament matches OR league matches */}
+            {/* Bracket View — with type selector */}
             <motion.div variants={item}>
-              <SectionCard title="Bracket" icon={Swords} badge={t?.matches?.length ? `${t.matches.length} Matches` : 'League'}>
-                {t?.matches && t.matches.length > 0 ? (
-                  /* Tournament bracket with rounds */
-                  <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
-                    <div className="flex gap-8 min-w-max px-1">
-                      {Object.entries(
-                        t.matches.reduce((acc, m) => {
-                          const round = 'round' in m ? (m as any).round || 1 : 1;
-                          if (!acc[round]) acc[round] = [];
-                          acc[round].push(m);
-                          return acc;
-                        }, {} as Record<number, typeof t.matches>)
-                      ).map(([round, matches], roundIdx) => (
-                        <div key={round} className="flex flex-col">
-                          <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
-                            {roundIdx === 0 ? 'Quarter Final' : roundIdx === 1 ? 'Semi Final' : roundIdx === 2 ? 'Final' : `Round ${round}`}
-                          </div>
-                          <div className="flex-1 flex flex-col justify-around" style={{ gap: `${Math.pow(2, roundIdx) * 16}px` }}>
-                            {matches.map((m, matchIdx) => (
-                              <BracketMatch
-                                key={m.id}
-                                team1={m.team1.name}
-                                team2={m.team2.name}
-                                score1={m.score1}
-                                score2={m.score2}
-                                status={m.status}
-                                round={roundIdx}
-                                matchIdx={matchIdx}
-                                isLast={matchIdx === matches.length - 1}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+              <Card className={`${dt.casinoCard} overflow-hidden`}>
+                <div className={dt.casinoBar} />
+                <div className="relative z-10">
+                  {/* Header with bracket type selector */}
+                  <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
+                    <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Swords className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider">Bracket</h3>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{t?.matches?.length || recentMatches.length} Matches</Badge>
                   </div>
-                ) : (
-                  /* League bracket — clubs matched by week in bracket-style layout */
-                  <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
-                    <div className="flex gap-6 min-w-max px-1">
-                      {/* Generate bracket columns from league matches */}
-                      {(() => {
-                        const allWeeks = [...new Set([
-                          ...recentMatches.map(m => m.week),
-                          ...upcomingMatches.map(m => m.week)
-                        ])].sort((a, b) => a - b);
-                        const totalWeeks = data.seasonProgress?.totalWeeks || 8;
-
-                        // Create bracket rounds from weeks
-                        // Group weeks into rounds: early weeks = group stage, later weeks = playoffs
-                        const roundNames = ['Group Stage', 'Quarter Final', 'Semi Final', 'Final'];
-                        const rounds: { name: string; matches: { club1: string; club2: string; score1: number; score2: number; completed: boolean }[] }[] = [];
-
-                        // Group stage — all completed + upcoming league matches per week
-                        allWeeks.forEach(week => {
-                          const weekMatches = [
-                            ...recentMatches.filter(m => m.week === week),
-                            ...upcomingMatches.filter(m => m.week === week)
-                          ];
-                          if (weekMatches.length > 0) {
-                            rounds.push({
-                              name: `Week ${week}`,
-                              matches: weekMatches.map(m => ({
-                                club1: m.club1.name,
-                                club2: m.club2.name,
-                                score1: m.score1,
-                                score2: m.score2,
-                                completed: m.status === 'completed'
-                              }))
-                            });
-                          }
-                        });
-
-                        return rounds.map((round, roundIdx) => (
-                          <div key={roundIdx} className="flex flex-col">
-                            <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap`}>
-                              {round.name}
-                            </div>
-                            <div className="flex-1 flex flex-col" style={{ gap: '8px' }}>
-                              {round.matches.map((m, matchIdx) => {
-                                const winner1 = m.completed && m.score1 > m.score2;
-                                const winner2 = m.completed && m.score2 > m.score1;
-                                return (
-                                  <div key={matchIdx} className="relative">
-                                    {roundIdx > 0 && (
-                                      <div className="absolute -left-4 top-1/2 w-4 flex items-center">
-                                        <div className={`w-full h-px ${dt.borderSubtle}`} />
-                                      </div>
-                                    )}
-                                    <div className={`rounded-lg overflow-hidden border ${dt.borderSubtle} transition-all hover:${dt.border} hover:shadow-sm`} style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}>
-                                      <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
-                                        <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
-                                          {winner1 && <span className="mr-1">▸</span>}
-                                          {m.club1}
-                                        </span>
-                                        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
-                                          {m.completed ? m.score1 : '-'}
-                                        </span>
-                                      </div>
-                                      <div className={`flex items-center px-2.5 py-1.5 ${winner2 ? dt.bgSubtle : ''}`}>
-                                        <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
-                                          {winner2 && <span className="mr-1">▸</span>}
-                                          {m.club2}
-                                        </span>
-                                        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
-                                          {m.completed ? m.score2 : '-'}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ));
-                      })()}
-                    </div>
+                  {/* Bracket type sub-tabs */}
+                  <div className={`flex items-center gap-1 px-4 py-2 border-b ${dt.borderSubtle}`}>
+                    {[
+                      { value: 'single_elimination', label: 'Single Elim', icon: Swords },
+                      { value: 'double_elimination', label: 'Double Elim', icon: Swords },
+                      { value: 'group_stage', label: 'Group Stage', icon: Users },
+                      { value: 'round_robin', label: 'Round Robin', icon: Calendar },
+                    ].map(bt => (
+                      <button
+                        key={bt.value}
+                        onClick={() => setBracketType(bt.value)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${
+                          bracketType === bt.value ? `${dt.bg} ${dt.text} shadow-sm` : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                      >
+                        <bt.icon className="w-3 h-3" />
+                        {bt.label}
+                      </button>
+                    ))}
                   </div>
-                )}
-              </SectionCard>
+                  <div className="p-4">
+                    {t?.matches && t.matches.length > 0 ? (
+                      <BracketView
+                        matches={t.matches.map(m => ({
+                          ...m,
+                          round: 'round' in m ? (m as any).round || 1 : 1,
+                        }))}
+                        bracketType={bracketType as any}
+                      />
+                    ) : (
+                      /* League matches — convert to bracket format */
+                      <BracketView
+                        matches={recentMatches.map(m => ({
+                          id: m.id,
+                          score1: m.score1 as number | null,
+                          score2: m.score2 as number | null,
+                          status: 'completed',
+                          team1: { id: m.club1.name, name: m.club1.name },
+                          team2: { id: m.club2.name, name: m.club2.name },
+                          mvpPlayer: null,
+                          round: m.week,
+                        }))}
+                        bracketType={bracketType as any}
+                      />
+                    )}
+                  </div>
+                </div>
+              </Card>
             </motion.div>
 
             {/* Completed Matches — grouped by week (Toornament match list style) */}
@@ -1042,134 +979,14 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ PARTICIPANTS TAB — Toornament Style ═══════════════ */}
+        {/* ═══════════════ PARTICIPANTS TAB — Esports Poster Grid ═══════════════ */}
         <TabsContent value="participants" className="mt-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>
-              <Card className={`${dt.casinoCard} overflow-hidden`}>
-                <div className={dt.casinoBar} />
-                {/* Toornament-style header with search + view toggle */}
-                <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
-                  <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                    <Gamepad2 className={`w-3 h-3 ${dt.neonText}`} />
-                  </div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider">Participants</h3>
-                  <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
-                </div>
-                {/* Search bar + View toggle */}
-                <div className={`flex items-center gap-2 px-4 py-2.5 border-b ${dt.borderSubtle}`}>
-                  <div className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                    <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                    <input
-                      type="text"
-                      placeholder="Search player or club..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
-                    />
-                    {searchQuery && (
-                      <button onClick={() => setSearchQuery('')} className="text-muted-foreground hover:text-foreground">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                      </button>
-                    )}
-                  </div>
-                  {/* View toggle */}
-                  <div className={`flex items-center rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} p-0.5`}>
-                    <button
-                      onClick={() => setParticipantView('list')}
-                      className={`p-1.5 rounded-md transition-all ${participantView === 'list' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
-                      title="List view"
-                    >
-                      <List className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setParticipantView('grid')}
-                      className={`p-1.5 rounded-md transition-all ${participantView === 'grid' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
-                      title="Grid view"
-                    >
-                      <Grid3X3 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* List View — Toornament-style participant rows */}
-                {participantView === 'list' && (
-                  <div className="max-h-[600px] overflow-y-auto custom-scrollbar">
-                    <div className="divide-y divide-transparent">
-                      {filteredPlayers.map((p, idx) => (
-                        <ParticipantRow
-                          key={p.id}
-                          player={p}
-                          rank={idx + 1}
-                          onClick={() => setSelectedPlayer(p)}
-                        />
-                      ))}
-                    </div>
-                    {filteredPlayers.length === 0 && (
-                      <div className="py-8 text-center">
-                        <p className="text-sm text-muted-foreground">No players found</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Grid View — Card grid */}
-                {participantView === 'grid' && (
-                  <div className="p-4 max-h-[600px] overflow-y-auto custom-scrollbar">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                      {filteredPlayers.map((p, idx) => (
-                        <motion.div
-                          key={p.id}
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          className={`cursor-pointer rounded-xl ${dt.casinoCard} ${idx < 3 ? dt.casinoGlow : ''} overflow-hidden`}
-                          onClick={() => setSelectedPlayer(p)}
-                        >
-                          <div className={idx < 3 ? dt.casinoBar : ''} />
-                          <div className="p-3 relative z-10">
-                            <div className="flex items-center gap-2.5 mb-2">
-                              <div className={`w-9 h-9 rounded-full ${idx < 3
-                                ? 'bg-gradient-to-br ' + (division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light')
-                                : dt.iconBg
-                              } flex items-center justify-center text-[10px] font-bold ${idx < 3 ? 'text-white' : dt.text} shrink-0 shadow-sm`}>
-                                {p.gamertag.slice(0, 2).toUpperCase()}
-                              </div>
-                              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${
-                                idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                                idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                                idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                                `${dt.bgSubtle} text-muted-foreground`
-                              }`}>
-                                {idx + 1}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <p className="text-xs font-semibold truncate">{p.gamertag}</p>
-                            </div>
-                            <TierBadge tier={p.tier} />
-                            <div className="flex items-center gap-2 mt-2 text-[9px] text-muted-foreground">
-                              {p.club && (
-                                <span className="truncate flex items-center gap-0.5">
-                                  <Shield className="w-2.5 h-2.5" />
-                                  {p.club}
-                                </span>
-                              )}
-                            </div>
-                            <div className={`mt-1.5 pt-1.5 border-t ${dt.borderSubtle} flex items-center justify-between`}>
-                              <span className={`text-xs font-bold ${dt.neonText}`}>{p.points} pts</span>
-                              <span className="text-[9px] text-muted-foreground">{p.totalWins}W</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                    {filteredPlayers.length === 0 && (
-                      <div className="py-8 text-center">
-                        <p className="text-sm text-muted-foreground">No players found</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </Card>
+              <ParticipantGrid
+                players={data.topPlayers || []}
+                onPlayerClick={(player) => setSelectedPlayer(player)}
+              />
             </motion.div>
           </motion.div>
         </TabsContent>
