@@ -130,7 +130,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [connectors, setConnectors] = useState<ConnectorPath[]>([]);
 
-  /* Group matches by round */
+  /* Group matches by round — auto-split if all in one round */
   const roundsData = useMemo(() => {
     if (!matches || matches.length === 0) return [];
 
@@ -141,6 +141,39 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
       return acc;
     }, {});
 
+    // If all matches are in a single round, auto-split into bracket rounds
+    // (e.g., 4 matches → QF(4) → SF(2) → Final(1), 2 matches → SF(2) → Final(1))
+    if (Object.keys(grouped).length === 1 && bracketType !== 'group_stage' && bracketType !== 'round_robin') {
+      const allMatches = Object.values(grouped)[0];
+      const totalMatches = allMatches.length;
+
+      // Calculate bracket rounds from total matches
+      // Total matches in single elim = n-1 where n = number of teams
+      // Round 1 = totalMatches/2 (or closest power of 2), each subsequent round = half
+      const rounds: { round: number; label: string; matches: Match[] }[] = [];
+      let remaining = [...allMatches];
+      let roundNum = 1;
+      let matchesInRound = Math.pow(2, Math.floor(Math.log2(totalMatches)));
+
+      // If total matches don't fit a power of 2, first round has the remainder
+      if (matchesInRound < totalMatches) {
+        matchesInRound = totalMatches - matchesInRound / 2;
+      }
+
+      while (remaining.length > 0) {
+        const roundMatches = remaining.splice(0, Math.max(1, matchesInRound));
+        rounds.push({
+          round: roundNum,
+          label: getRoundLabel(roundNum - 1, Math.ceil(Math.log2(totalMatches + 1))),
+          matches: roundMatches.map((m, i) => ({ ...m, round: roundNum })),
+        });
+        matchesInRound = Math.max(1, Math.floor(matchesInRound / 2));
+        roundNum++;
+      }
+
+      return rounds;
+    }
+
     const sortedRounds = Object.entries(grouped)
       .sort(([a], [b]) => Number(a) - Number(b))
       .map(([, roundMatches], idx) => ({
@@ -150,7 +183,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
       }));
 
     return sortedRounds;
-  }, [matches]);
+  }, [matches, bracketType]);
 
   /* Calculate SVG connector paths after layout */
   const calculateConnectors = useCallback(() => {
@@ -251,11 +284,13 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
 
   useEffect(() => {
     // Calculate connectors after mount and on resize
-    const timer = setTimeout(calculateConnectors, 100);
+    // Use multiple attempts to ensure DOM is ready
+    const attempts = [50, 200, 500, 1000];
+    const timers = attempts.map(delay => setTimeout(calculateConnectors, delay));
     const handleResize = () => calculateConnectors();
     window.addEventListener('resize', handleResize);
     return () => {
-      clearTimeout(timer);
+      timers.forEach(clearTimeout);
       window.removeEventListener('resize', handleResize);
     };
   }, [calculateConnectors]);
