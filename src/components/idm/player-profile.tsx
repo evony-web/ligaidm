@@ -64,7 +64,7 @@ function StatBlock({ icon: Icon, label, value, sub, color, highlight, size = 'no
 }
 
 /* ─── Match History Row — Esports style ─── */
-function MatchHistoryRow({ match }: { match: { week: number; result: string; score: string; mvp: boolean; opponent: string; kda: string } }) {
+function MatchHistoryRow({ match }: { match: { week: number; result: string; score: string; mvp: boolean; opponent: string; highScore: string } }) {
   const dt = useDivisionTheme();
   const isWin = match.result === 'WIN';
   return (
@@ -83,7 +83,7 @@ function MatchHistoryRow({ match }: { match: { week: number; result: string; sco
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <span>Wk {match.week}</span>
           <span className="text-border">•</span>
-          <span>Score {match.kda}</span>
+          <span>Score {match.highScore}</span>
         </div>
       </div>
       {/* Score */}
@@ -114,11 +114,11 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
 
   // Generate match history for demo
   const recentMatches = [
-    { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', kda: '985K' },
-    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Wolves', kda: '872K' },
-    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Elite', kda: '756K' },
-    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Raiders', kda: '1.1M' },
-    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Squad', kda: '923K' },
+    { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', highScore: '985K' },
+    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Wolves', highScore: '872K' },
+    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Elite', highScore: '756K' },
+    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Raiders', highScore: '1.1M' },
+    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Squad', highScore: '923K' },
   ];
 
   // Performance chart data (simulated)

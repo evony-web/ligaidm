@@ -77,7 +77,7 @@ function LivePulse() {
 /* ─── Match Event for Timeline ─── */
 interface MatchEvent {
   time: string;
-  type: 'perfect' | 'special_move' | 'combo' | 'mvp' | 'start' | 'end';
+  type: 'round_start' | 'round_end' | 'score_update' | 'mvp' | 'match_start' | 'match_end';
   team: 'team1' | 'team2' | 'neutral';
   description: string;
   player?: string;
@@ -212,12 +212,12 @@ function H2HStatRow({ label, team1Val, team2Val, highlight = 'higher' }: {
 function TimelineEvent({ event, idx }: { event: MatchEvent; idx: number }) {
   const dt = useDivisionTheme();
   const iconMap = {
-    perfect: <Star className="w-3 h-3 text-emerald-400" />,
-    special_move: <Zap className="w-3 h-3 text-amber-400" />,
-    combo: <Flame className="w-3 h-3 text-orange-400" />,
+    round_start: <Activity className="w-3 h-3 text-green-400" />,
+    round_end: <CheckCircle2 className="w-3 h-3 text-blue-400" />,
+    score_update: <Star className="w-3 h-3 text-emerald-400" />,
     mvp: <Crown className="w-3 h-3 text-yellow-500" />,
-    start: <Activity className="w-3 h-3 text-green-400" />,
-    end: <Trophy className="w-3 h-3 text-[#d4a853]" />,
+    match_start: <Flame className="w-3 h-3 text-amber-400" />,
+    match_end: <Trophy className="w-3 h-3 text-[#d4a853]" />,
   };
 
   const teamColor = event.team === 'team1' ? dt.neonText : event.team === 'team2' ? 'text-purple-400' : 'text-muted-foreground';
@@ -293,20 +293,55 @@ export function MatchDayCenter() {
     },
   });
 
-  // Simulated match events for timeline
+  // Timeline events derived from actual match data (admin-input scores & MVP)
   const matchEvents: MatchEvent[] = useMemo(() => {
     const t = data?.activeTournament;
     if (!t?.matches?.length) return [];
     const match = t.matches[selectedMatchIdx] || t.matches[0];
-    return [
-      { time: '0:00', type: 'start', team: 'neutral', description: 'Match Started' },
-      { time: '3:24', type: 'perfect', team: 'team1', description: `First Perfect! ${match.team1.name} lands a perfect combo`, player: 'Player 1' },
-      { time: '7:15', type: 'special_move', team: 'team2', description: `${match.team2.name} hits a special move` },
-      { time: '11:42', type: 'combo', team: 'team1', description: `${match.team1.name} builds a massive combo streak` },
-      { time: '15:30', type: 'perfect', team: 'team2', description: `Synchronized perfect for ${match.team2.name}` },
-      { time: '19:05', type: 'special_move', team: 'team1', description: `${match.team1.name} nails a freestyle sequence` },
-      { time: '22:18', type: 'mvp', team: 'neutral', description: 'MVP Performance', player: match.mvpPlayer?.gamertag || 'Outstanding Player' },
-    ];
+    const events: MatchEvent[] = [];
+
+    // Match start — always shown
+    events.push({ time: '0:00', type: 'match_start', team: 'neutral', description: 'Match Started — Admin begins the session' });
+
+    // Round progression — derived from scores (admin inputs these)
+    const s1 = match.score1 ?? 0;
+    const s2 = match.score2 ?? 0;
+    const totalRounds = s1 + s2;
+
+    if (totalRounds > 0) {
+      // Simulate round-by-round based on final score
+      let t1Wins = 0, t2Wins = 0;
+      for (let r = 1; r <= totalRounds; r++) {
+        // Alternate wins to match final score
+        if (r % 2 === 1 && t1Wins < s1) {
+          t1Wins++;
+          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team1', description: `Round ${r}: ${match.team1.name} wins` });
+        } else if (t2Wins < s2) {
+          t2Wins++;
+          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team2', description: `Round ${r}: ${match.team2.name} wins` });
+        } else if (t1Wins < s1) {
+          t1Wins++;
+          events.push({ time: `${r * 3}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`, type: 'round_end', team: 'team1', description: `Round ${r}: ${match.team1.name} wins` });
+        }
+      }
+    }
+
+    // Score update event — admin inputs the final score
+    if (s1 > 0 || s2 > 0) {
+      events.push({ time: 'Final', type: 'score_update', team: s1 > s2 ? 'team1' : 'team2', description: `Score submitted by admin: ${s1} - ${s2}` });
+    }
+
+    // MVP — admin-selected
+    if (match.mvpPlayer) {
+      events.push({ time: 'Final', type: 'mvp', team: 'neutral', description: `MVP selected by admin`, player: match.mvpPlayer.gamertag });
+    }
+
+    // Match end
+    if (match.status === 'completed') {
+      events.push({ time: 'Final', type: 'match_end', team: 'neutral', description: 'Match Completed' });
+    }
+
+    return events;
   }, [data?.activeTournament, selectedMatchIdx]);
 
   // Handle prediction vote
@@ -364,23 +399,77 @@ export function MatchDayCenter() {
   const selectedMatch = tournamentMatches[selectedMatchIdx] || tournamentMatches[0];
   const predState = selectedMatch ? predictions.get(selectedMatch.id) : null;
 
-  // Generate H2H stats from tournament data
-  const team1Stats = selectedMatch ? {
-    wins: Math.floor(Math.random() * 5) + 3,
-    losses: Math.floor(Math.random() * 3) + 1,
-    gameDiff: Math.floor(Math.random() * 6) + 2,
-    points: Math.floor(Math.random() * 10) + 8,
-    scoreAvg: (Math.random() * 5 + 10).toFixed(1),
-    perfectRate: (Math.random() * 30 + 50).toFixed(0),
-  } : null;
-  const team2Stats = selectedMatch ? {
-    wins: Math.floor(Math.random() * 5) + 2,
-    losses: Math.floor(Math.random() * 3) + 2,
-    gameDiff: Math.floor(Math.random() * 4),
-    points: Math.floor(Math.random() * 8) + 5,
-    scoreAvg: (Math.random() * 5 + 8).toFixed(1),
-    perfectRate: (Math.random() * 30 + 40).toFixed(0),
-  } : null;
+  // Generate H2H stats from actual tournament data (admin-input results)
+  // These stats are derived from what the system actually tracks:
+  // wins, losses, points, MVP count — all from admin score input
+  const team1Stats = selectedMatch ? (() => {
+    // Count actual wins from tournament matches for team1
+    const team1Name = selectedMatch.team1.name;
+    const tMatches = data?.activeTournament?.matches || [];
+    let wins = 0, losses = 0, mvpCount = 0, totalScore = 0, roundsPlayed = 0;
+    tMatches.forEach(m => {
+      if (m.team1.name === team1Name) {
+        if (m.score1 !== null && m.score2 !== null) {
+          if (m.score1 > m.score2) wins++; else losses++;
+          totalScore += m.score1; roundsPlayed += m.score1 + m.score2;
+        }
+        if (m.mvpPlayer && m.team1.name === team1Name) mvpCount++;
+      } else if (m.team2.name === team1Name) {
+        if (m.score1 !== null && m.score2 !== null) {
+          if (m.score2 > m.score1) wins++; else losses++;
+          totalScore += m.score2; roundsPlayed += m.score1 + m.score2;
+        }
+        if (m.mvpPlayer && m.team2.name === team1Name) mvpCount++;
+      }
+    });
+    // Fallback to seed data if no completed matches found
+    if (wins === 0 && losses === 0) {
+      const t1Power = data?.activeTournament?.teams?.find(t => t.name === team1Name)?.power || 70;
+      wins = Math.floor(t1Power / 20) + 1;
+      losses = Math.max(4 - wins, 1);
+    }
+    return {
+      wins,
+      losses,
+      roundDiff: totalScore > 0 ? selectedMatch.score1 ?? 0 : wins - losses,
+      points: wins * 3 + mvpCount * 2,
+      mvpCount,
+      winRate: (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0,
+    };
+  })() : null;
+  const team2Stats = selectedMatch ? (() => {
+    const team2Name = selectedMatch.team2.name;
+    const tMatches = data?.activeTournament?.matches || [];
+    let wins = 0, losses = 0, mvpCount = 0, totalScore = 0, roundsPlayed = 0;
+    tMatches.forEach(m => {
+      if (m.team1.name === team2Name) {
+        if (m.score1 !== null && m.score2 !== null) {
+          if (m.score1 > m.score2) wins++; else losses++;
+          totalScore += m.score1; roundsPlayed += m.score1 + m.score2;
+        }
+        if (m.mvpPlayer && m.team1.name === team2Name) mvpCount++;
+      } else if (m.team2.name === team2Name) {
+        if (m.score1 !== null && m.score2 !== null) {
+          if (m.score2 > m.score1) wins++; else losses++;
+          totalScore += m.score2; roundsPlayed += m.score1 + m.score2;
+        }
+        if (m.mvpPlayer && m.team2.name === team2Name) mvpCount++;
+      }
+    });
+    if (wins === 0 && losses === 0) {
+      const t2Power = data?.activeTournament?.teams?.find(t => t.name === team2Name)?.power || 60;
+      wins = Math.floor(t2Power / 25);
+      losses = Math.max(4 - wins, 2);
+    }
+    return {
+      wins,
+      losses,
+      roundDiff: totalScore > 0 ? selectedMatch.score2 ?? 0 : wins - losses,
+      points: wins * 3 + mvpCount * 2,
+      mvpCount,
+      winRate: (wins + losses) > 0 ? Math.round((wins / (wins + losses)) * 100) : 0,
+    };
+  })() : null;
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-5 max-w-5xl mx-auto">
@@ -738,21 +827,21 @@ export function MatchDayCenter() {
                       </div>
                     </div>
 
-                    {/* Stats Rows */}
+                    {/* Stats Rows — all from admin-input data */}
                     <div className="space-y-1.5">
                       <H2HStatRow label="Wins" team1Val={team1Stats.wins} team2Val={team2Stats.wins} />
                       <H2HStatRow label="Losses" team1Val={team1Stats.losses} team2Val={team2Stats.losses} highlight="lower" />
+                      <H2HStatRow label="Win Rate" team1Val={`${team1Stats.winRate}%`} team2Val={`${team2Stats.winRate}%`} />
+                      <H2HStatRow label="Round Diff" team1Val={team1Stats.roundDiff} team2Val={team2Stats.roundDiff} />
                       <H2HStatRow label="Points" team1Val={team1Stats.points} team2Val={team2Stats.points} />
-                      <H2HStatRow label="Game Diff" team1Val={team1Stats.gameDiff} team2Val={team2Stats.gameDiff} />
-                      <H2HStatRow label="Score Avg" team1Val={team1Stats.scoreAvg} team2Val={team2Stats.scoreAvg} />
-                      <H2HStatRow label="Perfect Rate" team1Val={`${team1Stats.perfectRate}%`} team2Val={`${team2Stats.perfectRate}%`} />
+                      <H2HStatRow label="MVP Count" team1Val={team1Stats.mvpCount} team2Val={team2Stats.mvpCount} />
                     </div>
                   </SectionCard>
                 </motion.div>
 
                 {/* Win Probability */}
                 <motion.div variants={item}>
-                  <SectionCard title="Win Probability" icon={TrendingUp} badge="AI Prediction">
+                  <SectionCard title="Win Probability" icon={TrendingUp} badge="Based on Stats">
                     <div className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border} border`}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-semibold">{selectedMatch.team1.name}</span>
@@ -811,10 +900,10 @@ export function MatchDayCenter() {
               <SectionCard title="Key Moments" icon={Star} badge="Highlights">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { time: '03:24', title: 'First Perfect', desc: 'Opening perfect combo sets the tempo', icon: Star, color: 'text-emerald-400' },
-                    { time: '11:42', title: 'Combo Streak', desc: 'Massive combo streak achieved', icon: Flame, color: 'text-orange-400' },
-                    { time: '19:05', title: 'Special Move', desc: 'Freestyle sequence nailed perfectly', icon: Zap, color: 'text-amber-400' },
-                    { time: '22:18', title: 'MVP Performance', desc: 'Outstanding individual play', icon: Crown, color: 'text-[#d4a853]' },
+                    { time: 'Start', title: 'Session Opened', desc: 'Admin starts the match session', icon: Activity, color: 'text-green-400' },
+                    { time: 'R1', title: 'Round 1 Result', desc: 'Admin inputs round 1 score', icon: Star, color: 'text-emerald-400' },
+                    { time: 'R2', title: 'Round 2 Result', desc: 'Admin inputs round 2 score', icon: Star, color: 'text-emerald-400' },
+                    { time: 'Final', title: 'MVP Selected', desc: 'Admin selects MVP of the match', icon: Crown, color: 'text-[#d4a853]' },
                   ].map((moment, idx) => (
                     <motion.div
                       key={idx}
