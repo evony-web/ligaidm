@@ -209,3 +209,40 @@ Stage Summary:
 - player-card.tsx: 5 occurrences replaced for card wrapper, rank badge glow, avatar glow, champion text
 - Cards now correctly display cyan/blue borders for Male division and purple borders for Female division
 - Lint passes clean
+
+---
+Task ID: 7
+Agent: Main Agent
+Task: Fix color harmony issue — warm obsidian gold-tinted colors replacing cold grey/blue tones
+
+Work Log:
+- Analyzed all files for cold color patterns: #0d0d1a (blue-black), #0a0a14 (blue-black), rgba(8,6,12,...) (cold purple-black), rgba(255,255,255,...) (cold white tints)
+- Fixed globals.css (2 duplicate CSS sections):
+  - .casino-card light mode: rgba(15,12,8,...) → rgba(20,17,10,0.92) and rgba(30,25,16,0.88) with gold-tinted border rgba(229,190,74,...)
+  - .dark .casino-card: rgba(8,6,4,...) → rgba(14,12,7,0.96) and rgba(22,18,10,0.92) with gold-tinted border
+  - .casino-card::before: white rgba → warm gold rgba(229,190,74,...)
+  - Second .casino-card: rgba(15,12,20,...) → rgba(20,17,10,0.92), rgba(14,12,7,0.96) with gold borders and inset highlights
+  - .casino-img-overlay: rgba(8,6,12,...) → rgba(12,10,6,...) warm obsidian for both light and dark
+  - .casino-pill: rgba(255,255,255,...) → rgba(229,190,74,...) gold-tinted backgrounds and borders
+  - .casino-surface::after: rgba(255,255,255,...) → rgba(229,190,74,...) gold hex grid pattern
+- Fixed dashboard.tsx (18 replacements):
+  - All bg-white/[0.03] → ${dt.bgSubtle} (division-aware cyan/purple tints)
+  - All bg-white/[0.02] → ${dt.bgSubtle}
+  - All border-white/[0.06] → ${dt.border} (division-aware borders)
+  - All border-white/[0.04] → ${dt.borderSubtle}
+  - Includes: prize pool, tabs, stat boxes, donation tracker, upcoming matches, leaderboard, clubs, activity feed
+- Fixed landing-page.tsx (17 replacements):
+  - All #0d0d1a → #0c0a06 (warm obsidian) — marquee, champion cards, feature cards, how-it-works, stats, footer
+  - #0a0a14 → #0c0a06 in timeline circle
+- Fixed player-card.tsx (1 replacement):
+  - border-white/[0.06] → ${dt.borderSubtle}
+- Checked tournament-view.tsx, league-view.tsx, admin-panel.tsx — no cold color patterns found, no changes needed
+- Lint passes clean, dev server running successfully
+
+Stage Summary:
+- All cold grey/blue-black card backgrounds replaced with warm obsidian gold-tinted colors
+- All cold white rgba tints replaced with warm gold rgba(229,190,74,...) tints in CSS
+- All cold bg-white/border-white inline classes in dashboard replaced with division-aware dt.* theme vars
+- All #0d0d1a cold blue-black in landing page replaced with #0c0a06 warm obsidian
+- Cards and backgrounds now blend harmoniously with the warm gold-tinted design system
+- Division neon accent colors (cyan/purple) preserved unchanged

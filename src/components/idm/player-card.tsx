@@ -90,7 +90,7 @@ export function PlayerCard({
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-white/[0.06]">
+        <div className={`grid grid-cols-3 gap-1 mt-2 pt-2 border-t ${dt.borderSubtle}`}>
           <div className="text-center">
             <p className={`text-xs font-bold ${dt.neonText}`}>{points}</p>
             <p className="text-[9px] text-muted-foreground">PTS</p>

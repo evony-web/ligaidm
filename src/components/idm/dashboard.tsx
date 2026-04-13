@@ -252,7 +252,7 @@ export function Dashboard() {
             )}
 
             {/* Prize Pool */}
-            <div className={`p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]`}>
+            <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
                 <span className={`text-lg font-bold ${dt.neonGradient}`}>{formatCurrency(t?.prizePool || 0)}</span>
@@ -364,7 +364,7 @@ export function Dashboard() {
 
       {/* ========== MAIN CONTENT WITH TABS ========== */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full grid grid-cols-4 bg-white/[0.03] border border-white/[0.06] h-auto p-1 rounded-xl">
+        <TabsList className={`w-full grid grid-cols-4 ${dt.bgSubtle} ${dt.border} h-auto p-1 rounded-xl`}>
           <TabsTrigger value="overview" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Overview</TabsTrigger>
           <TabsTrigger value="leaderboard" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Leaderboard</TabsTrigger>
           <TabsTrigger value="clubs" className="text-[11px] py-2 tab-premium data-[state=active]:text-foreground">Clubs</TabsTrigger>
@@ -378,7 +378,7 @@ export function Dashboard() {
             <motion.div variants={item}>
               <CasinoHeaderCard icon={Trophy} title="Latest Match" badge="RESULT">
                 {t?.matches?.filter(m => m.status === 'completed').slice(-1).map(m => (
-                  <div key={m.id} className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <div key={m.id} className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
                     <div className="flex items-center justify-between">
                       <div className="text-center flex-1">
                         <p className="text-sm font-semibold">{m.team1.name}</p>
@@ -418,15 +418,15 @@ export function Dashboard() {
                     <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center interactive-scale">
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
                       <p className={`text-lg font-bold ${dt.neonText}`}>{data.totalPlayers}</p>
                       <p className="text-[10px] text-muted-foreground">Players</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center interactive-scale cursor-pointer" onClick={() => setSelectedClub(data.clubs?.[0])}>
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
                       <p className={`text-lg font-bold ${dt.neonText}`}>{data.clubs?.length || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Clubs</p>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center interactive-scale">
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
                       <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
                       <p className="text-[10px] text-muted-foreground">Funded</p>
                     </div>
@@ -438,7 +438,7 @@ export function Dashboard() {
             {/* Donation Tracker */}
             <motion.div variants={item}>
               <CasinoHeaderCard icon={Gift} title="Donation & Sawer" badge="LIVE">
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-3">
+                <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} mb-3`}>
                   <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
                   <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(data.totalPrizePool)}</p>
                   <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
@@ -446,7 +446,7 @@ export function Dashboard() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground">Top Contributors</p>
                   {data.topDonors?.slice(0, 3).map((d, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs p-2 rounded-lg bg-white/[0.02] border border-white/[0.04] interactive-scale">
+                    <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} interactive-scale`}>
                       <span className="flex items-center gap-2">
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                           i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
@@ -468,7 +468,7 @@ export function Dashboard() {
                 {data.upcomingMatches?.length > 0 ? (
                   <div className="space-y-2">
                     {data.upcomingMatches.slice(0, 3).map(m => (
-                      <div key={m.id} className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] text-center interactive-scale">
+                      <div key={m.id} className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} text-center interactive-scale`}>
                         <div className="flex items-center gap-2 justify-center">
                           <Calendar className={`w-3 h-3 ${dt.neonText}`} />
                           <p className="text-[10px] text-muted-foreground">Week {m.week}</p>
@@ -503,13 +503,13 @@ export function Dashboard() {
                   <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
                     {data.topPlayers?.slice(0, 10).map((p, idx) => (
                       <div key={p.id} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer interactive-scale ${
-                        idx < 3 ? `${dt.bgSubtle} border ${dt.borderSubtle}` : 'hover:bg-white/[0.02] border border-transparent'
+                        idx < 3 ? `${dt.bgSubtle} ${dt.border}` : `hover:${dt.bgSubtle} border border-transparent`
                       }`} onClick={() => setSelectedPlayer(p)}>
                         <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                           idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                           idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                           idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                          'bg-white/[0.03] text-muted-foreground'
+                          `${dt.bgSubtle} text-muted-foreground`
                         }`}>
                           {idx + 1}
                         </span>
@@ -560,14 +560,14 @@ export function Dashboard() {
                     {data.clubs?.map((club, idx) => (
                       <div key={club.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer interactive-scale ${
                         idx === 0 ? `${dt.bgSubtle} border ${dt.borderSubtle} ${dt.casinoGlow}` :
-                        idx < 4 ? `${dt.bgSubtle} border ${dt.borderSubtle}` :
-                        'hover:bg-white/[0.02] border border-transparent'
+                        idx < 4 ? `${dt.bgSubtle} ${dt.border}` :
+                        `hover:${dt.bgSubtle} border border-transparent`
                       }`} onClick={() => setSelectedClub(club)}>
                         <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
                           idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                           idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                           idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                          'bg-white/[0.03] text-muted-foreground'
+                          `${dt.bgSubtle} text-muted-foreground`
                         }`}>
                           {idx + 1}
                         </span>
@@ -616,7 +616,7 @@ export function Dashboard() {
                     {data.recentMatches?.slice(0, 3).map((m) => (
                       <div key={`match-${m.id}`} className="timeline-item">
                         <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                           <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                             <Trophy className={`w-4 h-4 ${dt.neonText}`} />
                           </div>
@@ -639,7 +639,7 @@ export function Dashboard() {
                     {data.topPlayers?.slice(0, 2).map((p) => (
                       <div key={`player-${p.id}`} className="timeline-item">
                         <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                           <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
                             <Crown className="w-4 h-4 text-yellow-500" />
                           </div>
@@ -677,7 +677,7 @@ export function Dashboard() {
                     {data.topDonors?.slice(0, 1).map((d, i) => (
                       <div key={`donation-${i}`} className="timeline-item">
                         <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                           <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                             <Gift className={`w-4 h-4 ${dt.neonText}`} />
                           </div>
@@ -696,7 +696,7 @@ export function Dashboard() {
                     {data.upcomingMatches?.slice(0, 1).map((m) => (
                       <div key={`upcoming-${m.id}`} className="timeline-item">
                         <div className="timeline-dot" style={{ borderColor: 'var(--idm-gold)' }} />
-                        <div className="flex items-center gap-3 p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                        <div className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                           <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                             <Zap className={`w-4 h-4 ${dt.neonText}`} />
                           </div>

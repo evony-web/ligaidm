@@ -379,19 +379,19 @@ export function LandingPage() {
       <div className="wave-divider" />
 
       {/* ========== SCROLLING CHAMPION MARQUEE ========== */}
-      <section className="py-5 overflow-hidden border-y border-[#d4a853]/10 bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/30">
+      <section className="py-5 overflow-hidden border-y border-[#d4a853]/10 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
         <div className="flex animate-marquee whitespace-nowrap">
           {[...Array(2)].map((_, setIdx) => (
             <div key={setIdx} className="flex shrink-0 gap-4 pr-4">
               {maleData?.topPlayers?.slice(0, 6).map((p) => (
-                <div key={`m-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0d0d1a]/30 dark:bg-[#0d0d1a]/60 interactive-scale">
+                <div key={`m-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0c0a06]/30 dark:bg-[#0c0a06]/60 interactive-scale">
                   <TierBadge tier={p.tier} />
                   <span className="text-xs font-semibold whitespace-nowrap">{p.gamertag}</span>
                   <span className="text-[10px] text-[#d4a853] font-bold">{p.points}pts</span>
                 </div>
               ))}
               {femaleData?.topPlayers?.slice(0, 6).map((p) => (
-                <div key={`f-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0d0d1a]/30 dark:bg-[#0d0d1a]/60 interactive-scale">
+                <div key={`f-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0c0a06]/30 dark:bg-[#0c0a06]/60 interactive-scale">
                   <TierBadge tier={p.tier} />
                   <span className="text-xs font-semibold whitespace-nowrap">{p.gamertag}</span>
                   <span className="text-[10px] text-[#d4a853] font-bold">{p.points}pts</span>
@@ -425,7 +425,7 @@ export function LandingPage() {
                     {/* Division Header */}
                     <div className="relative img-zoom h-32">
                       <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/60 to-[#0d0d1a]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-[#0c0a06]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
                       <div className="absolute inset-0 flex items-center justify-between px-5">
                         <div className="flex items-center gap-2">
                           <Swords className="w-5 h-5 text-[#22d3ee]" />
@@ -515,7 +515,7 @@ export function LandingPage() {
                   <CardContent className="p-0">
                     <div className="relative img-zoom h-32">
                       <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/60 to-[#0d0d1a]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-[#0c0a06]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
                       <div className="absolute inset-0 flex items-center justify-between px-5">
                         <div className="flex items-center gap-2">
                           <Shield className="w-5 h-5 text-[#c084fc]" />
@@ -625,14 +625,14 @@ export function LandingPage() {
                   variants={fadeUp}
                   className="group"
                 >
-                  <div className={`${f.shape} card-shine card-border-glow relative bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#d4a853]/10 rounded-2xl overflow-hidden h-full transition-all duration-500 hover:border-[#d4a853]/30 hover:shadow-[0_0_40px_rgba(212,168,83,0.12)]`}>
+                  <div className={`${f.shape} card-shine card-border-glow relative bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#d4a853]/10 rounded-2xl overflow-hidden h-full transition-all duration-500 hover:border-[#d4a853]/30 hover:shadow-[0_0_40px_rgba(212,168,83,0.12)]`}>
                     {/* Gradient Top Bar */}
                     <div className={`h-1 bg-gradient-to-r ${f.color}`} />
 
                     {/* Image area with gradient overlay */}
                     <div className="relative img-zoom h-36">
                       <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a]/95 via-[#0d0d1a]/60 to-[#0d0d1a]/20 dark:from-[#0d0d1a] dark:via-[#0d0d1a]/60 dark:to-[#0d0d1a]/30" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06]/95 via-[#0c0a06]/60 to-[#0c0a06]/20 dark:from-[#0c0a06] dark:via-[#0c0a06]/60 dark:to-[#0c0a06]/30" />
                       <Badge className="absolute top-3 right-3 bg-[#d4a853]/20 text-[#d4a853] text-[10px] border border-[#d4a853]/30 backdrop-blur-sm">{f.badge}</Badge>
                       <div className={`absolute bottom-3 left-4 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg`}>
                         <f.icon className="w-6 h-6 text-white" />
@@ -653,7 +653,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS — Animated Timeline ========== */}
-      <section className="relative py-24 px-4 bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/30 overflow-hidden">
+      <section className="relative py-24 px-4 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30 overflow-hidden">
         <div className="absolute inset-0">
           <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.03] dark:opacity-[0.06]" aria-hidden="true" />
         </div>
@@ -695,7 +695,7 @@ export function LandingPage() {
                         whileInView={{ scale: 1 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.15, type: 'spring', stiffness: 200 }}
-                        className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#0d0d1a] dark:bg-[#0a0a14] border-2 ${s.ring} flex items-center justify-center glow-champion`}
+                        className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#0c0a06] dark:bg-[#0c0a06] border-2 ${s.ring} flex items-center justify-center glow-champion`}
                       >
                         <span className="text-sm sm:text-base font-black text-[#d4a853]">{s.step}</span>
                       </motion.div>
@@ -704,7 +704,7 @@ export function LandingPage() {
                     {/* Card with clip-corner shape */}
                     <motion.div
                       whileHover={{ x: 4 }}
-                      className="flex-1 bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#d4a853]/10 rounded-xl p-4 sm:p-5 transition-all duration-300 hover:border-[#d4a853]/30 hover:shadow-[0_0_25px_rgba(212,168,83,0.1)] card-shine"
+                      className="flex-1 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#d4a853]/10 rounded-xl p-4 sm:p-5 transition-all duration-300 hover:border-[#d4a853]/30 hover:shadow-[0_0_25px_rgba(212,168,83,0.1)] card-shine"
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center shrink-0`}>
@@ -739,7 +739,7 @@ export function LandingPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Male Leaderboard */}
               <motion.div variants={fadeLeft}>
-                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#06b6d4]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
+                <Card className="bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#06b6d4]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
                   <CardContent className="p-0">
                     <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#06b6d4]/10 to-transparent border-b border-[#06b6d4]/10">
                       <Swords className="w-4 h-4 text-[#22d3ee]" />
@@ -786,7 +786,7 @@ export function LandingPage() {
 
               {/* Female Leaderboard */}
               <motion.div variants={fadeRight}>
-                <Card className="bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/60 border border-[#a855f7]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
+                <Card className="bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#a855f7]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
                   <CardContent className="p-0">
                     <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#a855f7]/10 to-transparent border-b border-[#a855f7]/10">
                       <Shield className="w-4 h-4 text-[#c084fc]" />
@@ -836,7 +836,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== COMMUNITY STATS — Animated Counter Section ========== */}
-      <section className="py-20 px-4 relative overflow-hidden bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/30">
+      <section className="py-20 px-4 relative overflow-hidden bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
         <div className="absolute inset-0 bg-mesh-fury opacity-40" />
         <div className="ambient-light" style={{ top: '20%', right: '10%', animationDuration: '20s' }} />
 
@@ -938,7 +938,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== FOOTER ========== */}
-      <footer className="py-12 px-4 border-t border-[#d4a853]/10 text-center bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/30">
+      <footer className="py-12 px-4 border-t border-[#d4a853]/10 text-center bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
         <div className="max-w-4xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}

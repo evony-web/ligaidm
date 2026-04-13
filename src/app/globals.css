@@ -1986,13 +1986,13 @@ html {
   position: relative;
   background: linear-gradient(
     145deg,
-    rgba(15, 12, 8, 0.95) 0%,
-    rgba(25, 20, 14, 0.92) 50%,
-    rgba(15, 12, 8, 0.95) 100%
+    rgba(20, 17, 10, 0.92) 0%,
+    rgba(30, 25, 16, 0.88) 50%,
+    rgba(20, 17, 10, 0.92) 100%
   );
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(229, 190, 74, 0.08);
   overflow: hidden;
   isolation: isolate;
 }
@@ -2005,18 +2005,18 @@ html {
   z-index: 0;
   opacity: 0.04;
   background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+    radial-gradient(circle at 30% 20%, rgba(229, 190, 74, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(229, 190, 74, 0.02) 0%, transparent 50%);
 }
 
 .dark .casino-card {
   background: linear-gradient(
     145deg,
-    rgba(8, 6, 4, 0.98) 0%,
-    rgba(16, 13, 9, 0.95) 50%,
-    rgba(8, 6, 4, 0.98) 100%
+    rgba(14, 12, 7, 0.96) 0%,
+    rgba(22, 18, 10, 0.92) 50%,
+    rgba(14, 12, 7, 0.96) 100%
   );
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(229, 190, 74, 0.06);
 }
 
 .dark .casino-card::before {
@@ -2350,26 +2350,26 @@ html {
 /* Casino card surface — deep dark glossy */
 .casino-card {
   position: relative;
-  background: linear-gradient(145deg, rgba(15, 12, 20, 0.95), rgba(8, 6, 12, 0.98));
+  background: linear-gradient(145deg, rgba(20, 17, 10, 0.92), rgba(14, 12, 7, 0.96));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-radius: 16px;
   overflow: hidden;
   isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(229, 190, 74, 0.06);
   box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.4),
     0 1px 2px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    inset 0 1px 0 rgba(229, 190, 74, 0.04);
 }
 
 .dark .casino-card {
-  background: linear-gradient(145deg, rgba(15, 12, 20, 0.97), rgba(8, 6, 12, 0.99));
-  border-color: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(145deg, rgba(14, 12, 7, 0.96), rgba(10, 8, 5, 0.98));
+  border-color: rgba(229, 190, 74, 0.08);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.6),
     0 2px 4px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    inset 0 1px 0 rgba(229, 190, 74, 0.05);
 }
 
 /* Neon top accent bar — division specific */
@@ -2393,10 +2393,10 @@ html {
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(8, 6, 12, 0.1) 0%,
-    rgba(8, 6, 12, 0.3) 30%,
-    rgba(8, 6, 12, 0.7) 65%,
-    rgba(8, 6, 12, 0.95) 100%
+    rgba(12, 10, 6, 0.1) 0%,
+    rgba(12, 10, 6, 0.3) 30%,
+    rgba(12, 10, 6, 0.7) 65%,
+    rgba(12, 10, 6, 0.95) 100%
   );
   pointer-events: none;
 }
@@ -2404,10 +2404,10 @@ html {
 .dark .casino-img-overlay {
   background: linear-gradient(
     180deg,
-    rgba(8, 6, 12, 0.05) 0%,
-    rgba(8, 6, 12, 0.2) 30%,
-    rgba(8, 6, 12, 0.6) 60%,
-    rgba(8, 6, 12, 0.95) 100%
+    rgba(12, 10, 6, 0.05) 0%,
+    rgba(12, 10, 6, 0.2) 30%,
+    rgba(12, 10, 6, 0.6) 60%,
+    rgba(12, 10, 6, 0.95) 100%
   );
 }
 
@@ -2456,13 +2456,13 @@ html {
   gap: 10px;
   padding: 10px 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(229, 190, 74, 0.04);
+  border: 1px solid rgba(229, 190, 74, 0.08);
   transition: all 0.3s ease;
 }
 .casino-pill:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(229, 190, 74, 0.08);
+  border-color: rgba(229, 190, 74, 0.15);
   transform: translateY(-2px);
 }
 
@@ -2557,10 +2557,10 @@ html {
   z-index: 0;
   opacity: 0.015;
   background-image:
-    linear-gradient(30deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
-    linear-gradient(150deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
-    linear-gradient(30deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
-    linear-gradient(150deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%);
+    linear-gradient(30deg, rgba(229,190,74,0.05) 12%, transparent 12.5%, transparent 87%, rgba(229,190,74,0.05) 87.5%),
+    linear-gradient(150deg, rgba(229,190,74,0.05) 12%, transparent 12.5%, transparent 87%, rgba(229,190,74,0.05) 87.5%),
+    linear-gradient(30deg, rgba(229,190,74,0.05) 12%, transparent 12.5%, transparent 87%, rgba(229,190,74,0.05) 87.5%),
+    linear-gradient(150deg, rgba(229,190,74,0.05) 12%, transparent 12.5%, transparent 87%, rgba(229,190,74,0.05) 87.5%);
   background-size: 40px 70px;
   background-position: 0 0, 0 0, 20px 35px, 20px 35px;
 }
