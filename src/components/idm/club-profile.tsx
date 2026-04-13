@@ -9,6 +9,7 @@ import {
 import { TierBadge } from './tier-badge';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 interface ClubProfileProps {
   club: {
@@ -45,6 +46,7 @@ function StatBlock({ icon: Icon, label, value, sub, color }: {
 }
 
 export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileProps) {
+  const dt = useDivisionTheme();
   const totalMatches = club.wins + club.losses;
   const winRate = totalMatches > 0 ? Math.round((club.wins / totalMatches) * 100) : 0;
   const isUndefeated = club.losses === 0 && club.wins > 0;
@@ -86,12 +88,12 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
         >
           {/* Header Banner */}
           <div className="relative h-40 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-idm-amber/20 to-primary/10" />
+            <div className={`absolute inset-0 bg-gradient-to-br ${dt.bg} via-transparent to-transparent opacity-50`} />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
             {/* Decorative shield pattern */}
             <div className="absolute top-4 right-4 opacity-10">
-              <Shield className="w-24 h-24 text-primary" />
+              <Shield className={`w-24 h-24 ${dt.text}`} />
             </div>
 
             <button
@@ -105,7 +107,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             {rank && rank <= 3 && (
               <div className="absolute top-3 left-3 z-10">
                 <Badge className={`text-xs font-bold border-0 ${
-                  rank === 1 ? 'bg-yellow-500/20 text-yellow-500 glow-champion' :
+                  rank === 1 ? `bg-yellow-500/20 text-yellow-500 ${dt.glowChampion}` :
                   rank === 2 ? 'bg-gray-400/20 text-gray-400' :
                   'bg-amber-600/20 text-amber-600'
                 }`}>
@@ -117,9 +119,9 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             {/* Club Avatar */}
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 z-10">
               <div className={`w-20 h-20 rounded-2xl border-4 border-background flex items-center justify-center text-xl font-bold ${
-                rank === 1 ? 'bg-yellow-500/10 text-yellow-500 glow-champion card-champion' :
-                rank === 2 ? 'bg-gray-400/10 text-gray-400 glow-card-hover' :
-                'bg-primary/10 text-primary glow-card-hover'
+                rank === 1 ? `bg-yellow-500/10 text-yellow-500 ${dt.glowChampion} ${dt.cardChampion}` :
+                rank === 2 ? `bg-gray-400/10 text-gray-400 ${dt.glow}` :
+                `${dt.iconBg} ${dt.text} ${dt.glow}`
               }`}>
                 <Shield className="w-8 h-8" />
               </div>
@@ -130,12 +132,10 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
           <div className="px-4 pt-14 pb-6">
             {/* Name & Division */}
             <div className="text-center mb-4">
-              <h2 className="text-xl font-bold text-gradient-fury">{club.name}</h2>
+              <h2 className={`text-xl font-bold ${dt.gradientText}`}>{club.name}</h2>
               <div className="flex items-center justify-center gap-2 mt-2">
                 {club.division && (
-                  <Badge className={`text-[10px] border-0 ${
-                    club.division === 'male' ? 'bg-primary/10 text-primary' : 'bg-idm-amber/10 text-idm-amber'
-                  }`}>
+                  <Badge className={`text-[10px] border-0 ${dt.badgeBg}`}>
                     {club.division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}
                   </Badge>
                 )}
@@ -157,7 +157,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
 
             {/* Main Stats Grid */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              <StatBlock icon={Trophy} label="Points" value={club.points} color="text-primary" />
+              <StatBlock icon={Trophy} label="Points" value={club.points} color={dt.text} />
               <StatBlock icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${club.wins}W/${club.losses}L`} color="text-green-500" />
               <StatBlock icon={Swords} label="Game Diff" value={club.gameDiff > 0 ? `+${club.gameDiff}` : club.gameDiff} color="text-yellow-500" />
             </div>
@@ -168,7 +168,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-muted-foreground">Win Rate</span>
-                  <span className="font-bold text-primary">{winRate}%</span>
+                  <span className={`font-bold ${dt.text}`}>{winRate}%</span>
                 </div>
                 <Progress value={winRate} className="h-2" />
               </div>
@@ -190,21 +190,21 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                 <span className="text-sm font-bold text-red-500">{club.losses}</span>
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-primary/5 border border-primary/10">
+              <div className={`flex items-center justify-between p-2.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle}`}>
                 <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-primary" />
+                  <Zap className={`w-4 h-4 ${dt.text}`} />
                   <span className="text-xs font-medium">Total Matches</span>
                 </div>
-                <span className="text-sm font-bold text-primary">{totalMatches}</span>
+                <span className={`text-sm font-bold ${dt.text}`}>{totalMatches}</span>
               </div>
             </div>
 
             {/* Roster */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-primary" />
+                <Users className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Roster</h3>
-                <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{members.length} Players</Badge>
+                <Badge className={`${dt.badgeBg} text-[10px] ml-auto`}>{members.length} Players</Badge>
               </div>
               <div className="space-y-1.5">
                 {members.map((p, i) => (
@@ -228,7 +228,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                       <p className="text-[10px] text-muted-foreground">{p.name}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs font-bold text-primary">{p.points}</p>
+                      <p className={`text-xs font-bold ${dt.text}`}>{p.points}</p>
                       <p className="text-[9px] text-muted-foreground">pts</p>
                     </div>
                     <ChevronRight className="w-3 h-3 text-muted-foreground shrink-0" />
@@ -240,7 +240,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             {/* Achievements */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-primary" />
+                <Award className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Achievements</h3>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -260,12 +260,12 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                   </Badge>
                 )}
                 {rank === 1 && (
-                  <Badge className="bg-yellow-500/10 text-yellow-500 text-[10px] border-0 glow-champion">
+                  <Badge className={`bg-yellow-500/10 text-yellow-500 text-[10px] border-0 ${dt.glowChampion}`}>
                     <Crown className="w-3 h-3 mr-1" /> League Champion
                   </Badge>
                 )}
                 {rank && rank <= 4 && rank > 1 && (
-                  <Badge className="bg-idm-amber/10 text-idm-amber text-[10px] border-0">
+                  <Badge className={`${dt.badgeBg} text-[10px] border-0`}>
                     <Shield className="w-3 h-3 mr-1" /> Top 4
                   </Badge>
                 )}
@@ -280,7 +280,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                   </Badge>
                 )}
                 {winRate >= 70 && club.wins > 0 && (
-                  <Badge className="bg-primary/10 text-primary text-[10px] border-0">
+                  <Badge className={`${dt.badgeBg} text-[10px] border-0`}>
                     <TrendingUp className="w-3 h-3 mr-1" /> 70%+ Win Rate
                   </Badge>
                 )}
@@ -290,7 +290,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             {/* Recent Matches */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Swords className="w-4 h-4 text-primary" />
+                <Swords className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Recent Matches</h3>
               </div>
               <div className="space-y-1.5">
@@ -316,15 +316,15 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             </div>
 
             {/* Points Breakdown */}
-            <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
+            <div className={`p-3 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle}`}>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
+                <TrendingUp className={`w-4 h-4 ${dt.text}`} />
                 <span className="text-xs font-semibold">Points Breakdown</span>
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Win Bonus ({club.wins} wins × 2pts)</span>
-                  <span className="font-bold text-primary">+{club.wins * 2} pts</span>
+                  <span className={`font-bold ${dt.text}`}>+{club.wins * 2} pts</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Game Difference ({club.gameDiff > 0 ? '+' : ''}{club.gameDiff})</span>
@@ -343,7 +343,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                 <div className="h-px bg-border my-1" />
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{club.points} pts</span>
+                  <span className={dt.text}>{club.points} pts</span>
                 </div>
               </div>
             </div>

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { TierBadge } from './tier-badge';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 interface Tournament {
   id: string; name: string; weekNumber: number; division: string; status: string;
@@ -55,6 +56,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function TournamentView() {
   const { division } = useAppStore();
+  const dt = useDivisionTheme();
   const qc = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -158,7 +160,7 @@ export function TournamentView() {
           {tournaments?.map(t => (
             <motion.div key={t.id} variants={item}>
               <Card
-                className={`card-premium card-lift cursor-pointer ${t.status === 'main_event' ? 'glow-pulse' : t.status === 'completed' ? '' : 'card-glow-hover'}`}
+                className={`${dt.cardPremium} card-lift cursor-pointer ${t.status === 'main_event' ? 'glow-pulse' : t.status === 'completed' ? '' : dt.cardGlowHover}`}
                 onClick={() => setSelectedId(t.id)}
               >
                 <CardContent className="p-4">
@@ -196,7 +198,7 @@ export function TournamentView() {
         <>
           {/* Header */}
           <motion.div variants={item}>
-            <Card className="card-premium overflow-hidden">
+            <Card className={`${dt.cardPremium} overflow-hidden`}>
               <CardContent className="p-0">
                 <div className="relative p-4 bg-gradient-to-r from-primary/10 via-transparent to-idm-amber/5">
                   <div className="flex items-start justify-between">
@@ -242,7 +244,7 @@ export function TournamentView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Registered Players */}
             <motion.div variants={item}>
-              <Card className="card-premium h-full">
+              <Card className={`${dt.cardPremium} h-full`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -282,7 +284,7 @@ export function TournamentView() {
 
             {/* Teams */}
             <motion.div variants={item}>
-              <Card className="card-premium h-full">
+              <Card className={`${dt.cardPremium} h-full`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -324,7 +326,7 @@ export function TournamentView() {
           {/* Matches */}
           {selected.matches?.length > 0 && (
             <motion.div variants={item}>
-              <Card className="card-premium">
+              <Card className={dt.cardPremium}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

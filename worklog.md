@@ -174,3 +174,38 @@ Stage Summary:
 - Player cards use division-aware styling
 - Gold/primary colors preserved only for universal brand elements (logo, season badge, MVP crown, prize pool)
 - useDivisionTheme hook provides reusable division theme object
+
+---
+Task ID: 6
+Agent: full-stack-developer
+Task: Replace hardcoded gold card CSS classes with division-specific dt.* theme classes
+
+Work Log:
+- Read dashboard.tsx and player-card.tsx to identify all remaining hardcoded CSS classes
+- Found that some dt.* replacements had already been done (hero banner, hero card, match ticker, first 2 overview cards)
+- In dashboard.tsx, replaced 15 remaining hardcoded class occurrences:
+  - 3x `card-glow-hover` in season progress stat boxes (lines 352, 356, 360) → `${dt.cardGlowHover}`
+  - 2x `card-premium card-lift` in donation tracker & upcoming matches (lines 372, 402) → `${dt.cardPremium} card-lift`
+  - 1x `card-glow-hover` in upcoming match item (line 408) → `${dt.cardGlowHover}`
+  - 3x `card-premium` in leaderboard/clubs/activity tab cards (lines 426, 471, 515) → `dt.cardPremium`
+  - 2x `card-glow-hover` in clubs tab (lines 478, 479) → `${dt.cardGlowHover}`
+  - 1x `card-glow-hover` in activity match event (line 521) → `${dt.cardGlowHover}`
+  - 1x `card-glow-hover` in activity top player event (line 543) → `${dt.cardGlowHover}`
+  - 1x `card-glow-hover` in activity streak event (line 559) → `${dt.cardGlowHover}`
+  - 1x `card-glow-hover` in activity donation event (line 575) → `${dt.cardGlowHover}`
+  - 1x `card-glow-hover` in activity upcoming event (line 591) → `${dt.cardGlowHover}`
+- In player-card.tsx, replaced 5 hardcoded class occurrences:
+  - `card-champion` → `dt.cardChampion` (rank 1 card wrapper)
+  - `card-premium` × 2 → `dt.cardPremium` (rank 2/3 card wrapper)
+  - `card-glow-hover` → `${dt.cardGlowHover}` (rank >3 card wrapper)
+  - `glow-champion` × 2 → `${dt.glowChampion}` (rank badge glow + avatar glow)
+  - `text-gradient-gold` × 2 → `dt.gradientText` (champion name + champion points)
+- Preserved `card-lift`, `interactive-scale`, and universal gold elements (yellow-500 for MVP crown, rank badges)
+- Ran lint: passes clean with no errors
+
+Stage Summary:
+- All hardcoded gold card/frame CSS classes replaced with division-specific dt.* theme classes
+- dashboard.tsx: 15 occurrences replaced across stat boxes, tab cards, activity feed items
+- player-card.tsx: 5 occurrences replaced for card wrapper, rank badge glow, avatar glow, champion text
+- Cards now correctly display cyan/blue borders for Male division and purple borders for Female division
+- Lint passes clean

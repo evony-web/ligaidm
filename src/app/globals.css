@@ -1630,3 +1630,284 @@ html {
 .division-bar-female {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.15), transparent);
 }
+
+/* ============================================
+   28. DIVISION CARD VARIANTS — Neon borders/glows per division
+   ============================================ */
+
+/* --- card-gold-male: Cyan-accented premium card --- */
+.card-gold-male {
+  position: relative;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 15px rgba(6, 182, 212, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.card-gold-male::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    #06b6d4,
+    rgba(34, 211, 238, 0.4),
+    #06b6d4
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease-in-out infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dark .card-gold-male {
+  box-shadow:
+    0 0 20px rgba(34, 211, 238, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* --- card-gold-female: Purple-accented premium card --- */
+.card-gold-female {
+  position: relative;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 15px rgba(168, 85, 247, 0.08),
+    0 4px 24px rgba(0, 0, 0, 0.06);
+}
+
+.card-gold-female::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    135deg,
+    #a855f7,
+    rgba(192, 132, 252, 0.4),
+    #a855f7
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 6s ease-in-out infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dark .card-gold-female {
+  box-shadow:
+    0 0 20px rgba(192, 132, 252, 0.1),
+    0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* --- card-champion-male: Animated cyan border shimmer --- */
+.card-champion-male {
+  position: relative;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 20px rgba(6, 182, 212, 0.12),
+    0 0 40px rgba(6, 182, 212, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.card-champion-male::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    #06b6d4,
+    #67e8f9,
+    #06b6d4,
+    #22d3ee,
+    #06b6d4
+  );
+  background-size: 200% 100%;
+  animation: champion-border 3s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dark .card-champion-male {
+  box-shadow:
+    0 0 25px rgba(34, 211, 238, 0.15),
+    0 0 50px rgba(34, 211, 238, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* --- card-champion-female: Animated purple border shimmer --- */
+.card-champion-female {
+  position: relative;
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow:
+    0 0 20px rgba(168, 85, 247, 0.12),
+    0 0 40px rgba(168, 85, 247, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.card-champion-female::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    #a855f7,
+    #e9d5ff,
+    #a855f7,
+    #c084fc,
+    #a855f7
+  );
+  background-size: 200% 100%;
+  animation: champion-border 3s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.dark .card-champion-female {
+  box-shadow:
+    0 0 25px rgba(192, 132, 252, 0.15),
+    0 0 50px rgba(192, 132, 252, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Division champion glow pulses --- */
+@keyframes glow-champion-pulse-male {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(6, 182, 212, 0.3),
+      0 0 30px rgba(6, 182, 212, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(6, 182, 212, 0.5),
+      0 0 50px rgba(6, 182, 212, 0.2),
+      0 0 80px rgba(6, 182, 212, 0.05);
+  }
+}
+
+.glow-champion-male {
+  animation: glow-champion-pulse-male 2.5s ease-in-out infinite;
+}
+
+@keyframes glow-champion-pulse-female {
+  0%, 100% {
+    box-shadow:
+      0 0 15px rgba(168, 85, 247, 0.3),
+      0 0 30px rgba(168, 85, 247, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(168, 85, 247, 0.5),
+      0 0 50px rgba(168, 85, 247, 0.2),
+      0 0 80px rgba(168, 85, 247, 0.05);
+  }
+}
+
+.glow-champion-female {
+  animation: glow-champion-pulse-female 2.5s ease-in-out infinite;
+}
+
+/* --- Division card-glow-hover variants --- */
+.card-glow-hover-male {
+  position: relative;
+  border: 1px solid transparent;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.card-glow-hover-male:hover {
+  border-color: var(--idm-male);
+  box-shadow:
+    0 0 15px var(--idm-male-glow),
+    0 0 30px rgba(6, 182, 212, 0.06);
+}
+
+.card-glow-hover-female {
+  position: relative;
+  border: 1px solid transparent;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.card-glow-hover-female:hover {
+  border-color: var(--idm-female);
+  box-shadow:
+    0 0 15px var(--idm-female-glow),
+    0 0 30px rgba(168, 85, 247, 0.06);
+}
+
+/* --- Division prize pool / highlight box --- */
+.card-prize-male {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.06);
+}
+
+.card-prize-female {
+  position: relative;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.06);
+}

@@ -30,16 +30,16 @@ export function PlayerCard({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={`relative p-3 rounded-xl cursor-pointer transition-all ${
-        isChampion ? 'card-champion' :
-        rank === 2 ? 'card-premium' :
-        rank === 3 ? 'card-premium' :
-        'card-glow-hover bg-muted/20 border border-border/30'
+        isChampion ? dt.cardChampion :
+        rank === 2 ? dt.cardPremium :
+        rank === 3 ? dt.cardPremium :
+        `${dt.cardGlowHover} bg-muted/20 border border-border/30`
       }`}
     >
       {/* Rank badge */}
       {rank && rank <= 3 && (
         <div className={`absolute -top-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md ${
-          rank === 1 ? 'bg-yellow-500 text-white glow-champion' :
+          rank === 1 ? `bg-yellow-500 text-white ${dt.glowChampion}` :
           rank === 2 ? 'bg-gray-400 text-white' :
           'bg-amber-600 text-white'
         }`}>
@@ -56,7 +56,7 @@ export function PlayerCard({
 
       {/* Avatar */}
       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2 ${
-        isChampion ? 'bg-yellow-500/10 text-yellow-500 glow-champion' :
+        isChampion ? `bg-yellow-500/10 text-yellow-500 ${dt.glowChampion}` :
         tier === 'S' ? 'bg-red-500/10 text-red-500' :
         tier === 'A' ? `${dt.iconBg} ${dt.text}` :
         `${dt.iconBg} ${dt.text}`
@@ -66,7 +66,7 @@ export function PlayerCard({
 
       {/* Info */}
       <div className="text-center">
-        <p className={`text-sm font-semibold truncate ${isChampion ? 'text-gradient-gold' : ''}`}>{gamertag}</p>
+        <p className={`text-sm font-semibold truncate ${isChampion ? dt.gradientText : ''}`}>{gamertag}</p>
         <div className="flex items-center justify-center gap-1.5 mt-1">
           <TierBadge tier={tier} />
         </div>
@@ -78,7 +78,7 @@ export function PlayerCard({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-border/30">
         <div className="text-center">
-          <p className={`text-xs font-bold ${isChampion ? 'text-gradient-gold' : dt.text}`}>{points}</p>
+          <p className={`text-xs font-bold ${isChampion ? dt.gradientText : dt.text}`}>{points}</p>
           <p className="text-[9px] text-muted-foreground">PTS</p>
         </div>
         <div className="text-center">

@@ -150,7 +150,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       </nav>
 
       {/* Season Status */}
-      <div className="mx-3 p-3 rounded-xl card-premium mb-3">
+      <div className={`mx-3 p-3 rounded-xl ${dt.cardPremium} mb-3`}>
         <div className="flex items-center gap-2 mb-2">
           <Flame className={`w-3 h-3 ${dt.text}`} />
           <span className={`text-[10px] font-semibold ${dt.text} uppercase tracking-wider`}>Season 1</span>

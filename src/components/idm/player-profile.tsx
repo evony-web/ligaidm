@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { TierBadge } from './tier-badge';
 import { Badge } from '@/components/ui/badge';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { Progress } from '@/components/ui/progress';
 
 interface PlayerProfileProps {
@@ -46,6 +47,7 @@ function StatCard({ icon: Icon, label, value, sub, color }: {
 }
 
 export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
+  const dt = useDivisionTheme();
   const winRate = player.matches > 0 ? Math.round((player.totalWins / player.matches) * 100) : 0;
   const mvpRate = player.matches > 0 ? Math.round((player.totalMvp / player.matches) * 100) : 0;
 
@@ -85,7 +87,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="relative h-32 bg-gradient-to-br from-primary/20 via-idm-amber/10 to-primary/5 overflow-hidden">
+          <div className={`relative h-32 bg-gradient-to-br ${dt.bgSubtle} via-transparent to-transparent overflow-hidden`}>
 
             <button
               onClick={onClose}
@@ -110,7 +112,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             {/* Avatar */}
             <div className="absolute -bottom-8 left-1/2 -translate-x-1/2">
               <div className={`w-20 h-20 rounded-full border-4 border-background flex items-center justify-center text-xl font-bold ${
-                player.tier === 'S' ? 'bg-red-500/10 text-red-500 glow-gold' :
+                player.tier === 'S' ? `bg-red-500/10 text-red-500 ${dt.glow}` :
                 player.tier === 'A' ? 'bg-yellow-500/10 text-yellow-500' :
                 'bg-green-500/10 text-green-500'
               }`}>
@@ -123,7 +125,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
           <div className="px-4 pt-12 pb-6">
             {/* Name & Tier */}
             <div className="text-center mb-4">
-              <h2 className="text-xl font-bold text-gradient-fury">{player.gamertag}</h2>
+              <h2 className={`text-xl font-bold ${dt.gradientText}`}>{player.gamertag}</h2>
               <p className="text-xs text-muted-foreground mt-0.5">{player.name}</p>
               <div className="flex items-center justify-center gap-2 mt-2">
                 <TierBadge tier={player.tier} />
@@ -136,8 +138,8 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               </div>
               {player.club && (
                 <div className="flex items-center justify-center gap-1 mt-2">
-                  <Shield className="w-3 h-3 text-primary" />
-                  <span className="text-xs text-primary font-medium">{player.club}</span>
+                  <Shield className={`w-3 h-3 ${dt.text}`} />
+                  <span className={`text-xs ${dt.text} font-medium`}>{player.club}</span>
                 </div>
               )}
               <p className="text-[10px] text-muted-foreground mt-2 max-w-xs mx-auto">{tier.desc}</p>
@@ -145,7 +147,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
 
             {/* Main Stats Grid */}
             <div className="grid grid-cols-3 gap-2 mb-4">
-              <StatCard icon={Trophy} label="Points" value={player.points} color="text-primary" />
+              <StatCard icon={Trophy} label="Points" value={player.points} color={dt.text} />
               <StatCard icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${player.totalWins}W/${player.matches - player.totalWins}L`} color="text-green-500" />
               <StatCard icon={Crown} label="MVP" value={player.totalMvp} sub={`${mvpRate}% rate`} color="text-yellow-500" />
             </div>
@@ -156,7 +158,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               <div>
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-muted-foreground">Win Rate</span>
-                  <span className="font-bold text-primary">{winRate}%</span>
+                  <span className={`font-bold ${dt.text}`}>{winRate}%</span>
                 </div>
                 <Progress value={winRate} className="h-2" />
               </div>
@@ -182,7 +184,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             {/* Achievements */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Award className="w-4 h-4 text-primary" />
+                <Award className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Achievements</h3>
               </div>
               <div className="flex flex-wrap gap-1.5">
@@ -227,7 +229,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             {/* Recent Matches */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Calendar className="w-4 h-4 text-primary" />
+                <Calendar className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Recent Matches</h3>
               </div>
               <div className="space-y-1.5">
@@ -256,15 +258,15 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             </div>
 
             {/* Points Breakdown */}
-            <div className="mt-4 p-3 rounded-xl bg-primary/5 border border-primary/10">
+            <div className={`mt-4 p-3 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle}`}>
               <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-primary" />
+                <TrendingUp className={`w-4 h-4 ${dt.text}`} />
                 <span className="text-xs font-semibold">Points Breakdown</span>
               </div>
               <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Win Bonus (5 wins)</span>
-                  <span className="font-bold text-primary">+10 pts</span>
+                  <span className={`font-bold ${dt.text}`}>+10 pts</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">MVP Bonus (2x)</span>
@@ -281,7 +283,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
                 <div className="h-px bg-border my-1" />
                 <div className="flex justify-between font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{player.points} pts</span>
+                  <span className={dt.text}>{player.points} pts</span>
                 </div>
               </div>
             </div>

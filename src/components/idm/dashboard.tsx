@@ -143,7 +143,7 @@ export function Dashboard() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
 
       {/* HERO BANNER - Premium */}
-      <motion.div variants={item} className="relative rounded-2xl overflow-hidden card-premium min-h-[200px]">
+      <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.cardPremium} min-h-[200px]`}>
         {/* Banner Background Image */}
         <div className="absolute inset-0 hidden sm:block">
           <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
@@ -168,7 +168,7 @@ export function Dashboard() {
 
       {/* HERO CARD - Premium with mesh background */}
       <motion.div variants={item}>
-        <Card className="card-premium card-glow-hover overflow-hidden relative">
+        <Card className={`${dt.cardPremium} ${dt.cardGlowHover} overflow-hidden relative`}>
           <CardContent className="relative p-4 lg:p-6">
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -216,10 +216,10 @@ export function Dashboard() {
             )}
 
             {/* Prize Pool */}
-            <div className="mt-4 p-3 rounded-xl card-gold bg-yellow-500/5 border border-yellow-500/10">
+            <div className={`mt-4 p-3 rounded-xl ${dt.cardPrize} ${dt.prizeBg} ${dt.prizeBorder}`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
-                <span className="text-lg font-bold text-gradient-gold">{formatCurrency(t?.prizePool || 0)}</span>
+                <span className={`text-lg font-bold ${dt.gradientText}`}>{formatCurrency(t?.prizePool || 0)}</span>
               </div>
               <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
               <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(data.totalPrizePool)}</p>
@@ -231,7 +231,7 @@ export function Dashboard() {
       {/* LIVE MATCH TICKER */}
       {data.recentMatches?.length > 0 && (
         <motion.div variants={item}>
-          <Card className="card-premium overflow-hidden">
+          <Card className={`${dt.cardPremium} overflow-hidden`}>
             <CardContent className="p-0">
               <div className={`flex items-center gap-2 px-4 py-2.5 ${dt.bgSubtle} border-b ${dt.borderSubtle}`}>
                 <Radio className={`w-3.5 h-3.5 ${dt.text}`} />
@@ -241,7 +241,7 @@ export function Dashboard() {
               <div className="overflow-x-auto">
                 <div className="flex gap-3 p-3 min-w-max">
                   {data.recentMatches.slice(0, 5).map(m => (
-                    <div key={m.id} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30 shrink-0 card-glow-hover interactive-scale">
+                    <div key={m.id} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30 shrink-0 ${dt.cardGlowHover} interactive-scale`}>
                       <div className="text-right min-w-[70px]">
                         <p className={`text-xs font-semibold ${m.score1 > m.score2 ? dt.text : 'text-muted-foreground'}`}>{m.club1.name}</p>
                       </div>
@@ -302,11 +302,11 @@ export function Dashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Latest Match Result */}
             <motion.div variants={item}>
-              <Card className="card-premium card-lift h-full">
+              <Card className={`${dt.cardPremium} card-lift h-full`}>
                 <CardContent className="p-4">
                   <SectionHeader icon={Trophy} title="Latest Match" />
                   {t?.matches?.filter(m => m.status === 'completed').slice(-1).map(m => (
-                    <div key={m.id} className="p-4 rounded-xl card-champion">
+                    <div key={m.id} className={`p-4 rounded-xl ${dt.cardChampion}`}>
                       <div className="flex items-center justify-between">
                         <div className="text-center flex-1">
                           <p className="text-sm font-semibold">{m.team1.name}</p>
@@ -321,9 +321,9 @@ export function Dashboard() {
                         </div>
                       </div>
                       {m.mvpPlayer && (
-                        <div className="mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg bg-yellow-500/5">
+                        <div className={`mt-3 flex items-center justify-center gap-1.5 p-2 rounded-lg ${dt.bgSubtle}`}>
                           <Crown className="w-3.5 h-3.5 text-yellow-500" />
-                          <span className="text-xs font-semibold text-yellow-500">MVP: {m.mvpPlayer.gamertag}</span>
+                          <span className={`text-xs font-semibold ${dt.text}`}>MVP: {m.mvpPlayer.gamertag}</span>
                         </div>
                       )}
                     </div>
@@ -336,7 +336,7 @@ export function Dashboard() {
 
             {/* Season Progress */}
             <motion.div variants={item}>
-              <Card className="card-premium card-lift h-full">
+              <Card className={`${dt.cardPremium} card-lift h-full`}>
                 <CardContent className="p-4">
                   <SectionHeader icon={TrendingUp} title="Season Progress" />
                   <div className="space-y-3">
@@ -349,15 +349,15 @@ export function Dashboard() {
                       <p className={`text-[10px] ${dt.text} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale`}>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} ${dt.cardGlowHover} interactive-scale`}>
                         <p className={`text-lg font-bold ${dt.text}`}>{data.totalPlayers}</p>
                         <p className="text-[10px] text-muted-foreground">Players</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} ${dt.cardGlowHover} interactive-scale cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
                         <p className={`text-lg font-bold ${dt.text}`}>{data.clubs?.length || 0}</p>
                         <p className="text-[10px] text-muted-foreground">Clubs</p>
                       </div>
-                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale`}>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} ${dt.cardGlowHover} interactive-scale`}>
                         <p className={`text-sm font-bold ${dt.text}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
                         <p className="text-[10px] text-muted-foreground">Funded</p>
                       </div>
@@ -369,12 +369,12 @@ export function Dashboard() {
 
             {/* Donation Tracker */}
             <motion.div variants={item}>
-              <Card className="card-premium card-lift h-full">
+              <Card className={`${dt.cardPremium} card-lift h-full`}>
                 <CardContent className="p-4">
                   <SectionHeader icon={Gift} title="Donation & Sawer" badge="LIVE" />
-                  <div className="p-3 rounded-xl card-gold bg-yellow-500/5 border border-yellow-500/10 mb-3">
+                  <div className={`p-3 rounded-xl ${dt.cardPrize} ${dt.prizeBg} ${dt.prizeBorder} mb-3`}>
                     <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
-                    <p className="text-xl font-bold text-gradient-gold">{formatCurrency(data.totalPrizePool)}</p>
+                    <p className={`text-xl font-bold ${dt.gradientText}`}>{formatCurrency(data.totalPrizePool)}</p>
                     <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
                   </div>
                   <div className="space-y-2">
@@ -383,7 +383,7 @@ export function Dashboard() {
                       <div key={i} className="flex items-center justify-between text-xs p-2 rounded-lg bg-muted/30 interactive-scale">
                         <span className="flex items-center gap-2">
                           <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                            i === 0 ? 'bg-yellow-500/20 text-yellow-500 glow-champion' :
+                            i === 0 ? `bg-yellow-500/20 text-yellow-500 ${dt.glowChampion}` :
                             i === 1 ? 'bg-gray-400/20 text-gray-400' :
                             `${dt.iconBg} ${dt.text}`
                           }`}>{i + 1}</span>
@@ -399,13 +399,13 @@ export function Dashboard() {
 
             {/* Upcoming Matches */}
             <motion.div variants={item}>
-              <Card className="card-premium card-lift h-full">
+              <Card className={`${dt.cardPremium} card-lift h-full`}>
                 <CardContent className="p-4">
                   <SectionHeader icon={Zap} title="Upcoming Matches" />
                   {data.upcomingMatches?.length > 0 ? (
                     <div className="space-y-2">
                       {data.upcomingMatches.slice(0, 3).map(m => (
-                        <div key={m.id} className="p-3 rounded-xl bg-muted/50 text-center card-glow-hover interactive-scale border border-border/30">
+                        <div key={m.id} className={`p-3 rounded-xl bg-muted/50 text-center ${dt.cardGlowHover} interactive-scale border border-border/30`}>
                           <p className="text-[10px] text-muted-foreground mb-1">Week {m.week}</p>
                           <p className="text-sm font-semibold">{m.club1.name} <span className="text-muted-foreground">vs</span> {m.club2.name}</p>
                           <Badge className={`mt-1.5 ${dt.badgeBg} text-[10px] border`}>BO3</Badge>
@@ -423,7 +423,7 @@ export function Dashboard() {
 
         {/* LEADERBOARD TAB */}
         <TabsContent value="leaderboard" className="mt-4">
-          <Card className="card-premium">
+          <Card className={dt.cardPremium}>
             <CardContent className="p-4">
               <SectionHeader icon={Award} title="Leaderboard" badge="TOP 10" />
               <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
@@ -432,7 +432,7 @@ export function Dashboard() {
                     idx < 3 ? `${dt.bgSubtle} border ${dt.borderSubtle}` : 'hover:bg-muted/50 border border-transparent'
                   }`} onClick={() => setSelectedPlayer(p)}>
                     <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                      idx === 0 ? 'bg-yellow-500/20 text-yellow-500 glow-champion' :
+                      idx === 0 ? `bg-yellow-500/20 text-yellow-500 ${dt.glowChampion}` :
                       idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                       idx === 2 ? 'bg-amber-600/20 text-amber-600' :
                       'bg-muted text-muted-foreground'
@@ -468,15 +468,15 @@ export function Dashboard() {
 
         {/* CLUBS TAB */}
         <TabsContent value="clubs" className="mt-4">
-          <Card className="card-premium">
+          <Card className={dt.cardPremium}>
             <CardContent className="p-4">
               <SectionHeader icon={Shield} title="Club Standings" badge={`${data.clubs?.length || 0} Clubs`} />
               <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
                 {data.clubs?.map((club, idx) => (
                   <div key={club.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer interactive-scale ${
-                    idx === 0 ? 'card-gold glow-champion' :
-                    idx < 4 ? `${dt.bgSubtle} border ${dt.borderSubtle} card-glow-hover` :
-                    'hover:bg-muted/50 border border-transparent card-glow-hover'
+                    idx === 0 ? `${dt.cardGold} ${dt.glowChampion}` :
+                    idx < 4 ? `${dt.bgSubtle} border ${dt.borderSubtle} ${dt.cardGlowHover}` :
+                    `hover:bg-muted/50 border border-transparent ${dt.cardGlowHover}`
                   }`} onClick={() => setSelectedClub(club)}>
                     <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
                       idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
@@ -500,7 +500,7 @@ export function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-lg font-bold ${idx === 0 ? 'text-gradient-gold' : dt.text}`}>{club.points}</p>
+                      <p className={`text-lg font-bold ${idx === 0 ? dt.gradientText : dt.text}`}>{club.points}</p>
                       <p className="text-[9px] text-muted-foreground">points</p>
                     </div>
                   </div>
@@ -512,13 +512,13 @@ export function Dashboard() {
 
         {/* ACTIVITY TAB */}
         <TabsContent value="activity" className="mt-4">
-          <Card className="card-premium">
+          <Card className={dt.cardPremium}>
             <CardContent className="p-4">
               <SectionHeader icon={Activity} title="Activity Feed" badge="LIVE" />
               <div className="space-y-2 max-h-96 overflow-y-auto custom-scrollbar">
                 {/* Recent Match Events */}
                 {data.recentMatches?.slice(0, 3).map((m) => (
-                  <div key={`match-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/30 card-glow-hover">
+                  <div key={`match-${m.id}`} className={`flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/30 ${dt.cardGlowHover}`}>
                     <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Trophy className={`w-4 h-4 ${dt.text}`} />
                     </div>
@@ -540,13 +540,13 @@ export function Dashboard() {
 
                 {/* Top Player Events */}
                 {data.topPlayers?.slice(0, 2).map((p) => (
-                  <div key={`player-${p.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-yellow-500/5 border border-yellow-500/10 card-glow-hover">
-                    <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                  <div key={`player-${p.id}`} className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} ${dt.cardGlowHover}`}>
+                    <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Crown className="w-4 h-4 text-yellow-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">
-                        <span className="text-yellow-500">{p.gamertag}</span> earned MVP
+                        <span className={dt.text}>{p.gamertag}</span> earned MVP
                       </p>
                       <p className="text-[10px] text-muted-foreground">{p.points} pts • {p.totalMvp}x MVP this season</p>
                     </div>
@@ -556,7 +556,7 @@ export function Dashboard() {
 
                 {/* Streak Events */}
                 {data.topPlayers?.filter(p => p.streak >= 2).slice(0, 1).map((p) => (
-                  <div key={`streak-${p.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-orange-500/5 border border-orange-500/10 card-glow-hover">
+                  <div key={`streak-${p.id}`} className={`flex items-center gap-3 p-2.5 rounded-lg bg-orange-500/5 border border-orange-500/10 ${dt.cardGlowHover}`}>
                     <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
                       <Flame className="w-4 h-4 text-orange-500" />
                     </div>
@@ -572,7 +572,7 @@ export function Dashboard() {
 
                 {/* Donation Events */}
                 {data.topDonors?.slice(0, 1).map((d, i) => (
-                  <div key={`donation-${i}`} className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} border ${dt.borderSubtle} card-glow-hover`}>
+                  <div key={`donation-${i}`} className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} border ${dt.borderSubtle} ${dt.cardGlowHover}`}>
                     <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Gift className={`w-4 h-4 ${dt.text}`} />
                     </div>
@@ -588,17 +588,17 @@ export function Dashboard() {
 
                 {/* Upcoming Match Event */}
                 {data.upcomingMatches?.slice(0, 1).map((m) => (
-                  <div key={`upcoming-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-idm-amber/5 border border-idm-amber/10 card-glow-hover">
-                    <div className="w-8 h-8 rounded-lg bg-idm-amber/10 flex items-center justify-center shrink-0">
-                      <Zap className="w-4 h-4 text-idm-amber" />
+                  <div key={`upcoming-${m.id}`} className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} ${dt.cardGlowHover}`}>
+                    <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Zap className={`w-4 h-4 ${dt.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">
-                        <span className="text-idm-amber">{m.club1.name}</span> vs <span className="text-idm-amber">{m.club2.name}</span>
+                        <span className={dt.text}>{m.club1.name}</span> vs <span className={dt.text}>{m.club2.name}</span>
                       </p>
                       <p className="text-[10px] text-muted-foreground">Week {m.week} • Upcoming</p>
                     </div>
-                    <Badge className="bg-idm-amber/10 text-idm-amber text-[10px] border-0">BO3</Badge>
+                    <Badge className={`${dt.badgeBg} text-[10px] border-0`}>BO3</Badge>
                   </div>
                 ))}
               </div>
