@@ -72,7 +72,7 @@ function ThemeToggle() {
     >
       <div className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center text-xs ${
         isDark
-          ? 'left-9 bg-teal-500 text-white glow-teal'
+          ? 'left-9 bg-amber-500 text-white glow-gold'
           : 'left-1 bg-violet-500 text-white'
       }`}>
         {isDark ? '🌙' : '🐉'}
@@ -154,7 +154,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
           <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Season 1</span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-primary to-idm-purple" />
+          <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-primary to-idm-amber" />
         </div>
         <p className="text-[9px] text-muted-foreground mt-1.5">60% Complete • Week 5/8</p>
       </div>

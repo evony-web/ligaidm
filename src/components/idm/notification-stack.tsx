@@ -14,7 +14,7 @@ const iconMap: Record<NotifType, React.ComponentType<{ className?: string }>> = 
 
 const colorMap: Record<NotifType, { bg: string; icon: string; border: string }> = {
   donation: { bg: 'bg-primary/5', icon: 'text-primary', border: 'border-primary/20' },
-  match: { bg: 'bg-idm-purple/5', icon: 'text-idm-purple', border: 'border-idm-purple/20' },
+  match: { bg: 'bg-idm-amber/5', icon: 'text-idm-amber', border: 'border-idm-amber/20' },
   mvp: { bg: 'bg-yellow-500/5', icon: 'text-yellow-500', border: 'border-yellow-500/20' },
   streak: { bg: 'bg-orange-500/5', icon: 'text-orange-500', border: 'border-orange-500/20' },
   victory: { bg: 'bg-green-500/5', icon: 'text-green-500', border: 'border-green-500/20' },

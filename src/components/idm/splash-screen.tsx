@@ -60,9 +60,9 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
             className="absolute inset-0 pointer-events-none"
             animate={{
               background: [
-                'radial-gradient(ellipse at 30% 50%, rgba(45,212,191,0.08) 0%, transparent 60%)',
-                'radial-gradient(ellipse at 70% 50%, rgba(139,92,246,0.08) 0%, transparent 60%)',
-                'radial-gradient(ellipse at 30% 50%, rgba(45,212,191,0.08) 0%, transparent 60%)',
+                'radial-gradient(ellipse at 30% 50%, rgba(184,134,11,0.08) 0%, transparent 60%)',
+                'radial-gradient(ellipse at 70% 50%, rgba(245,158,11,0.08) 0%, transparent 60%)',
+                'radial-gradient(ellipse at 30% 50%, rgba(184,134,11,0.08) 0%, transparent 60%)',
               ],
             }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
@@ -84,9 +84,9 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
                   className="absolute -inset-4 rounded-3xl"
                   animate={{
                     boxShadow: [
-                      '0 0 25px rgba(45,212,191,0.25), 0 0 60px rgba(45,212,191,0.08)',
-                      '0 0 40px rgba(45,212,191,0.4), 0 0 80px rgba(139,92,246,0.15)',
-                      '0 0 25px rgba(45,212,191,0.25), 0 0 60px rgba(45,212,191,0.08)',
+                      '0 0 25px rgba(184,134,11,0.25), 0 0 60px rgba(184,134,11,0.08)',
+                      '0 0 40px rgba(184,134,11,0.4), 0 0 80px rgba(245,158,11,0.15)',
+                      '0 0 25px rgba(184,134,11,0.25), 0 0 60px rgba(184,134,11,0.08)',
                     ],
                   }}
                   transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -127,7 +127,7 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
             >
               <div className="h-0.5 rounded-full bg-white/10 overflow-hidden">
                 <motion.div
-                  className="h-full rounded-full bg-gradient-to-r from-teal-400 to-purple-400"
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 to-yellow-300"
                   initial={{ width: '0%' }}
                   animate={{ width: '100%' }}
                   transition={{ duration: 2.2, delay: 1.4, ease: 'easeInOut' }}

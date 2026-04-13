@@ -41,12 +41,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  /* IDM Esports custom colors */
-  --color-idm-teal: var(--idm-teal);
-  --color-idm-glow: var(--idm-glow);
-  --color-idm-pearl: var(--idm-pearl);
-  --color-idm-purple: var(--idm-purple);
+  /* IDM Esports custom colors — Royal Gold Edition */
   --color-idm-gold: var(--idm-gold);
+  --color-idm-glow: var(--idm-glow);
+  --color-idm-champagne: var(--idm-champagne);
+  --color-idm-amber: var(--idm-amber);
+  --color-idm-burgundy: var(--idm-burgundy);
   --color-idm-s-tier: var(--idm-s-tier);
   --color-idm-a-tier: var(--idm-a-tier);
   --color-idm-b-tier: var(--idm-b-tier);
@@ -54,97 +54,97 @@
 
 /* ============================================
    LIGHT FURY THEME (Light Mode)
-   Soft white + pearl blue / soft purple
+   Warm ivory + luxury gold / champagne
    ============================================ */
 :root {
   --radius: 0.75rem;
-  --background: #fafbfe;
-  --foreground: #1a1d2e;
-  --card: rgba(255, 255, 255, 0.85);
-  --card-foreground: #1a1d2e;
-  --popover: #ffffff;
-  --popover-foreground: #1a1d2e;
-  --primary: #6366f1;
+  --background: #faf8f2;
+  --foreground: #2c2417;
+  --card: rgba(255, 253, 248, 0.88);
+  --card-foreground: #2c2417;
+  --popover: #fffdf8;
+  --popover-foreground: #2c2417;
+  --primary: #b8860b;
   --primary-foreground: #ffffff;
-  --secondary: #f0f1fe;
-  --secondary-foreground: #4338ca;
-  --muted: #f1f2f8;
-  --muted-foreground: #6b7294;
-  --accent: #e8eaff;
-  --accent-foreground: #4338ca;
-  --destructive: #ef4444;
-  --border: rgba(99, 102, 241, 0.12);
-  --input: rgba(99, 102, 241, 0.12);
-  --ring: #6366f1;
-  --chart-1: #6366f1;
-  --chart-2: #8b5cf6;
-  --chart-3: #a78bfa;
-  --chart-4: #c4b5fd;
-  --chart-5: #ddd6fe;
-  --sidebar: rgba(255, 255, 255, 0.9);
-  --sidebar-foreground: #1a1d2e;
-  --sidebar-primary: #6366f1;
+  --secondary: #fdf6e3;
+  --secondary-foreground: #8b6914;
+  --muted: #f5efe0;
+  --muted-foreground: #8a7d6b;
+  --accent: #f5e6c8;
+  --accent-foreground: #8b6914;
+  --destructive: #dc2626;
+  --border: rgba(184, 134, 11, 0.15);
+  --input: rgba(184, 134, 11, 0.15);
+  --ring: #b8860b;
+  --chart-1: #b8860b;
+  --chart-2: #d4a017;
+  --chart-3: #e5be4a;
+  --chart-4: #c4963a;
+  --chart-5: #a07010;
+  --sidebar: rgba(255, 253, 248, 0.92);
+  --sidebar-foreground: #2c2417;
+  --sidebar-primary: #b8860b;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f0f1fe;
-  --sidebar-accent-foreground: #4338ca;
-  --sidebar-border: rgba(99, 102, 241, 0.12);
-  --sidebar-ring: #6366f1;
-  /* IDM custom */
-  --idm-teal: #0d9488;
-  --idm-glow: rgba(99, 102, 241, 0.3);
-  --idm-pearl: #e0e7ff;
-  --idm-purple: #8b5cf6;
-  --idm-gold: #f59e0b;
-  --idm-s-tier: #ef4444;
-  --idm-a-tier: #f59e0b;
-  --idm-b-tier: #22c55e;
+  --sidebar-accent: #fdf6e3;
+  --sidebar-accent-foreground: #8b6914;
+  --sidebar-border: rgba(184, 134, 11, 0.15);
+  --sidebar-ring: #b8860b;
+  /* IDM custom — Royal Gold */
+  --idm-gold: #b8860b;
+  --idm-glow: rgba(184, 134, 11, 0.3);
+  --idm-champagne: #f5e6c8;
+  --idm-amber: #d97706;
+  --idm-burgundy: #7c2d12;
+  --idm-s-tier: #dc2626;
+  --idm-a-tier: #d97706;
+  --idm-b-tier: #65a30d;
 }
 
 /* ============================================
    NIGHT FURY THEME (Dark Mode)
-   Deep green-black + glowing teal / neon green
+   Deep obsidian black + glowing gold / warm amber
    ============================================ */
 .dark {
-  --background: #0d1117;
-  --foreground: #e6edf3;
-  --card: rgba(22, 27, 34, 0.9);
-  --card-foreground: #e6edf3;
-  --popover: #161b22;
-  --popover-foreground: #e6edf3;
-  --primary: #2dd4bf;
-  --primary-foreground: #0d1117;
-  --secondary: rgba(45, 212, 191, 0.1);
-  --secondary-foreground: #2dd4bf;
-  --muted: rgba(45, 212, 191, 0.06);
-  --muted-foreground: #8b949e;
-  --accent: rgba(45, 212, 191, 0.12);
-  --accent-foreground: #2dd4bf;
+  --background: #0c0a06;
+  --foreground: #f5e6c8;
+  --card: rgba(20, 17, 10, 0.92);
+  --card-foreground: #f5e6c8;
+  --popover: #161309;
+  --popover-foreground: #f5e6c8;
+  --primary: #e5be4a;
+  --primary-foreground: #0c0a06;
+  --secondary: rgba(229, 190, 74, 0.1);
+  --secondary-foreground: #e5be4a;
+  --muted: rgba(229, 190, 74, 0.06);
+  --muted-foreground: #9a8a6e;
+  --accent: rgba(229, 190, 74, 0.12);
+  --accent-foreground: #e5be4a;
   --destructive: #f87171;
-  --border: rgba(45, 212, 191, 0.15);
-  --input: rgba(45, 212, 191, 0.15);
-  --ring: #2dd4bf;
-  --chart-1: #2dd4bf;
-  --chart-2: #14b8a6;
-  --chart-3: #0d9488;
-  --chart-4: #5eead4;
-  --chart-5: #99f6e4;
-  --sidebar: rgba(13, 17, 23, 0.95);
-  --sidebar-foreground: #e6edf3;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #0d1117;
-  --sidebar-accent: rgba(45, 212, 191, 0.1);
-  --sidebar-accent-foreground: #2dd4bf;
-  --sidebar-border: rgba(45, 212, 191, 0.15);
-  --sidebar-ring: #2dd4bf;
-  /* IDM custom */
-  --idm-teal: #2dd4bf;
-  --idm-glow: rgba(45, 212, 191, 0.4);
-  --idm-pearl: #1a2332;
-  --idm-purple: #a78bfa;
-  --idm-gold: #fbbf24;
+  --border: rgba(229, 190, 74, 0.12);
+  --input: rgba(229, 190, 74, 0.12);
+  --ring: #e5be4a;
+  --chart-1: #e5be4a;
+  --chart-2: #d4a017;
+  --chart-3: #b8860b;
+  --chart-4: #f5d77a;
+  --chart-5: #c4963a;
+  --sidebar: rgba(12, 10, 6, 0.96);
+  --sidebar-foreground: #f5e6c8;
+  --sidebar-primary: #e5be4a;
+  --sidebar-primary-foreground: #0c0a06;
+  --sidebar-accent: rgba(229, 190, 74, 0.08);
+  --sidebar-accent-foreground: #e5be4a;
+  --sidebar-border: rgba(229, 190, 74, 0.12);
+  --sidebar-ring: #e5be4a;
+  /* IDM custom — Night Gold */
+  --idm-gold: #e5be4a;
+  --idm-glow: rgba(229, 190, 74, 0.35);
+  --idm-champagne: #1a1608;
+  --idm-amber: #f59e0b;
+  --idm-burgundy: #fb923c;
   --idm-s-tier: #f87171;
   --idm-a-tier: #fbbf24;
-  --idm-b-tier: #4ade80;
+  --idm-b-tier: #86efac;
 }
 
 @layer base {
@@ -173,26 +173,26 @@
   border: 1px solid var(--border);
 }
 
-/* Glow effects */
-.glow-teal {
-  box-shadow: 0 0 20px var(--idm-glow), 0 0 60px rgba(45, 212, 191, 0.1);
-}
-
-.glow-purple {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
-}
-
+/* Glow effects — Gold themed */
 .glow-gold {
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3), 0 0 60px rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 20px var(--idm-glow), 0 0 60px rgba(184, 134, 11, 0.1);
 }
 
-/* Pulse glow animation */
+.glow-amber {
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.3), 0 0 60px rgba(217, 119, 6, 0.1);
+}
+
+.glow-burgundy {
+  box-shadow: 0 0 20px rgba(124, 45, 18, 0.4), 0 0 60px rgba(124, 45, 18, 0.15);
+}
+
+/* Pulse glow animation — Gold */
 @keyframes glow-pulse {
   0%, 100% {
-    box-shadow: 0 0 20px var(--idm-glow), 0 0 40px rgba(45, 212, 191, 0.05);
+    box-shadow: 0 0 20px var(--idm-glow), 0 0 40px rgba(184, 134, 11, 0.05);
   }
   50% {
-    box-shadow: 0 0 30px var(--idm-glow), 0 0 60px rgba(45, 212, 191, 0.15);
+    box-shadow: 0 0 30px var(--idm-glow), 0 0 60px rgba(184, 134, 11, 0.15);
   }
 }
 
@@ -210,7 +210,7 @@
   animation: float 4s ease-in-out infinite;
 }
 
-/* Shimmer effect */
+/* Shimmer effect — Gold shimmer */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -227,10 +227,10 @@
   animation: shimmer 2s ease-in-out infinite;
 }
 
-/* Dragon gradient text */
+/* Main brand gradient text — Gold-to-amber-to-champagne */
 .text-gradient-fury {
-  background: linear-gradient(135deg, #2dd4bf, #8b5cf6, #2dd4bf);
-  background-size: 200% 200%;
+  background: linear-gradient(135deg, #e5be4a, #f5d77a, #d4a017, #f5e6c8, #b8860b);
+  background-size: 300% 300%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -244,22 +244,22 @@
 
 /* Tier badge styles */
 .tier-s {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .tier-a {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
+  background: linear-gradient(135deg, #d97706, #b45309);
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .tier-b {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
+  background: linear-gradient(135deg, #65a30d, #4d7c0f);
   color: white;
   text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — Gold tinted */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -267,14 +267,15 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
+  background: var(--idm-gold);
   border-radius: 3px;
+  opacity: 0.5;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
+  background: var(--primary);
 }
 
-/* Premium card hover */
+/* Premium card hover — Gold glow */
 .card-hover {
   transition: all 0.3s ease;
 }
@@ -368,16 +369,13 @@ html {
 
 /* ============================================
    ============================================
-   IDM LEAGUE — MENGGELEGAR PREMIUM THEME
-   Dragon Scale · Gradient Mesh · Champion FX
+   IDM LEAGUE — ROYAL GOLD LUXURY THEME
+   Obsidian · Gold · Champagne · Burgundy
    ============================================
    ============================================ */
 
 /* ============================================
    1. DRAGON SCALE PATTERN OVERLAY
-   CSS-only diamond/scale pattern using
-   repeating-linear-gradient. Subtle texture
-   for hero sections and feature backgrounds.
    ============================================ */
 .bg-dragon-pattern {
   position: relative;
@@ -419,9 +417,7 @@ html {
 }
 
 /* ============================================
-   2. GRADIENT MESH BACKGROUNDS
-   Animated gradient mesh that slowly shifts
-   for premium hero sections and containers.
+   2. GRADIENT MESH BACKGROUNDS — Gold/Amber
    ============================================ */
 @keyframes mesh-fury {
   0%, 100% {
@@ -453,18 +449,18 @@ html {
 .bg-mesh-fury {
   position: relative;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(13, 148, 136, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(184, 134, 11, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(217, 119, 6, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(212, 160, 23, 0.06) 0%, transparent 50%);
   background-size: 200% 200%, 200% 200%, 200% 200%;
   animation: mesh-fury 12s ease-in-out infinite;
 }
 
 .dark .bg-mesh-fury {
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(45, 212, 191, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(167, 139, 250, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(229, 190, 74, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(245, 158, 11, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(196, 150, 58, 0.05) 0%, transparent 50%);
   background-size: 200% 200%, 200% 200%, 200% 200%;
 }
 
@@ -492,28 +488,26 @@ html {
 .bg-mesh-dark {
   position: relative;
   background:
-    radial-gradient(ellipse at 15% 30%, rgba(13, 17, 23, 0.9) 0%, transparent 60%),
-    radial-gradient(ellipse at 85% 70%, rgba(6, 78, 71, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(45, 212, 191, 0.06) 0%, transparent 60%);
+    radial-gradient(ellipse at 15% 30%, rgba(12, 10, 6, 0.9) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 70%, rgba(184, 134, 11, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(229, 190, 74, 0.05) 0%, transparent 60%);
   background-size: 200% 200%, 200% 200%, 200% 200%;
   animation: mesh-dark 15s ease-in-out infinite;
 }
 
 .dark .bg-mesh-dark {
   background:
-    radial-gradient(ellipse at 15% 30%, rgba(13, 17, 23, 0.95) 0%, transparent 60%),
-    radial-gradient(ellipse at 85% 70%, rgba(6, 78, 71, 0.5) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(45, 212, 191, 0.1) 0%, transparent 60%);
+    radial-gradient(ellipse at 15% 30%, rgba(12, 10, 6, 0.95) 0%, transparent 60%),
+    radial-gradient(ellipse at 85% 70%, rgba(184, 134, 11, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(229, 190, 74, 0.08) 0%, transparent 60%);
   background-size: 200% 200%, 200% 200%, 200% 200%;
 }
 
 /* ============================================
    3. PREMIUM CARD VARIANTS
-   Glass cards with gradient borders, gold
-   accents, and champion-level shimmer FX.
    ============================================ */
 
-/* --- card-premium: Glass card with gradient border --- */
+/* --- card-premium: Glass card with gold gradient border --- */
 .card-premium {
   position: relative;
   background: var(--card);
@@ -533,9 +527,10 @@ html {
   padding: 1px;
   background: linear-gradient(
     135deg,
-    var(--idm-teal),
-    var(--idm-purple),
-    var(--idm-teal)
+    var(--idm-gold),
+    var(--idm-amber),
+    #f5e6c8,
+    var(--idm-gold)
   );
   background-size: 200% 200%;
   animation: gradient-shift 4s ease-in-out infinite;
@@ -559,7 +554,7 @@ html {
   overflow: hidden;
   isolation: isolate;
   box-shadow:
-    0 0 15px rgba(245, 158, 11, 0.08),
+    0 0 15px rgba(184, 134, 11, 0.08),
     0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
@@ -573,7 +568,7 @@ html {
   background: linear-gradient(
     135deg,
     var(--idm-gold),
-    rgba(245, 158, 11, 0.4),
+    rgba(229, 190, 74, 0.4),
     var(--idm-gold)
   );
   background-size: 200% 200%;
@@ -590,18 +585,14 @@ html {
 
 .dark .card-gold {
   box-shadow:
-    0 0 20px rgba(251, 191, 36, 0.1),
+    0 0 20px rgba(229, 190, 74, 0.1),
     0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 /* --- card-champion: Animated gold border shimmer --- */
 @keyframes champion-border {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 .card-champion {
@@ -613,8 +604,8 @@ html {
   overflow: hidden;
   isolation: isolate;
   box-shadow:
-    0 0 20px rgba(245, 158, 11, 0.12),
-    0 0 40px rgba(245, 158, 11, 0.05),
+    0 0 20px rgba(184, 134, 11, 0.12),
+    0 0 40px rgba(184, 134, 11, 0.05),
     0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
@@ -630,7 +621,7 @@ html {
     var(--idm-gold),
     #fde68a,
     var(--idm-gold),
-    #fde68a,
+    #f5e6c8,
     var(--idm-gold)
   );
   background-size: 200% 100%;
@@ -647,18 +638,15 @@ html {
 
 .dark .card-champion {
   box-shadow:
-    0 0 25px rgba(251, 191, 36, 0.15),
-    0 0 50px rgba(251, 191, 36, 0.06),
+    0 0 25px rgba(229, 190, 74, 0.15),
+    0 0 50px rgba(229, 190, 74, 0.06),
     0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 /* ============================================
-   4. SECTION DECORATORS
-   Gradient line separators and animated
-   underlines for section headers.
+   4. SECTION DECORATORS — Gold themed
    ============================================ */
 
-/* --- section-divider: Decorative gradient line --- */
 .section-divider {
   height: 1px;
   border: none;
@@ -666,9 +654,9 @@ html {
   background: linear-gradient(
     90deg,
     transparent,
-    var(--idm-teal),
-    var(--idm-purple),
-    var(--idm-teal),
+    var(--idm-gold),
+    #f5e6c8,
+    var(--idm-gold),
     transparent
   );
   opacity: 0.5;
@@ -678,7 +666,6 @@ html {
   opacity: 0.7;
 }
 
-/* --- section-header-line: Animated underline growing from center --- */
 .section-header-line {
   position: relative;
   display: inline-block;
@@ -693,8 +680,8 @@ html {
   height: 2px;
   background: linear-gradient(
     90deg,
-    var(--idm-teal),
-    var(--idm-purple)
+    var(--idm-gold),
+    var(--idm-amber)
   );
   border-radius: 1px;
   transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
@@ -708,23 +695,20 @@ html {
 }
 
 /* ============================================
-   5. ENHANCED GLOW EFFECTS
-   Champion gold pulse, elite red/purple aura,
-   and theme-aware card hover glow.
+   5. ENHANCED GLOW EFFECTS — Gold themed
    ============================================ */
 
-/* --- glow-champion: Golden glow with pulse for #1 --- */
 @keyframes glow-champion-pulse {
   0%, 100% {
     box-shadow:
-      0 0 15px rgba(245, 158, 11, 0.3),
-      0 0 30px rgba(245, 158, 11, 0.1);
+      0 0 15px rgba(184, 134, 11, 0.3),
+      0 0 30px rgba(184, 134, 11, 0.1);
   }
   50% {
     box-shadow:
-      0 0 25px rgba(245, 158, 11, 0.5),
-      0 0 50px rgba(245, 158, 11, 0.2),
-      0 0 80px rgba(245, 158, 11, 0.05);
+      0 0 25px rgba(184, 134, 11, 0.5),
+      0 0 50px rgba(184, 134, 11, 0.2),
+      0 0 80px rgba(184, 134, 11, 0.05);
   }
 }
 
@@ -732,18 +716,17 @@ html {
   animation: glow-champion-pulse 2.5s ease-in-out infinite;
 }
 
-/* --- glow-elite: Red/purple glow for elite items --- */
 @keyframes glow-elite-pulse {
   0%, 100% {
     box-shadow:
-      0 0 15px rgba(239, 68, 68, 0.25),
-      0 0 30px rgba(139, 92, 246, 0.1);
+      0 0 15px rgba(217, 119, 6, 0.25),
+      0 0 30px rgba(124, 45, 18, 0.1);
   }
   50% {
     box-shadow:
-      0 0 25px rgba(239, 68, 68, 0.35),
-      0 0 50px rgba(139, 92, 246, 0.15),
-      0 0 70px rgba(239, 68, 68, 0.05);
+      0 0 25px rgba(217, 119, 6, 0.4),
+      0 0 50px rgba(124, 45, 18, 0.15),
+      0 0 70px rgba(217, 119, 6, 0.05);
   }
 }
 
@@ -751,7 +734,6 @@ html {
   animation: glow-elite-pulse 3s ease-in-out infinite;
 }
 
-/* --- glow-card-hover: Theme-aware glow on hover --- */
 .glow-card-hover {
   transition: box-shadow 0.35s ease;
 }
@@ -759,21 +741,19 @@ html {
 .glow-card-hover:hover {
   box-shadow:
     0 0 20px var(--idm-glow),
-    0 0 40px rgba(99, 102, 241, 0.08),
+    0 0 40px rgba(184, 134, 11, 0.08),
     0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .dark .glow-card-hover:hover {
   box-shadow:
     0 0 20px var(--idm-glow),
-    0 0 40px rgba(45, 212, 191, 0.1),
+    0 0 40px rgba(229, 190, 74, 0.1),
     0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 /* ============================================
-   6. ANIMATED BACKGROUND PARTICLES (CSS-only)
-   Multiple box-shadows for star/particle FX
-   on dark mode hero sections.
+   6. ANIMATED BACKGROUND PARTICLES — Gold/Amber
    ============================================ */
 @keyframes particle-float-1 {
   0%, 100% {
@@ -828,24 +808,24 @@ html {
   border-radius: 50%;
   background: transparent;
   box-shadow:
-    25px 50px var(--idm-teal),
-    80px 120px var(--idm-purple),
-    150px 40px var(--idm-gold),
-    220px 180px var(--idm-teal),
-    300px 90px var(--idm-purple),
-    380px 200px var(--idm-teal),
-    50px 250px var(--idm-gold),
-    420px 60px var(--idm-purple),
-    500px 150px var(--idm-teal),
-    180px 280px var(--idm-gold),
-    600px 100px var(--idm-purple),
-    700px 220px var(--idm-teal),
-    350px 300px var(--idm-gold),
-    550px 30px var(--idm-teal),
-    650px 170px var(--idm-purple),
-    100px 350px var(--idm-teal),
-    750px 80px var(--idm-gold),
-    450px 250px var(--idm-purple);
+    25px 50px var(--idm-gold),
+    80px 120px var(--idm-amber),
+    150px 40px #f5e6c8,
+    220px 180px var(--idm-gold),
+    300px 90px var(--idm-amber),
+    380px 200px var(--idm-gold),
+    50px 250px #f5e6c8,
+    420px 60px var(--idm-amber),
+    500px 150px var(--idm-gold),
+    180px 280px #f5e6c8,
+    600px 100px var(--idm-amber),
+    700px 220px var(--idm-gold),
+    350px 300px #f5e6c8,
+    550px 30px var(--idm-gold),
+    650px 170px var(--idm-amber),
+    100px 350px var(--idm-gold),
+    750px 80px #f5e6c8,
+    450px 250px var(--idm-amber);
   animation: particle-float-1 6s ease-in-out infinite;
   opacity: 0.4;
 }
@@ -856,16 +836,16 @@ html {
   border-radius: 50%;
   background: transparent;
   box-shadow:
-    60px 80px var(--idm-gold),
-    200px 160px var(--idm-teal),
-    340px 30px var(--idm-purple),
-    480px 220px var(--idm-gold),
-    120px 300px var(--idm-teal),
-    560px 70px var(--idm-gold),
-    680px 250px var(--idm-purple),
-    40px 180px var(--idm-gold),
-    400px 140px var(--idm-teal),
-    720px 130px var(--idm-gold);
+    60px 80px #f5e6c8,
+    200px 160px var(--idm-gold),
+    340px 30px var(--idm-amber),
+    480px 220px #f5e6c8,
+    120px 300px var(--idm-gold),
+    560px 70px #f5e6c8,
+    680px 250px var(--idm-amber),
+    40px 180px #f5e6c8,
+    400px 140px var(--idm-gold),
+    720px 130px #f5e6c8;
   animation: particle-float-2 8s ease-in-out infinite;
   opacity: 0.3;
 }
@@ -879,12 +859,9 @@ html {
 }
 
 /* ============================================
-   7. PREMIUM TAB STYLING
-   Animated bottom indicator and slide effect
-   for tab navigation components.
+   7. PREMIUM TAB STYLING — Gold themed
    ============================================ */
 
-/* --- tab-premium: Tab with animated bottom indicator --- */
 .tab-premium {
   position: relative;
   padding: 0.5rem 1rem;
@@ -904,7 +881,7 @@ html {
   left: 50%;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--idm-teal), var(--idm-purple));
+  background: linear-gradient(90deg, var(--idm-gold), var(--idm-amber));
   border-radius: 1px;
   transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -923,24 +900,20 @@ html {
   left: 0;
 }
 
-/* --- tab-active-indicator: Sliding underline for tab groups --- */
 .tab-active-indicator {
   position: absolute;
   bottom: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--idm-teal), var(--idm-purple));
+  background: linear-gradient(90deg, var(--idm-gold), var(--idm-amber));
   border-radius: 1px;
   transition: left 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 /* ============================================
-   8. GRADIENT TEXT VARIANTS
-   Gold shimmer, champion rainbow/gold, and
-   fire gradient text effects.
+   8. GRADIENT TEXT VARIANTS — Gold themed
    ============================================ */
 
-/* --- text-gradient-gold: Gold shimmer text --- */
 @keyframes gold-shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
@@ -952,7 +925,7 @@ html {
     var(--idm-gold),
     #fde68a,
     var(--idm-gold),
-    #fde68a,
+    #f5e6c8,
     var(--idm-gold)
   );
   background-size: 200% auto;
@@ -962,7 +935,6 @@ html {
   animation: gold-shimmer 4s linear infinite;
 }
 
-/* --- text-gradient-champion: Rainbow/gold animated for champions --- */
 @keyframes champion-text {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -975,10 +947,10 @@ html {
     var(--idm-gold),
     #fde68a,
     #fbbf24,
-    var(--idm-purple),
+    #f5e6c8,
     #fde68a,
     var(--idm-gold),
-    #f59e0b
+    var(--idm-amber)
   );
   background-size: 300% 100%;
   -webkit-background-clip: text;
@@ -987,7 +959,6 @@ html {
   animation: champion-text 4s ease-in-out infinite;
 }
 
-/* --- text-gradient-fire: Red/orange fire gradient --- */
 @keyframes fire-text {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
@@ -996,11 +967,11 @@ html {
 .text-gradient-fire {
   background: linear-gradient(
     135deg,
-    #ef4444,
+    #dc2626,
     #f97316,
     #fbbf24,
     #f97316,
-    #ef4444
+    #dc2626
   );
   background-size: 200% 200%;
   -webkit-background-clip: text;
@@ -1011,8 +982,6 @@ html {
 
 /* ============================================
    9. NOISE TEXTURE
-   Subtle SVG noise overlay for premium feel.
-   Uses a data URI SVG turbulence filter.
    ============================================ */
 .bg-noise {
   position: relative;
@@ -1036,12 +1005,9 @@ html {
 }
 
 /* ============================================
-   10. BETTER HOVER STATES
-   Card lift, glow border on hover, and
-   interactive scale micro-interactions.
+   10. BETTER HOVER STATES — Gold themed
    ============================================ */
 
-/* --- card-lift: Card that lifts on hover with shadow --- */
 .card-lift {
   transition:
     transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
@@ -1062,7 +1028,6 @@ html {
     0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* --- card-glow-hover: Glow border appears on hover --- */
 .card-glow-hover {
   position: relative;
   border: 1px solid transparent;
@@ -1075,16 +1040,15 @@ html {
   border-color: var(--primary);
   box-shadow:
     0 0 15px var(--idm-glow),
-    0 0 30px rgba(99, 102, 241, 0.06);
+    0 0 30px rgba(184, 134, 11, 0.06);
 }
 
 .dark .card-glow-hover:hover {
   box-shadow:
     0 0 15px var(--idm-glow),
-    0 0 30px rgba(45, 212, 191, 0.08);
+    0 0 30px rgba(229, 190, 74, 0.08);
 }
 
-/* --- interactive-scale: Subtle scale on hover --- */
 .interactive-scale {
   transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   will-change: transform;

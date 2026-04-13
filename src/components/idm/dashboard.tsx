@@ -147,7 +147,7 @@ export function Dashboard() {
             <Badge className="bg-primary/20 text-primary text-[10px] border border-primary/20 px-2 py-0.5">
               🐉 Season {data.season?.number || 1}
             </Badge>
-            <Badge className="bg-idm-purple/20 text-idm-purple text-[10px] border border-idm-purple/20 px-2 py-0.5">
+            <Badge className="bg-idm-amber/20 text-idm-amber text-[10px] border border-idm-amber/20 px-2 py-0.5">
               {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
             </Badge>
           </div>
@@ -578,17 +578,17 @@ export function Dashboard() {
 
                 {/* Upcoming Match Event */}
                 {data.upcomingMatches?.slice(0, 1).map((m) => (
-                  <div key={`upcoming-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-idm-purple/5 border border-idm-purple/10 card-glow-hover">
-                    <div className="w-8 h-8 rounded-lg bg-idm-purple/10 flex items-center justify-center shrink-0">
-                      <Zap className="w-4 h-4 text-idm-purple" />
+                  <div key={`upcoming-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-idm-amber/5 border border-idm-amber/10 card-glow-hover">
+                    <div className="w-8 h-8 rounded-lg bg-idm-amber/10 flex items-center justify-center shrink-0">
+                      <Zap className="w-4 h-4 text-idm-amber" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">
-                        <span className="text-idm-purple">{m.club1.name}</span> vs <span className="text-idm-purple">{m.club2.name}</span>
+                        <span className="text-idm-amber">{m.club1.name}</span> vs <span className="text-idm-amber">{m.club2.name}</span>
                       </p>
                       <p className="text-[10px] text-muted-foreground">Week {m.week} • Upcoming</p>
                     </div>
-                    <Badge className="bg-idm-purple/10 text-idm-purple text-[10px] border-0">BO3</Badge>
+                    <Badge className="bg-idm-amber/10 text-idm-amber text-[10px] border-0">BO3</Badge>
                   </div>
                 ))}
               </div>

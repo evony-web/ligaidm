@@ -198,7 +198,7 @@ export function TournamentView() {
           <motion.div variants={item}>
             <Card className="card-premium overflow-hidden">
               <CardContent className="p-0">
-                <div className="relative p-4 bg-gradient-to-r from-primary/10 via-transparent to-idm-purple/5">
+                <div className="relative p-4 bg-gradient-to-r from-primary/10 via-transparent to-idm-amber/5">
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-1">Week {selected.weekNumber}</p>

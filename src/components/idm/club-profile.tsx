@@ -86,7 +86,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
         >
           {/* Header Banner */}
           <div className="relative h-40 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-idm-purple/20 to-primary/10" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-idm-amber/20 to-primary/10" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 
             {/* Decorative shield pattern */}
@@ -134,7 +134,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               <div className="flex items-center justify-center gap-2 mt-2">
                 {club.division && (
                   <Badge className={`text-[10px] border-0 ${
-                    club.division === 'male' ? 'bg-primary/10 text-primary' : 'bg-idm-purple/10 text-idm-purple'
+                    club.division === 'male' ? 'bg-primary/10 text-primary' : 'bg-idm-amber/10 text-idm-amber'
                   }`}>
                     {club.division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}
                   </Badge>
@@ -265,17 +265,17 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                   </Badge>
                 )}
                 {rank && rank <= 4 && rank > 1 && (
-                  <Badge className="bg-idm-purple/10 text-idm-purple text-[10px] border-0">
+                  <Badge className="bg-idm-amber/10 text-idm-amber text-[10px] border-0">
                     <Shield className="w-3 h-3 mr-1" /> Top 4
                   </Badge>
                 )}
                 {club.gameDiff >= 5 && (
-                  <Badge className="bg-teal-500/10 text-teal-500 text-[10px] border-0">
+                  <Badge className="bg-amber-500/10 text-amber-500 text-[10px] border-0">
                     <Swords className="w-3 h-3 mr-1" /> Dominant (+{club.gameDiff} GD)
                   </Badge>
                 )}
                 {totalMatches >= 5 && (
-                  <Badge className="bg-purple-500/10 text-purple-500 text-[10px] border-0">
+                  <Badge className="bg-amber-600/10 text-amber-600 text-[10px] border-0">
                     <BarChart3 className="w-3 h-3 mr-1" /> Veteran Club
                   </Badge>
                 )}

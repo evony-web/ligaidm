@@ -85,7 +85,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="relative h-32 bg-gradient-to-br from-primary/20 via-idm-purple/10 to-primary/5 overflow-hidden">
+          <div className="relative h-32 bg-gradient-to-br from-primary/20 via-idm-amber/10 to-primary/5 overflow-hidden">
 
             <button
               onClick={onClose}
@@ -217,7 +217,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
                   </Badge>
                 )}
                 {player.matches >= 5 && (
-                  <Badge className="bg-purple-500/10 text-purple-500 text-[10px] border-0">
+                  <Badge className="bg-amber-600/10 text-amber-600 text-[10px] border-0">
                     <BarChart3 className="w-3 h-3 mr-1" /> Veteran (5+ Matches)
                   </Badge>
                 )}

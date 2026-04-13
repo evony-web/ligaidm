@@ -85,7 +85,7 @@ export function LeagueView() {
               <h2 className="text-lg font-bold text-gradient-fury">IDM League</h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <Badge className="bg-primary/10 text-primary text-[10px] border-0">{data.season?.name}</Badge>
-                <Badge className={`text-[10px] border-0 ${division === 'male' ? 'bg-blue-500/10 text-blue-500' : 'bg-purple-500/10 text-purple-500'}`}>
+                <Badge className={`text-[10px] border-0 ${division === 'male' ? 'bg-blue-500/10 text-blue-500' : 'bg-amber-600/10 text-amber-600'}`}>
                   {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
                 </Badge>
               </div>
@@ -360,7 +360,7 @@ export function LeagueView() {
           <motion.div variants={container} initial="hidden" animate="show">
             <Card className="card-premium overflow-hidden">
               <CardContent className="p-0">
-                <div className="px-4 py-3 bg-gradient-to-r from-primary/10 via-idm-purple/5 to-primary/10 border-b border-primary/10">
+                <div className="px-4 py-3 bg-gradient-to-r from-primary/10 via-idm-amber/5 to-primary/10 border-b border-primary/10">
                   <div className="flex items-center gap-2">
                     <Crown className="w-4 h-4 text-yellow-500" />
                     <h3 className="text-sm font-semibold">Playoff Bracket</h3>

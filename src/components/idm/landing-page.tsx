@@ -96,7 +96,7 @@ export function LandingPage() {
                 <Badge className="bg-yellow-500/10 text-yellow-500 text-xs border border-yellow-500/20 px-3 py-1.5">
                   🏆 Premium Esports
                 </Badge>
-                <Badge className="bg-idm-purple/10 text-idm-purple text-xs border border-idm-purple/20 px-3 py-1.5">
+                <Badge className="bg-idm-amber/10 text-idm-amber text-xs border border-idm-amber/20 px-3 py-1.5">
                   ⚡ MPL-Style
                 </Badge>
               </div>
@@ -112,7 +112,7 @@ export function LandingPage() {
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-bold rounded-xl glow-teal transition-all hover:scale-105 card-premium"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-bold rounded-xl glow-gold transition-all hover:scale-105 card-premium"
                 onClick={() => enterApp('male')}
               >
                 <Swords className="w-5 h-5 mr-2" />
@@ -209,7 +209,7 @@ export function LandingPage() {
 
               {/* MALE CHAMPIONS */}
               <motion.div variants={fadeUp}>
-                <Card className="card-premium glow-teal overflow-hidden">
+                <Card className="card-premium glow-gold overflow-hidden">
                   <CardContent className="p-0">
                     {/* Division Header */}
                     <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 border-b border-primary/10">
@@ -300,13 +300,13 @@ export function LandingPage() {
 
               {/* FEMALE CHAMPIONS */}
               <motion.div variants={fadeUp}>
-                <Card className="card-premium glow-purple overflow-hidden">
+                <Card className="card-premium glow-amber overflow-hidden">
                   <CardContent className="p-0">
                     {/* Division Header */}
-                    <div className="bg-gradient-to-r from-idm-purple/10 to-idm-purple/5 p-4 border-b border-idm-purple/10">
+                    <div className="bg-gradient-to-r from-idm-amber/10 to-idm-amber/5 p-4 border-b border-idm-amber/10">
                       <div className="flex items-center gap-2">
-                        <Shield className="w-4 h-4 text-idm-purple" />
-                        <h3 className="text-sm font-bold text-idm-purple">🗡️ FEMALE DIVISION</h3>
+                        <Shield className="w-4 h-4 text-idm-amber" />
+                        <h3 className="text-sm font-bold text-idm-amber">🗡️ FEMALE DIVISION</h3>
                       </div>
                     </div>
 
@@ -410,10 +410,10 @@ export function LandingPage() {
               {[
                 { icon: Swords, title: 'Weekly Tournament', desc: '1 tournament per week per division. Solo registration, auto-balanced teams, 1 main event match.', color: 'text-primary', bg: 'bg-primary/10' },
                 { icon: Trophy, title: 'IDM League', desc: 'MPL-style round robin with BO3 format. Club-based competition with playoffs and grand final.', color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
-                { icon: Zap, title: 'Smart Matchmaking', desc: 'Snake draft system with S+A+B tier balancing. Auto-swap if power imbalance detected.', color: 'text-teal-500', bg: 'bg-teal-500/10' },
+                { icon: Zap, title: 'Smart Matchmaking', desc: 'Snake draft system with S+A+B tier balancing. Auto-swap if power imbalance detected.', color: 'text-amber-500', bg: 'bg-amber-500/10' },
                 { icon: TrendingUp, title: 'Seasonal Ranking', desc: 'Win +2pts, MVP based on prize, participation +10, streak bonuses up to +30.', color: 'text-green-500', bg: 'bg-green-500/10' },
                 { icon: Gift, title: 'Donation & Sawer', desc: 'Live prize pool tracker, top contributors, real-time donation notifications.', color: 'text-pink-500', bg: 'bg-pink-500/10' },
-                { icon: Shield, title: 'Full Admin Panel', desc: 'Approve players, assign tiers, generate teams, input scores, distribute points.', color: 'text-idm-purple', bg: 'bg-idm-purple/10' },
+                { icon: Shield, title: 'Full Admin Panel', desc: 'Approve players, assign tiers, generate teams, input scores, distribute points.', color: 'text-idm-amber', bg: 'bg-idm-amber/10' },
               ].map((f, i) => (
                 <motion.div key={i} variants={fadeUp}>
                   <Card className="card-premium card-lift h-full">
@@ -524,9 +524,9 @@ export function LandingPage() {
               <motion.div variants={fadeUp}>
                 <Card className="card-premium overflow-hidden">
                   <CardContent className="p-0">
-                    <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-idm-purple/10 to-transparent border-b border-idm-purple/10">
-                      <Shield className="w-4 h-4 text-idm-purple" />
-                      <span className="text-xs font-bold text-idm-purple uppercase tracking-wider">Female Division</span>
+                    <div className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-idm-amber/10 to-transparent border-b border-idm-amber/10">
+                      <Shield className="w-4 h-4 text-idm-amber" />
+                      <span className="text-xs font-bold text-idm-amber uppercase tracking-wider">Female Division</span>
                     </div>
                     <div className="p-3 space-y-1">
                       {femaleData?.topPlayers?.slice(0, 5).map((p, idx) => (
@@ -537,7 +537,7 @@ export function LandingPage() {
                             idx === 2 ? 'bg-amber-600/20 text-amber-600' :
                             'bg-muted text-muted-foreground'
                           }`}>{idx + 1}</span>
-                          <div className="w-8 h-8 rounded-full bg-idm-purple/10 flex items-center justify-center text-[10px] font-bold text-idm-purple shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-idm-amber/10 flex items-center justify-center text-[10px] font-bold text-idm-amber shrink-0">
                             {p.gamertag.slice(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -563,7 +563,7 @@ export function LandingPage() {
 
       {/* ========== CTA SECTION ========== */}
       <section className="py-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-idm-purple/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-idm-amber/5" />
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="relative z-10 max-w-2xl mx-auto text-center">
           <motion.div variants={fadeUp}>
             <Sparkles className="w-10 h-10 text-primary mx-auto mb-5" />
@@ -576,7 +576,7 @@ export function LandingPage() {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
                 size="lg"
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-bold rounded-xl glow-teal transition-all hover:scale-105"
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base font-bold rounded-xl glow-gold transition-all hover:scale-105"
                 onClick={() => enterApp('male')}
               >
                 Enter Male Division

@@ -18,11 +18,11 @@ const iconMap = {
 };
 
 const glowMap = {
-  donation: 'glow-teal',
-  match: 'glow-purple',
+  donation: 'glow-gold',
+  match: 'glow-amber',
   mvp: 'glow-gold',
   streak: 'shadow-[0_0_20px_rgba(249,115,22,0.3)]',
-  victory: 'glow-teal',
+  victory: 'glow-gold',
 };
 
 export function DonationPopup({ show, message, onClose }: { show: boolean; message: string; onClose: () => void }) {
@@ -53,14 +53,14 @@ export function DonationPopup({ show, message, onClose }: { show: boolean; messa
             type === 'mvp' ? 'bg-yellow-500/10' :
             type === 'streak' ? 'bg-orange-500/10' :
             type === 'victory' ? 'bg-green-500/10' :
-            'bg-idm-purple/10'
+            'bg-idm-amber/10'
           }`}>
             <Icon className={`w-4 h-4 ${
               type === 'donation' ? 'text-primary' :
               type === 'mvp' ? 'text-yellow-500' :
               type === 'streak' ? 'text-orange-500' :
               type === 'victory' ? 'text-green-500' :
-              'text-idm-purple'
+              'text-idm-amber'
             }`} />
           </div>
           <span className="text-sm font-medium">{message}</span>
