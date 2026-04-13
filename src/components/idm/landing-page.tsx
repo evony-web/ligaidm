@@ -158,6 +158,18 @@ export function LandingPage() {
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
   const contentY = useTransform(heroScroll, [0, 1], ['0%', '20%']);
 
+  /* ========== Section Parallax Refs ========== */
+  const championsRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: championsScroll } = useScroll({ target: championsRef, offset: ['start end', 'end start'] });
+  const championsY = useTransform(championsScroll, [0, 1], ['5%', '-5%']);
+
+  const featuresRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: featuresScroll } = useScroll({ target: featuresRef, offset: ['start end', 'end start'] });
+  const featuresY = useTransform(featuresScroll, [0, 1], ['3%', '-3%']);
+
+  /* ========== Hero Mid-depth Parallax ========== */
+  const heroMidY = useTransform(heroScroll, [0, 1], ['0%', '15%']);
+
   /* ========== Data Queries ========== */
   const { data: maleData } = useQuery<StatsData>({
     queryKey: ['stats', 'male'],
@@ -197,13 +209,23 @@ export function LandingPage() {
 
       {/* ========== HERO SECTION — Cinematic Parallax ========== */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Multi-layer Parallax Background */}
+        {/* Multi-layer Parallax Background — 3 depth layers */}
+        {/* Layer 1: Deep background (slowest) */}
         <motion.div className="absolute inset-0 hidden sm:block" style={{ y: heroY, scale: heroScale }}>
           <img src="/bg-default.jpg" alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
         </motion.div>
         <motion.div className="absolute inset-0 sm:hidden" style={{ y: heroY, scale: heroScale }}>
           <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
         </motion.div>
+
+        {/* Layer 2: Mid-depth gold haze */}
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            y: heroMidY,
+            background: 'radial-gradient(ellipse at 50% 60%, rgba(212,168,83,0.08) 0%, transparent 70%)',
+          }}
+        />
 
         {/* Gradient Overlays — Multiple layers for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/60" />
@@ -381,11 +403,11 @@ export function LandingPage() {
       </section>
 
       {/* ========== CHAMPIONS BANNER — Cinematic Cards ========== */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0">
+      <section ref={championsRef} className="relative py-24 overflow-hidden">
+        <motion.div className="absolute inset-0" style={{ y: championsY }}>
           <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.03] dark:opacity-[0.06]" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
-        </div>
+        </motion.div>
 
         {/* Ambient lights */}
         <div className="ambient-light" style={{ top: '20%', left: '10%', animationDuration: '18s' }} />
@@ -581,9 +603,9 @@ export function LandingPage() {
       <div className="section-divider max-w-4xl mx-auto" />
 
       {/* ========== FEATURES SECTION — Creative Card Shapes ========== */}
-      <section className="py-24 px-4 relative overflow-hidden">
-        {/* Background Mesh */}
-        <div className="absolute inset-0 bg-mesh-fury opacity-50" />
+      <section ref={featuresRef} className="py-24 px-4 relative overflow-hidden">
+        {/* Background Mesh with parallax */}
+        <motion.div className="absolute inset-0 bg-mesh-fury opacity-50" style={{ y: featuresY }} />
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
@@ -808,6 +830,46 @@ export function LandingPage() {
                   </CardContent>
                 </Card>
               </motion.div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ========== COMMUNITY STATS — Animated Counter Section ========== */}
+      <section className="py-20 px-4 relative overflow-hidden bg-[#0d0d1a]/5 dark:bg-[#0d0d1a]/30">
+        <div className="absolute inset-0 bg-mesh-fury opacity-40" />
+        <div className="ambient-light" style={{ top: '20%', right: '10%', animationDuration: '20s' }} />
+
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            variants={stagger}
+          >
+            <SectionHeader icon={Flame} label="Community" title="By The Numbers" subtitle="Growing esports community" />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+              {[
+                { icon: Users, value: `${(maleData?.totalPlayers || 18) + (femaleData?.totalPlayers || 12)}+`, label: 'Total Players', color: 'from-[#d4a853] to-[#b8860b]' },
+                { icon: Trophy, value: `${(maleData?.clubs?.length || 6) + (femaleData?.clubs?.length || 6)}`, label: 'Active Clubs', color: 'from-amber-500 to-amber-600' },
+                { icon: Wallet, value: formatCurrency((maleData?.totalPrizePool || 0) + (femaleData?.totalPrizePool || 0)), label: 'Total Prize Pool', color: 'from-green-500 to-green-600' },
+                { icon: Medal, value: `${maleData?.seasonProgress?.completedWeeks || 0}/${maleData?.seasonProgress?.totalWeeks || 8}`, label: 'Season Progress', color: 'from-pink-500 to-pink-600' },
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  variants={scaleIn}
+                  className="group"
+                >
+                  <div className="relative p-6 rounded-2xl glass card-shine card-border-glow text-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,168,83,0.15)]">
+                    <div className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
+                      <stat.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <p className="text-2xl sm:text-3xl font-black text-gradient-fury leading-tight">{stat.value}</p>
+                    <p className="text-[11px] text-muted-foreground mt-2 uppercase tracking-wider">{stat.label}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
         </div>

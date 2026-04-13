@@ -64,3 +64,32 @@ Stage Summary:
 - Landing page completely redesigned with cinematic parallax, scroll-triggered animations, creative card shapes
 - 10 new CSS effect sections added for advanced animations and visual effects
 - All animations use framer-motion for smooth performance
+
+---
+Task ID: 3
+Agent: Main Agent
+Task: Fix banners (remove swords/kingdom fashion) and enhance landing page with deeper parallax
+
+Work Log:
+- User feedback: desktop banner had characters with swords and kingdom/medieval fashion, not appropriate for esports theme; mobile banner: prefer previous background style but with new character style
+- Regenerated bg-default.jpg (1344x768) with 6 characters in modern esports fashion: techwear hoodie with neon cyan, red bomber jacket streetwear, emerald green blazer, pastel pink kpop crop top, navy blue athletic jersey, purple vintage denim jacket - NO swords, NO weapons, NO armor, NO medieval fashion
+- Regenerated bg-mobiledefault.jpg (768x1344) with 2 characters: sleek black techwear hoodie with neon cyan accents + vibrant red bomber jacket streetwear - obsidian black background with gold glow
+- Added deeper parallax effects to landing page:
+  - 3-layer hero parallax: deep background (slowest), mid-depth gold haze, foreground content
+  - Champions section parallax (5% to -5% vertical shift)
+  - Features section parallax (3% to -3% vertical shift)
+  - All use framer-motion useScroll + useTransform hooks
+- Added new "By The Numbers" Community Stats section between Leaderboard and CTA
+  - Animated stat cards with gradient icon backgrounds
+  - Total Players, Active Clubs, Total Prize Pool, Season Progress
+  - Uses scaleIn animation variant with glass card styling
+- Fixed useTransform hook call - moved from JSX to component top level (React hooks rules)
+- Lint passes clean, dev server running successfully
+
+Stage Summary:
+- Desktop banner regenerated without swords/kingdom fashion - all modern esports streetwear styles
+- Mobile banner regenerated with modern character styles on obsidian black background
+- Added 3-depth-layer parallax to hero section for more cinematic depth
+- Added section-level parallax to Champions and Features sections
+- Added new Community Stats section with animated counters
+- All hooks properly declared at component top level
