@@ -39,6 +39,9 @@ export interface DivisionTheme {
   neonGradient: string;
   neonPulse: string;
   cornerAccent: string;
+  /* Division-tinted background/glass tokens */
+  bgMesh: string;
+  glassStrong: string;
 }
 
 const maleTheme: DivisionTheme = {
@@ -69,7 +72,7 @@ const maleTheme: DivisionTheme = {
   prizeBorder: 'border-idm-male/15',
   prizeText: 'text-idm-male',
   /* Casino SpinWin tokens — male cyan */
-  casinoCard: 'casino-card casino-surface',
+  casinoCard: 'casino-card casino-card-male casino-surface',
   casinoBar: 'casino-card-bar-male',
   casinoGlow: 'casino-glow-male',
   casinoBadge: 'casino-badge casino-badge-male',
@@ -77,6 +80,9 @@ const maleTheme: DivisionTheme = {
   neonGradient: 'text-neon-male',
   neonPulse: 'neon-pulse-male',
   cornerAccent: 'casino-corner-accent',
+  /* Division-tinted background/glass tokens */
+  bgMesh: 'bg-mesh-male',
+  glassStrong: 'glass-strong glass-strong-male',
 };
 
 const femaleTheme: DivisionTheme = {
@@ -107,7 +113,7 @@ const femaleTheme: DivisionTheme = {
   prizeBorder: 'border-idm-female/15',
   prizeText: 'text-idm-female',
   /* Casino SpinWin tokens — female purple */
-  casinoCard: 'casino-card casino-surface',
+  casinoCard: 'casino-card casino-card-female casino-surface',
   casinoBar: 'casino-card-bar-female',
   casinoGlow: 'casino-glow-female',
   casinoBadge: 'casino-badge casino-badge-female',
@@ -115,6 +121,9 @@ const femaleTheme: DivisionTheme = {
   neonGradient: 'text-neon-female',
   neonPulse: 'neon-pulse-female',
   cornerAccent: 'casino-corner-accent casino-corner-accent-female',
+  /* Division-tinted background/glass tokens */
+  bgMesh: 'bg-mesh-female',
+  glassStrong: 'glass-strong glass-strong-female',
 };
 
 export function useDivisionTheme(): DivisionTheme {

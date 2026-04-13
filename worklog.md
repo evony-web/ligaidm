@@ -246,3 +246,52 @@ Stage Summary:
 - All #0d0d1a cold blue-black in landing page replaced with #0c0a06 warm obsidian
 - Cards and backgrounds now blend harmoniously with the warm gold-tinted design system
 - Division neon accent colors (cyan/purple) preserved unchanged
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: Harmonize card and background colors — apply warm obsidian + division-tinted atmospheric connection
+
+Work Log:
+- Analyzed full color system: page background (#0c0a06), sidebar (glass-strong, rgba(20,17,10,0.92)), casino-card (rgba(14,12,7,0.96)), card variants (all use var(--card))
+- Identified core issue: flat obsidian background has no atmospheric connection to card surfaces; cards use gold-tinted borders while page has no matching ambient light; no visual bridge between background and division-colored cards
+- Added division-tinted atmospheric background meshes to globals.css:
+  - .bg-mesh-male: cyan-tinted radial gradients over obsidian background
+  - .bg-mesh-female: purple-tinted radial gradients over obsidian background
+  - Dark mode variants with stronger tint intensity for better visibility
+- Added division-specific casino card surfaces to globals.css:
+  - .casino-card-male: Cyan-tinted obsidian surface (rgba(10,14,17,...) with cyan gradient glow)
+  - .casino-card-female: Purple-tinted obsidian surface (rgba(14,11,17,...) with purple gradient glow)
+  - Both have subtle radial gradient overlays in dark mode for depth
+- Added division-tinted glass-strong classes for sidebar/mobile:
+  - .glass-strong-male: cyan-tinted obsidian gradient + subtle inner glow
+  - .glass-strong-female: purple-tinted obsidian gradient + subtle inner glow
+- Updated all dark mode card variant backgrounds:
+  - .dark .card-gold: warm obsidian gradient (rgba(14,12,7,...) → rgba(22,18,10,...))
+  - .dark .card-champion: warm obsidian gradient
+  - .dark .card-gold-male: cyan-tinted obsidian gradient (rgba(10,14,17,...))
+  - .dark .card-gold-female: purple-tinted obsidian gradient (rgba(14,11,17,...))
+  - .dark .card-champion-male: cyan-tinted obsidian gradient
+  - .dark .card-champion-female: purple-tinted obsidian gradient
+  - .dark .card-prize-male/female: division-tinted obsidian gradients
+  - .dark .card-premium-male/female: division-tinted obsidian gradients
+- Updated casino-surface hex pattern to use division-specific colors
+- Updated casino-pill to use var(--card) and var(--border) for neutral base
+- Updated useDivisionTheme hook with new tokens:
+  - bgMesh: 'bg-mesh-male' / 'bg-mesh-female'
+  - glassStrong: 'glass-strong glass-strong-male' / 'glass-strong glass-strong-female'
+  - casinoCard: now includes 'casino-card-male' / 'casino-card-female'
+- Updated app-shell.tsx:
+  - Desktop sidebar: uses dt.glassStrong (division-tinted)
+  - Mobile header: uses dt.glassStrong
+  - Mobile bottom nav: uses dt.glassStrong
+  - Main content area: uses dt.bgMesh (division-tinted atmospheric mesh)
+- Lint passes clean, dev server running successfully
+
+Stage Summary:
+- Cards and backgrounds now harmonize through division-tinted atmospheric meshes
+- Background mesh creates visual bridge between flat obsidian and card surfaces
+- All card surfaces in dark mode use division-tinted obsidian (cyan for male, purple for female)
+- Sidebar and mobile elements use division-tinted glass-strong
+- Warm obsidian character preserved while division colors permeate through the entire UI layer
+- The "menyatu" (blending) effect achieved: cards feel like they emerge from the background

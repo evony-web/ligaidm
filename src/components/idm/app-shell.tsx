@@ -207,7 +207,7 @@ export function AppShell() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Mobile Header */}
-      <header className="lg:hidden sticky top-0 z-40 glass-strong px-4 py-3 flex items-center justify-between">
+      <header className={`lg:hidden sticky top-0 z-40 ${dt.glassStrong} px-4 py-3 flex items-center justify-between`}>
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg overflow-hidden glow-pulse">
             <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
@@ -231,12 +231,12 @@ export function AppShell() {
 
       <div className="flex flex-1">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 border-r border-border glass-strong sticky top-0 h-screen overflow-y-auto custom-scrollbar">
+        <aside className={`hidden lg:block w-64 border-r border-border ${dt.glassStrong} sticky top-0 h-screen overflow-y-auto custom-scrollbar`}>
           <SidebarContent />
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0">
+        <main className={`flex-1 min-w-0 ${dt.bgMesh}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}
@@ -253,7 +253,7 @@ export function AppShell() {
       </div>
 
       {/* Mobile Bottom Nav - Premium */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-border safe-area-bottom">
+      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 ${dt.glassStrong} border-t border-border safe-area-bottom`}>
         <div className="flex justify-around py-1 px-1">
           <button
             onClick={() => useAppStore.getState().setCurrentView('landing')}
