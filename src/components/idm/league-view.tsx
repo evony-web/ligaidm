@@ -37,10 +37,10 @@ function SectionHeader({ icon: Icon, title, badge, className = '' }: {
   return (
     <div className={`flex items-center gap-2 mb-3 ${className}`}>
       <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-        <Icon className={`w-3.5 h-3.5 ${dt.text}`} />
+        <Icon className={`w-3.5 h-3.5 ${dt.neonText}`} />
       </div>
       <h3 className="text-sm font-semibold section-header-line">{title}</h3>
-      {badge && <Badge className={`${dt.badgeBg} text-[10px] border-0 ml-auto`}>{badge}</Badge>}
+      {badge && <Badge className={`${dt.casinoBadge} ml-auto`}>{badge}</Badge>}
     </div>
   );
 }
@@ -60,7 +60,7 @@ export function LeagueView() {
   if (isLoading || !data?.hasData) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className={`w-8 h-8 border-2 ${dt.neonText} border-t-transparent rounded-full animate-spin`} />
       </div>
     );
   }
@@ -77,18 +77,18 @@ export function LeagueView() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
 
       {/* Header */}
-      <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.cardPremium}`}>
-
-        <div className="relative p-4 lg:p-5">
+      <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.casinoCard} ${dt.cornerAccent}`}>
+        <div className={dt.casinoBar} />
+        <div className="relative p-4 lg:p-5 z-10">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-xl ${dt.iconBg} flex items-center justify-center ${dt.glow}`}>
-              <Trophy className={`w-6 h-6 ${dt.text}`} />
+              <Trophy className={`w-6 h-6 ${dt.neonText}`} />
             </div>
             <div>
-              <h2 className={`text-lg font-bold ${dt.gradientText}`}>IDM League</h2>
+              <h2 className={`text-lg font-bold ${dt.neonGradient}`}>IDM League</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <Badge className={`${dt.badgeBg} text-[10px] border-0`}>{data.season?.name}</Badge>
-                <Badge className={`text-[10px] border-0 ${dt.badgeBg}`}>
+                <Badge className={`${dt.casinoBadge}`}>{data.season?.name}</Badge>
+                <Badge className={`${dt.casinoBadge}`}>
                   {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
                 </Badge>
               </div>
@@ -96,15 +96,15 @@ export function LeagueView() {
             <div className="ml-auto text-right">
               <div className="grid grid-cols-3 gap-3">
                 <div className="text-center">
-                  <p className={`text-lg font-bold ${dt.text}`}>{clubs.length}</p>
+                  <p className={`text-lg font-bold ${dt.neonText}`}>{clubs.length}</p>
                   <p className="text-[9px] text-muted-foreground">Clubs</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-lg font-bold ${dt.text}`}>{weeks.length}</p>
+                  <p className={`text-lg font-bold ${dt.neonText}`}>{weeks.length}</p>
                   <p className="text-[9px] text-muted-foreground">Weeks</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-lg font-bold ${dt.text}`}>{leagueMatches.filter(m => m.status === 'completed').length}</p>
+                  <p className={`text-lg font-bold ${dt.neonText}`}>{leagueMatches.filter(m => m.status === 'completed').length}</p>
                   <p className="text-[9px] text-muted-foreground">Played</p>
                 </div>
               </div>
@@ -129,8 +129,8 @@ export function LeagueView() {
                 <div
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer interactive-scale ${
                     idx === 0 ? `${dt.cardGold} ${dt.glowChampion}` :
-                    idx < 4 ? `${dt.cardPremium} ${dt.cardGlowHover}` :
-                    `${dt.cardGlowHover} bg-muted/20 border border-border/30`
+                    idx < 4 ? `${dt.casinoCard} ${dt.casinoGlow} casino-shimmer` :
+                    `${dt.casinoGlow} bg-muted/20 border border-border/30`
                   }`}
                   onClick={() => setSelectedClub(club)}
                 >
@@ -139,7 +139,7 @@ export function LeagueView() {
                     idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                     idx === 1 ? 'bg-gray-400/20 text-gray-400' :
                     idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                    idx < 4 ? `${dt.iconBg} ${dt.text}` :
+                    idx < 4 ? `${dt.iconBg} ${dt.neonText}` :
                     'bg-muted text-muted-foreground'
                   }`}>
                     {idx < 3 ? ['🥇', '🥈', '🥉'][idx] : idx + 1}
@@ -147,12 +147,12 @@ export function LeagueView() {
 
                   {/* Club Avatar */}
                   <div className={`w-10 h-10 rounded-xl ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                    <Shield className={`w-5 h-5 ${idx === 0 ? 'text-yellow-500' : dt.text}`} />
+                    <Shield className={`w-5 h-5 ${idx === 0 ? 'text-yellow-500' : dt.neonText}`} />
                   </div>
 
                   {/* Club Info */}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold truncate ${idx === 0 ? dt.gradientText : ''}`}>{club.name}</p>
+                    <p className={`text-sm font-semibold truncate ${idx === 0 ? dt.neonGradient : ''}`}>{club.name}</p>
                     <div className="flex items-center gap-2 text-[10px]">
                       <span className="text-green-500 font-medium">{club.wins}W</span>
                       <span className="text-muted-foreground">-</span>
@@ -180,7 +180,7 @@ export function LeagueView() {
 
                   {/* Points */}
                   <div className="text-right shrink-0 pl-3 border-l border-border/50">
-                    <p className={`text-xl font-bold ${idx === 0 ? dt.gradientText : dt.text}`}>{club.points}</p>
+                    <p className={`text-xl font-bold ${idx === 0 ? dt.neonGradient : dt.neonText}`}>{club.points}</p>
                     <p className="text-[9px] text-muted-foreground">PTS</p>
                   </div>
                 </div>
@@ -197,18 +197,19 @@ export function LeagueView() {
               const completed = weekMatches.filter(m => m.status === 'completed').length;
               return (
                 <motion.div key={week} variants={item}>
-                  <Card className={`${dt.cardPremium} overflow-hidden`}>
-                    <CardContent className="p-0">
+                  <Card className={`${dt.casinoCard} overflow-hidden casino-shimmer`}>
+                    <div className={dt.casinoBar} />
+                    <CardContent className="p-0 relative z-10">
                       {/* Week header */}
                       <div className={`flex items-center justify-between px-4 py-3 ${dt.bgSubtle} border-b ${dt.borderSubtle}`}>
                         <div className="flex items-center gap-2">
-                          <Calendar className={`w-4 h-4 ${dt.text}`} />
+                          <Calendar className={`w-4 h-4 ${dt.neonText}`} />
                           <h3 className="text-sm font-semibold section-header-line">Week {week}</h3>
                         </div>
                         <Badge className={`text-[10px] border-0 ${
                           completed === weekMatches.length ? 'bg-green-500/10 text-green-500' :
                           completed > 0 ? 'bg-yellow-500/10 text-yellow-500' :
-                          `${dt.badgeBg}`
+                          `${dt.casinoBadge}`
                         }`}>
                           {completed === weekMatches.length ? '✅ Complete' : `${completed}/${weekMatches.length} Played`}
                         </Badge>
@@ -225,35 +226,35 @@ export function LeagueView() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2 flex-1 min-w-0">
                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                  m.status === 'completed' && m.score1! > m.score2! ? `${dt.iconBg} ${dt.text}` : 'bg-muted text-muted-foreground'
+                                  m.status === 'completed' && m.score1! > m.score2! ? `${dt.iconBg} ${dt.neonText}` : 'bg-muted text-muted-foreground'
                                 }`}>
                                   {m.club1.name.slice(0, 2).toUpperCase()}
                                 </div>
                                 <span className={`text-sm font-medium truncate ${
-                                  m.status === 'completed' && m.score1! > m.score2! ? `${dt.text} font-bold` : ''
+                                  m.status === 'completed' && m.score1! > m.score2! ? `${dt.neonText} font-bold` : ''
                                 }`}>
                                   {m.club1.name}
                                 </span>
                               </div>
                               <div className="flex items-center gap-2 mx-3">
                                 {m.status === 'completed' ? (
-                                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${dt.bg}`}>
-                                    <span className={`text-base font-bold ${m.score1! > m.score2! ? dt.text : 'text-muted-foreground'}`}>{m.score1}</span>
+                                  <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg casino-pill`}>
+                                    <span className={`text-base font-bold casino-score ${m.score1! > m.score2! ? dt.neonText : 'text-muted-foreground'}`}>{m.score1}</span>
                                     <span className="text-[10px] text-muted-foreground">-</span>
-                                    <span className={`text-base font-bold ${m.score2! > m.score1! ? dt.text : 'text-muted-foreground'}`}>{m.score2}</span>
+                                    <span className={`text-base font-bold casino-score ${m.score2! > m.score1! ? dt.neonText : 'text-muted-foreground'}`}>{m.score2}</span>
                                   </div>
                                 ) : (
-                                  <Badge className={`${dt.badgeBg} text-[10px] border-0 glow-pulse`}>vs</Badge>
+                                  <Badge className={`${dt.casinoBadge} ${dt.neonPulse}`}>vs</Badge>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
                                 <span className={`text-sm font-medium truncate ${
-                                  m.status === 'completed' && m.score2! > m.score1! ? `${dt.text} font-bold` : ''
+                                  m.status === 'completed' && m.score2! > m.score1! ? `${dt.neonText} font-bold` : ''
                                 }`}>
                                   {m.club2.name}
                                 </span>
                                 <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                  m.status === 'completed' && m.score2! > m.score1! ? `${dt.iconBg} ${dt.text}` : 'bg-muted text-muted-foreground'
+                                  m.status === 'completed' && m.score2! > m.score1! ? `${dt.iconBg} ${dt.neonText}` : 'bg-muted text-muted-foreground'
                                 }`}>
                                   {m.club2.name.slice(0, 2).toUpperCase()}
                                 </div>
@@ -282,8 +283,9 @@ export function LeagueView() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* Top Performers */}
             <motion.div variants={item}>
-              <Card className={dt.cardPremium}>
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard}`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <SectionHeader icon={Crown} title="Top Performers" badge="MVP RACE" />
                   <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
                     {data.topPlayers?.slice(0, 5).map((p, idx) => (
@@ -296,7 +298,7 @@ export function LeagueView() {
                           idx === 2 ? 'bg-amber-600/20 text-amber-600' :
                           'bg-muted text-muted-foreground'
                         }`}>{idx + 1}</span>
-                        <div className={`w-8 h-8 rounded-full ${dt.iconBg} flex items-center justify-center text-[10px] font-bold ${dt.text} shrink-0`}>
+                        <div className={`w-8 h-8 rounded-full ${dt.iconBg} flex items-center justify-center text-[10px] font-bold ${dt.neonText} shrink-0`}>
                           {p.gamertag.slice(0, 2).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -310,7 +312,7 @@ export function LeagueView() {
                             <span className="flex items-center gap-1"><BarChart3 className="w-3 h-3" />{p.totalWins}W</span>
                           </div>
                         </div>
-                        <span className={`text-sm font-bold ${dt.text}`}>{p.points} pts</span>
+                        <span className={`text-sm font-bold ${dt.neonText}`}>{p.points} pts</span>
                       </div>
                     ))}
                   </div>
@@ -320,19 +322,20 @@ export function LeagueView() {
 
             {/* Club Stats Grid */}
             <motion.div variants={item}>
-              <Card className={dt.cardPremium}>
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard}`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <SectionHeader icon={TrendingUp} title="Club Power Rankings" />
                   <div className="grid grid-cols-2 gap-2">
                     {clubs.slice(0, 4).map((club, idx) => {
                       const wr = club.wins + club.losses > 0 ? Math.round((club.wins / (club.wins + club.losses)) * 100) : 0;
                       return (
                         <div key={club.id} className={`p-3 rounded-xl cursor-pointer interactive-scale ${
-                          idx === 0 ? dt.cardGold : `bg-muted/30 border border-border/20 ${dt.cardGlowHover}`
+                          idx === 0 ? dt.cardGold : `bg-muted/30 border border-border/20 ${dt.casinoGlow} casino-shimmer`
                         }`} onClick={() => setSelectedClub(club)}>
                           <div className="flex items-center gap-2 mb-2">
-                            <Shield className={`w-4 h-4 ${idx === 0 ? 'text-yellow-500' : dt.text}`} />
-                            <span className={`text-xs font-semibold truncate ${idx === 0 ? dt.gradientText : ''}`}>{club.name}</span>
+                            <Shield className={`w-4 h-4 ${idx === 0 ? 'text-yellow-500' : dt.neonText}`} />
+                            <span className={`text-xs font-semibold truncate ${idx === 0 ? dt.neonGradient : ''}`}>{club.name}</span>
                           </div>
                           <div className="grid grid-cols-3 gap-1 text-center">
                             <div>
@@ -340,7 +343,7 @@ export function LeagueView() {
                               <p className="text-[8px] text-muted-foreground">WINS</p>
                             </div>
                             <div>
-                              <p className={`text-sm font-bold ${dt.text}`}>{wr}%</p>
+                              <p className={`text-sm font-bold ${dt.neonText}`}>{wr}%</p>
                               <p className="text-[8px] text-muted-foreground">WR</p>
                             </div>
                             <div>
@@ -361,9 +364,10 @@ export function LeagueView() {
         {/* PLAYOFF BRACKET - Enhanced */}
         <TabsContent value="playoff" className="mt-4">
           <motion.div variants={container} initial="hidden" animate="show">
-            <Card className={`${dt.cardPremium} overflow-hidden`}>
-              <CardContent className="p-0">
-                <div className={`px-4 py-3 bg-gradient-to-r ${dt.bgSubtle} via-transparent ${dt.bgSubtle} border-b ${dt.borderSubtle}`}>
+            <Card className={`${dt.casinoCard} ${dt.cornerAccent} overflow-hidden`}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-0 relative z-10">
+                <div className={`px-4 py-3 casino-img-overlay border-b ${dt.borderSubtle}`}>
                   <div className="flex items-center gap-2">
                     <Crown className="w-4 h-4 text-yellow-500" />
                     <h3 className="text-sm font-semibold">Playoff Bracket</h3>
@@ -377,19 +381,19 @@ export function LeagueView() {
                     <div className="space-y-6">
                       <p className="text-[10px] text-muted-foreground text-center font-semibold mb-2 uppercase tracking-wider">Semi Final</p>
                       {playoffMatches.filter(m => m.round.startsWith('semifinal')).map(m => (
-                        <div key={m.id} className={`p-3 rounded-xl bg-muted/50 min-w-[160px] ${dt.cardGlowHover} interactive-scale border border-border/30`}>
+                        <div key={m.id} className={`p-3 rounded-xl bg-muted/50 min-w-[160px] ${dt.casinoGlow} interactive-scale border border-border/30 casino-shimmer`}>
                           <div className="space-y-2">
-                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score1! > m.score2! ? 'font-bold text-primary' : ''}`}>
+                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score1! > m.score2! ? `font-bold ${dt.neonText}` : ''}`}>
                               <span>{m.club1.name}</span>
-                              <span className="font-mono">{m.score1 ?? '-'}</span>
+                              <span className="font-mono casino-score">{m.score1 ?? '-'}</span>
                             </div>
                             <div className="h-px bg-border" />
-                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score2! > m.score1! ? 'font-bold text-primary' : ''}`}>
+                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score2! > m.score1! ? `font-bold ${dt.neonText}` : ''}`}>
                               <span>{m.club2.name}</span>
-                              <span className="font-mono">{m.score2 ?? '-'}</span>
+                              <span className="font-mono casino-score">{m.score2 ?? '-'}</span>
                             </div>
                           </div>
-                          <Badge className={`mt-2 text-[9px] border-0 ${dt.badgeBg}`}>BO5</Badge>
+                          <Badge className={`mt-2 text-[9px] border-0 ${dt.casinoBadge}`}>BO5</Badge>
                         </div>
                       ))}
                     </div>
@@ -397,7 +401,7 @@ export function LeagueView() {
                     {/* Connector */}
                     <div className="hidden lg:flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <div className="w-8 h-px bg-border" />
-                      <Swords className={`w-4 h-4 ${dt.text}`} />
+                      <Swords className={`w-4 h-4 ${dt.neonText}`} />
                       <div className="w-8 h-px bg-border" />
                     </div>
 
@@ -407,18 +411,18 @@ export function LeagueView() {
                       {playoffMatches.filter(m => m.round === 'grand_final').map(m => (
                         <div key={m.id} className={`p-4 rounded-xl ${dt.cardChampion} min-w-[180px]`}>
                           <div className="space-y-2">
-                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score1! > m.score2! ? 'font-bold text-primary' : ''}`}>
+                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score1! > m.score2! ? `font-bold ${dt.neonText}` : ''}`}>
                               <span>{m.club1.name}</span>
-                              <span className="font-mono">{m.score1 ?? '-'}</span>
+                              <span className="font-mono casino-score">{m.score1 ?? '-'}</span>
                             </div>
                             <div className={`h-px ${dt.borderSubtle}`} />
-                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score2! > m.score1! ? 'font-bold text-primary' : ''}`}>
+                            <div className={`flex items-center justify-between text-xs ${m.status === 'completed' && m.score2! > m.score1! ? `font-bold ${dt.neonText}` : ''}`}>
                               <span>{m.club2.name}</span>
-                              <span className="font-mono">{m.score2 ?? '-'}</span>
+                              <span className="font-mono casino-score">{m.score2 ?? '-'}</span>
                             </div>
                           </div>
                           <div className="mt-3 text-center">
-                            <Badge className={`text-[9px] border-0 ${dt.badgeBg} ${dt.glowChampion}`}>🏆 BO5 Grand Final</Badge>
+                            <Badge className={`text-[9px] border-0 ${dt.casinoBadge} ${dt.glowChampion}`}>🏆 BO5 Grand Final</Badge>
                           </div>
                         </div>
                       ))}

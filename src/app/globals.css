@@ -1976,3 +1976,630 @@ html {
 .group:hover .card-cover {
   transform: scale(1.05);
 }
+
+/* ============================================
+   28. SPINWIN CASINO STYLE — Neon / Dark Glossy
+   ============================================ */
+
+/* Casino card — dark glossy surface with hex pattern */
+.casino-card {
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(15, 12, 8, 0.95) 0%,
+    rgba(25, 20, 14, 0.92) 50%,
+    rgba(15, 12, 8, 0.95) 100%
+  );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.casino-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+}
+
+.dark .casino-card {
+  background: linear-gradient(
+    145deg,
+    rgba(8, 6, 4, 0.98) 0%,
+    rgba(16, 13, 9, 0.95) 50%,
+    rgba(8, 6, 4, 0.98) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.dark .casino-card::before {
+  opacity: 0.06;
+}
+
+/* Neon accent bar — Male (Cyan) */
+.casino-card-bar-male {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #22d3ee 20%,
+    #06b6d4 50%,
+    #22d3ee 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.5), 0 0 20px rgba(34, 211, 238, 0.2);
+}
+
+/* Neon accent bar — Female (Purple) */
+.casino-card-bar-female {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #c084fc 20%,
+    #a855f7 50%,
+    #c084fc 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.5), 0 0 20px rgba(192, 132, 252, 0.2);
+}
+
+/* Neon hover glow — Male */
+.casino-glow-male {
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.casino-glow-male:hover {
+  box-shadow:
+    0 0 15px rgba(34, 211, 238, 0.25),
+    0 0 30px rgba(34, 211, 238, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(34, 211, 238, 0.2);
+}
+
+/* Neon hover glow — Female */
+.casino-glow-female {
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.casino-glow-female:hover {
+  box-shadow:
+    0 0 15px rgba(192, 132, 252, 0.25),
+    0 0 30px rgba(192, 132, 252, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.15);
+  border-color: rgba(192, 132, 252, 0.2);
+}
+
+/* Casino shimmer sweep on hover */
+.casino-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.casino-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.04) 45%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 55%,
+    transparent 60%
+  );
+  transform: translateX(-100%) rotate(0deg);
+  transition: none;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.casino-shimmer:hover::after {
+  transform: translateX(100%) rotate(0deg);
+  transition: transform 0.8s ease;
+}
+
+/* Neon pulse — Male */
+@keyframes neon-pulse-male-keyframes {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(34, 211, 238, 0.3),
+      0 0 20px rgba(34, 211, 238, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(34, 211, 238, 0.5),
+      0 0 40px rgba(34, 211, 238, 0.2),
+      0 0 60px rgba(34, 211, 238, 0.05);
+  }
+}
+
+.neon-pulse-male {
+  animation: neon-pulse-male-keyframes 2.5s ease-in-out infinite;
+}
+
+/* Neon pulse — Female */
+@keyframes neon-pulse-female-keyframes {
+  0%, 100% {
+    box-shadow:
+      0 0 10px rgba(192, 132, 252, 0.3),
+      0 0 20px rgba(192, 132, 252, 0.1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(192, 132, 252, 0.5),
+      0 0 40px rgba(192, 132, 252, 0.2),
+      0 0 60px rgba(192, 132, 252, 0.05);
+  }
+}
+
+.neon-pulse-female {
+  animation: neon-pulse-female-keyframes 2.5s ease-in-out infinite;
+}
+
+/* Neon glow text — Male */
+.neon-text-male {
+  color: #22d3ee;
+  text-shadow: 0 0 7px rgba(34, 211, 238, 0.4), 0 0 15px rgba(34, 211, 238, 0.15);
+}
+
+/* Neon glow text — Female */
+.neon-text-female {
+  color: #c084fc;
+  text-shadow: 0 0 7px rgba(192, 132, 252, 0.4), 0 0 15px rgba(192, 132, 252, 0.15);
+}
+
+/* Neon gradient text — Male */
+.text-neon-male {
+  background: linear-gradient(
+    135deg,
+    #22d3ee,
+    #06b6d4,
+    #67e8f9,
+    #22d3ee,
+    #0891b2
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+/* Neon gradient text — Female */
+.text-neon-female {
+  background: linear-gradient(
+    135deg,
+    #c084fc,
+    #a855f7,
+    #e9d5ff,
+    #c084fc,
+    #9333ea
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+/* Neon outlined badge — Male */
+.casino-badge-male {
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 6px rgba(34, 211, 238, 0.2), inset 0 0 6px rgba(34, 211, 238, 0.05);
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.08);
+}
+
+/* Neon outlined badge — Female */
+.casino-badge-female {
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.2), inset 0 0 6px rgba(192, 132, 252, 0.05);
+  color: #c084fc;
+  background: rgba(192, 132, 252, 0.08);
+}
+
+/* Decorative corner accent line */
+.casino-corner-accent {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.casino-corner-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--idm-male), transparent);
+  opacity: 0.6;
+}
+
+.casino-corner-accent::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  background: linear-gradient(180deg, var(--idm-male), transparent);
+  opacity: 0.6;
+}
+
+.casino-corner-accent-female::before {
+  background: linear-gradient(90deg, var(--idm-female), transparent);
+}
+
+.casino-corner-accent-female::after {
+  background: linear-gradient(180deg, var(--idm-female), transparent);
+}
+
+/* ============================================
+   29. ADDITIONAL CASINO UTILITY CLASSES
+   ============================================ */
+
+/* Casino surface — hex pattern overlay */
+.casino-surface {
+  position: relative;
+}
+
+.casino-surface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.02;
+  background:
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 10px,
+      var(--idm-male) 10px,
+      var(--idm-male) 11px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 10px,
+      var(--idm-male) 10px,
+      var(--idm-male) 11px
+    );
+}
+
+.dark .casino-surface::after {
+  opacity: 0.04;
+}
+
+/* Casino image overlay — dramatic dark gradient for image headers */
+.casino-img-overlay {
+  position: relative;
+}
+
+.casino-img-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 40%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+
+.dark .casino-img-overlay::before {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.2) 40%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/* Casino badge — base neon outlined badge */
+.casino-badge {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 2px 8px;
+  letter-spacing: 0.02em;
+}
+
+/* Casino pill — dark pill stat container */
+.casino-pill {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 9999px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+.dark .casino-pill {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Casino score — tabular number display */
+.casino-score {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   28. SPINWIN CASINO UI — Neon Gaming Style
+   Dark immersive cards with neon division accents
+   ============================================ */
+
+/* Casino card surface — deep dark glossy */
+.casino-card {
+  position: relative;
+  background: linear-gradient(145deg, rgba(15, 12, 20, 0.95), rgba(8, 6, 12, 0.98));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 16px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.dark .casino-card {
+  background: linear-gradient(145deg, rgba(15, 12, 20, 0.97), rgba(8, 6, 12, 0.99));
+  border-color: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Neon top accent bar — division specific */
+.casino-card-bar-male {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--idm-male), var(--idm-male-light), var(--idm-male), transparent);
+  box-shadow: 0 0 12px var(--idm-male-glow);
+  opacity: 0.85;
+}
+
+.casino-card-bar-female {
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--idm-female), var(--idm-female-light), var(--idm-female), transparent);
+  box-shadow: 0 0 12px var(--idm-female-glow);
+  opacity: 0.85;
+}
+
+/* Casino image header overlay — dramatic dark gradient */
+.casino-img-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 12, 0.1) 0%,
+    rgba(8, 6, 12, 0.3) 30%,
+    rgba(8, 6, 12, 0.7) 65%,
+    rgba(8, 6, 12, 0.95) 100%
+  );
+  pointer-events: none;
+}
+
+.dark .casino-img-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 12, 0.05) 0%,
+    rgba(8, 6, 12, 0.2) 30%,
+    rgba(8, 6, 12, 0.6) 60%,
+    rgba(8, 6, 12, 0.95) 100%
+  );
+}
+
+/* Neon glow on hover — Male */
+.casino-glow-male {
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.casino-glow-male:hover {
+  border-color: rgba(34, 211, 238, 0.3);
+  box-shadow:
+    0 0 20px rgba(34, 211, 238, 0.15),
+    0 0 40px rgba(34, 211, 238, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Neon glow on hover — Female */
+.casino-glow-female {
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
+}
+.casino-glow-female:hover {
+  border-color: rgba(192, 132, 252, 0.3);
+  box-shadow:
+    0 0 20px rgba(192, 132, 252, 0.15),
+    0 0 40px rgba(192, 132, 252, 0.06),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Neon pulse for LIVE elements — Male */
+@keyframes neon-pulse-male {
+  0%, 100% { box-shadow: 0 0 8px rgba(34, 211, 238, 0.3), 0 0 16px rgba(34, 211, 238, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(34, 211, 238, 0.5), 0 0 32px rgba(34, 211, 238, 0.2), 0 0 48px rgba(34, 211, 238, 0.05); }
+}
+.neon-pulse-male { animation: neon-pulse-male 2s ease-in-out infinite; }
+
+/* Neon pulse for LIVE elements — Female */
+@keyframes neon-pulse-female {
+  0%, 100% { box-shadow: 0 0 8px rgba(192, 132, 252, 0.3), 0 0 16px rgba(192, 132, 252, 0.1); }
+  50% { box-shadow: 0 0 16px rgba(192, 132, 252, 0.5), 0 0 32px rgba(192, 132, 252, 0.2), 0 0 48px rgba(192, 132, 252, 0.05); }
+}
+.neon-pulse-female { animation: neon-pulse-female 2s ease-in-out infinite; }
+
+/* Casino stat pill — dark pill with neon accent */
+.casino-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s ease;
+}
+.casino-pill:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Casino badge — neon outlined */
+.casino-badge {
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid;
+}
+.casino-badge-male {
+  color: var(--idm-male);
+  border-color: rgba(34, 211, 238, 0.3);
+  background: rgba(34, 211, 238, 0.08);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
+}
+.casino-badge-female {
+  color: var(--idm-female);
+  border-color: rgba(192, 132, 252, 0.3);
+  background: rgba(192, 132, 252, 0.08);
+  text-shadow: 0 0 8px rgba(192, 132, 252, 0.3);
+}
+
+/* Casino neon text glow */
+.neon-text-male {
+  color: var(--idm-male);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.4), 0 0 20px rgba(34, 211, 238, 0.15);
+}
+.neon-text-female {
+  color: var(--idm-female);
+  text-shadow: 0 0 10px rgba(192, 132, 252, 0.4), 0 0 20px rgba(192, 132, 252, 0.15);
+}
+
+/* Casino gradient text — division specific */
+.text-neon-male {
+  background: linear-gradient(135deg, var(--idm-male), var(--idm-male-light), #a5f3fc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.text-neon-female {
+  background: linear-gradient(135deg, var(--idm-female), var(--idm-female-light), #f0abfc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Casino corner accent — decorative neon corner */
+.casino-corner-accent {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  opacity: 0.35;
+  z-index: 2;
+}
+.casino-corner-accent::before,
+.casino-corner-accent::after {
+  content: '';
+  position: absolute;
+  background: var(--idm-male);
+}
+.casino-corner-accent::before {
+  width: 100%;
+  height: 1px;
+  top: 0;
+  left: 0;
+}
+.casino-corner-accent::after {
+  width: 1px;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.casino-corner-accent-female::before,
+.casino-corner-accent-female::after {
+  background: var(--idm-female);
+}
+
+/* Casino surface pattern — subtle hex grid */
+.casino-surface {
+  position: relative;
+}
+.casino-surface::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.015;
+  background-image:
+    linear-gradient(30deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
+    linear-gradient(150deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
+    linear-gradient(30deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%),
+    linear-gradient(150deg, rgba(255,255,255,0.05) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.05) 87.5%);
+  background-size: 40px 70px;
+  background-position: 0 0, 0 0, 20px 35px, 20px 35px;
+}
+
+/* Casino match score display */
+.casino-score {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.05em;
+}
+
+/* Casino shimmer sweep */
+@keyframes casino-shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+.casino-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.casino-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.03),
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.03),
+    transparent
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: none;
+  pointer-events: none;
+}
+.casino-shimmer:hover::after {
+  animation: casino-shimmer 0.8s ease-out;
+}

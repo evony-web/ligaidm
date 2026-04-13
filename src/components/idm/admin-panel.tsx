@@ -18,6 +18,7 @@ import { TierBadge } from './tier-badge';
 import { StatusBadge } from './status-badge';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
@@ -28,6 +29,7 @@ function formatCurrency(amount: number) {
 
 export function AdminPanel() {
   const { division } = useAppStore();
+  const dt = useDivisionTheme();
   const qc = useQueryClient();
 
   const { data: players } = useQuery({
@@ -233,7 +235,7 @@ export function AdminPanel() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-primary" />
+          <Shield className={`w-5 h-5 ${dt.neonText}`} />
           <h2 className="text-lg font-bold text-gradient-fury">Admin Panel</h2>
           <Badge className="bg-red-500/10 text-red-500 text-[10px] border-0">ADMIN</Badge>
         </div>
@@ -260,10 +262,11 @@ export function AdminPanel() {
         <TabsContent value="players">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
             {/* Add new player */}
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <UserPlus className="w-4 h-4 text-primary" /> Add New Player
+                  <UserPlus className={`w-4 h-4 ${dt.neonText}`} /> Add New Player
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <Input placeholder="Name" value={newPlayer.name} onChange={(e) => setNewPlayer(p => ({ ...p, name: e.target.value }))} />
@@ -291,10 +294,10 @@ export function AdminPanel() {
             <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
               {filteredPlayers.map((p: { id: string; gamertag: string; name: string; tier: string; points: number; totalWins: number; streak: number; totalMvp: number; matches: number; isActive: boolean }) => (
                 <motion.div key={p.id} variants={item}
-                  className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 card-hover"
+                  className={`flex items-center justify-between p-3 rounded-xl bg-card border border-border/50 ${dt.casinoGlow}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                    <div className={`w-8 h-8 rounded-full ${dt.iconBg} flex items-center justify-center text-xs font-bold ${dt.neonText} shrink-0`}>
                       {p.gamertag.slice(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -329,10 +332,11 @@ export function AdminPanel() {
         <TabsContent value="tournaments">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* Create tournament */}
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-primary" /> Create Tournament
+                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Tournament
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <Input placeholder="Name" value={newTournament.name} onChange={(e) => setNewTournament(p => ({ ...p, name: e.target.value }))} />
@@ -350,9 +354,10 @@ export function AdminPanel() {
             <div className="space-y-2">
               {tournaments?.map((t: { id: string; name: string; weekNumber: number; status: string; prizePool: number; _count?: { teams: number; participations: number } }) => (
                 <motion.div key={t.id} variants={item}>
-                  <Card className={`card-premium card-hover cursor-pointer ${selectedTournamentId === t.id ? 'ring-1 ring-primary' : ''}`}
+                  <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer cursor-pointer ${selectedTournamentId === t.id ? `ring-1 ${dt.border}` : ''}`}
                     onClick={() => setSelectedTournamentId(selectedTournamentId === t.id ? null : t.id)}>
-                    <CardContent className="p-3">
+                    <div className={dt.casinoBar} />
+                    <CardContent className="p-3 relative z-10">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div>
                           <p className="text-sm font-semibold">{t.name}</p>
@@ -389,8 +394,9 @@ export function AdminPanel() {
 
             {/* Selected Tournament Detail */}
             {selectedTournament && (
-              <Card className="card-premium">
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard} ${dt.cornerAccent}`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-semibold">{selectedTournament.name} — Management</h3>
                     <StatusBadge status={selectedTournament.status} />
@@ -435,7 +441,7 @@ export function AdminPanel() {
                               <TierBadge tier={p.tier} />
                               <span className="text-xs">{p.gamertag}</span>
                             </div>
-                            <Button size="sm" variant="ghost" className="h-6 text-[10px] text-primary"
+                            <Button size="sm" variant="ghost" className={`h-6 text-[10px] ${dt.neonText}`}
                               onClick={() => registerPlayer.mutate({ tournamentId: selectedTournament.id, playerId: p.id })}>
                               <UserPlus className="w-3 h-3 mr-1" /> Register
                             </Button>
@@ -454,11 +460,11 @@ export function AdminPanel() {
                           <div key={t.id} className={`p-2 rounded-lg text-xs ${t.isWinner ? 'bg-yellow-500/5 border border-yellow-500/10' : 'bg-muted/50'}`}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="font-semibold">{t.name} {t.isWinner && '👑'}</span>
-                              <span className="text-primary">⚡ {t.power}</span>
+                              <span className={dt.neonText}>⚡ {t.power}</span>
                             </div>
                             <div className="flex flex-wrap gap-1">
                               {t.teamPlayers.map((tp: { player: { gamertag: string; tier: string } }) => (
-                                <span key={tp.player.gamertag} className="flex items-center gap-1 bg-background/50 px-1.5 py-0.5 rounded">
+                                <span key={tp.player.gamertag} className="flex items-center gap-1 casino-pill px-1.5 py-0.5 rounded">
                                   <TierBadge tier={tp.player.tier} /> {tp.player.gamertag}
                                 </span>
                               ))}
@@ -478,17 +484,18 @@ export function AdminPanel() {
         <TabsContent value="matches">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* League Match Scoring */}
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-primary" /> League Match Scoring
+                  <Trophy className={`w-4 h-4 ${dt.neonText}`} /> League Match Scoring
                 </h3>
                 <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
                   {stats?.leagueMatches?.filter((m: { status: string }) => m.status === 'upcoming').map((m: { id: string; week: number; club1: { name: string }; club2: { name: string }; format: string }) => (
                     <div key={m.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/50 border border-border/30">
                       <div>
                         <p className="text-xs font-semibold">Week {m.week}: {m.club1.name} vs {m.club2.name}</p>
-                        <Badge className="text-[9px] border-0 bg-primary/10 text-primary mt-0.5">{m.format}</Badge>
+                        <Badge className={`${dt.casinoBadge} mt-0.5`}>{m.format}</Badge>
                       </div>
                       <div className="flex gap-1">
                         <Button size="sm" variant="outline" className="h-6 text-[9px]"
@@ -518,14 +525,15 @@ export function AdminPanel() {
             </Card>
 
             {/* Playoff Match Scoring */}
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Crown className="w-4 h-4 text-yellow-500" /> Playoff Match Scoring
                 </h3>
                 <div className="space-y-2">
                   {stats?.playoffMatches?.map((m: { id: string; round: string; club1: { name: string }; club2: { name: string }; status: string; format: string; score1: number | null; score2: number | null }) => (
-                    <div key={m.id} className={`p-3 rounded-lg border ${m.status === 'upcoming' ? 'bg-muted/50 border-border/30' : 'bg-primary/5 border-primary/10'}`}>
+                    <div key={m.id} className={`p-3 rounded-lg border ${m.status === 'upcoming' ? 'bg-muted/50 border-border/30' : `${dt.bg} ${dt.border}`}`}>
                       <div className="flex items-center justify-between mb-1">
                         <div>
                           <Badge className="text-[9px] border-0 bg-yellow-500/10 text-yellow-500">
@@ -548,7 +556,7 @@ export function AdminPanel() {
                           })}
                         </div>
                       ) : (
-                        <p className="text-sm font-bold text-primary mt-1">{m.score1} - {m.score2}</p>
+                        <p className={`text-sm font-bold ${dt.neonText} mt-1 casino-score`}>{m.score1} - {m.score2}</p>
                       )}
                     </div>
                   ))}
@@ -561,10 +569,11 @@ export function AdminPanel() {
         {/* ====== CLUBS TAB ====== */}
         <TabsContent value="clubs">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-primary" /> Create Club
+                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Club
                 </h3>
                 <div className="flex gap-2">
                   <Input placeholder="Club name" value={newClub} onChange={(e) => setNewClub(e.target.value)} />
@@ -575,8 +584,9 @@ export function AdminPanel() {
             <div className="space-y-2">
               {clubs?.map((c: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number; _count?: { members: number } }) => (
                 <motion.div key={c.id} variants={item}>
-                  <Card className="card-premium card-hover">
-                    <CardContent className="p-3 flex items-center justify-between">
+                  <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer`}>
+                    <div className={dt.casinoBar} />
+                    <CardContent className="p-3 flex items-center justify-between relative z-10">
                       <div>
                         <p className="text-sm font-semibold">{c.name}</p>
                         <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
@@ -587,7 +597,7 @@ export function AdminPanel() {
                           <span>GD: {c.gameDiff > 0 ? '+' : ''}{c.gameDiff}</span>
                         </div>
                       </div>
-                      <Badge className="bg-primary/10 text-primary text-[10px] border-0">{c._count?.members || 0} members</Badge>
+                      <Badge className={dt.casinoBadge}>{c._count?.members || 0} members</Badge>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -599,10 +609,11 @@ export function AdminPanel() {
         {/* ====== DONATIONS TAB ====== */}
         <TabsContent value="donations">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-            <Card className="card-premium">
-              <CardContent className="p-4">
+            <Card className={dt.casinoCard}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-primary" /> Add Donation
+                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Add Donation
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                   <Input placeholder="Donor name" value={newDonation.donorName} onChange={(e) => setNewDonation(p => ({ ...p, donorName: e.target.value }))} />
@@ -617,16 +628,16 @@ export function AdminPanel() {
             </Card>
             <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
               {donations?.slice(0, 20).map((d: { id: string; donorName: string; amount: number; message: string | null; type: string; createdAt: string }) => (
-                <motion.div key={d.id} variants={item} className="flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50">
+                <motion.div key={d.id} variants={item} className={`flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50 ${dt.casinoGlow}`}>
                   <div className="flex items-center gap-2">
-                    <Gift className="w-3.5 h-3.5 text-primary" />
+                    <Gift className={`w-3.5 h-3.5 ${dt.neonText}`} />
                     <div>
                       <p className="text-xs font-medium">{d.donorName}</p>
                       {d.message && <p className="text-[10px] text-muted-foreground">{d.message}</p>}
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs font-bold text-primary">{formatCurrency(d.amount)}</p>
+                    <p className={`text-xs font-bold ${dt.neonText}`}>{formatCurrency(d.amount)}</p>
                     <Badge className="text-[9px] border-0 bg-muted text-muted-foreground">{d.type}</Badge>
                   </div>
                 </motion.div>

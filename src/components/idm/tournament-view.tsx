@@ -152,7 +152,7 @@ export function TournamentView() {
     return (
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
-          <Swords className="w-5 h-5 text-primary" />
+          <Swords className={`w-5 h-5 ${dt.neonText}`} />
           <h2 className="text-lg font-bold text-gradient-fury">Weekly Tournaments</h2>
         </div>
 
@@ -160,13 +160,14 @@ export function TournamentView() {
           {tournaments?.map(t => (
             <motion.div key={t.id} variants={item}>
               <Card
-                className={`${dt.cardPremium} card-lift cursor-pointer ${t.status === 'main_event' ? 'glow-pulse' : t.status === 'completed' ? '' : dt.cardGlowHover}`}
+                className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer card-lift cursor-pointer ${t.status === 'main_event' ? dt.neonPulse : ''}`}
                 onClick={() => setSelectedId(t.id)}
               >
-                <CardContent className="p-4">
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <p className="text-[10px] text-primary font-semibold uppercase tracking-wider">Week {t.weekNumber}</p>
+                      <p className={`text-[10px] ${dt.neonText} font-semibold uppercase tracking-wider`}>Week {t.weekNumber}</p>
                       <p className="text-sm font-bold">{t.name}</p>
                     </div>
                     <StatusBadge status={t.status} />
@@ -198,13 +199,14 @@ export function TournamentView() {
         <>
           {/* Header */}
           <motion.div variants={item}>
-            <Card className={`${dt.cardPremium} overflow-hidden`}>
-              <CardContent className="p-0">
-                <div className="relative p-4 bg-gradient-to-r from-primary/10 via-transparent to-idm-amber/5">
+            <Card className={`${dt.casinoCard} ${dt.cornerAccent} overflow-hidden`}>
+              <div className={dt.casinoBar} />
+              <CardContent className="p-0 relative z-10">
+                <div className="relative p-4 casino-img-overlay">
                   <div className="flex items-start justify-between">
                     <div>
-                      <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-1">Week {selected.weekNumber}</p>
-                      <h2 className="text-xl font-bold text-gradient-fury">{selected.name}</h2>
+                      <p className={`text-[10px] ${dt.neonText} font-semibold uppercase tracking-wider mb-1`}>Week {selected.weekNumber}</p>
+                      <h2 className={`text-xl font-bold ${dt.neonGradient}`}>{selected.name}</h2>
                       <p className="text-xs text-muted-foreground mt-1">📍 {selected.location} • {selected.bpm} BPM</p>
                     </div>
                     <StatusBadge status={selected.status} />
@@ -244,20 +246,21 @@ export function TournamentView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Registered Players */}
             <motion.div variants={item}>
-              <Card className={`${dt.cardPremium} h-full`}>
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard} h-full`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Users className="w-3.5 h-3.5 text-primary" />
+                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Users className={`w-3.5 h-3.5 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-sm font-semibold section-header-line">Registered Players</h3>
-                    <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{selected.participations?.length || 0}</Badge>
+                    <Badge className={`${dt.casinoBadge} ml-auto`}>{selected.participations?.length || 0}</Badge>
                   </div>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
                     {selected.participations?.map(p => (
                       <div key={p.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                          <div className={`w-7 h-7 rounded-full ${dt.iconBg} flex items-center justify-center text-[10px] font-bold ${dt.neonText}`}>
                             {p.player.gamertag.slice(0, 2).toUpperCase()}
                           </div>
                           <div>
@@ -284,19 +287,20 @@ export function TournamentView() {
 
             {/* Teams */}
             <motion.div variants={item}>
-              <Card className={`${dt.cardPremium} h-full`}>
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard} h-full`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Swords className="w-3.5 h-3.5 text-primary" />
+                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-sm font-semibold section-header-line">Teams</h3>
-                    <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{selected.teams?.length || 0}</Badge>
+                    <Badge className={`${dt.casinoBadge} ml-auto`}>{selected.teams?.length || 0}</Badge>
                   </div>
                   {selected.teams?.length > 0 ? (
                     <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                       {selected.teams.map(t => (
-                        <div key={t.id} className={`p-3 rounded-xl ${t.isWinner ? 'bg-primary/5 border border-primary/20' : 'bg-muted/50'}`}>
+                        <div key={t.id} className={`p-3 rounded-xl ${t.isWinner ? `${dt.bg} border ${dt.border}` : 'bg-muted/50'}`}>
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-semibold">{t.name}</span>
                             <div className="flex items-center gap-2">
@@ -306,7 +310,7 @@ export function TournamentView() {
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {t.teamPlayers.map(tp => (
-                              <div key={tp.player.id} className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-background/50 text-xs">
+                              <div key={tp.player.id} className="flex items-center gap-1 px-2 py-0.5 rounded-full casino-pill text-xs">
                                 <TierBadge tier={tp.player.tier} />
                                 <span>{tp.player.gamertag}</span>
                               </div>
@@ -326,11 +330,12 @@ export function TournamentView() {
           {/* Matches */}
           {selected.matches?.length > 0 && (
             <motion.div variants={item}>
-              <Card className={dt.cardPremium}>
-                <CardContent className="p-4">
+              <Card className={`${dt.casinoCard} ${dt.cornerAccent}`}>
+                <div className={dt.casinoBar} />
+                <CardContent className="p-4 relative z-10">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Trophy className="w-3.5 h-3.5 text-primary" />
+                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Trophy className={`w-3.5 h-3.5 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-sm font-semibold section-header-line">Match Results</h3>
                   </div>
@@ -339,12 +344,12 @@ export function TournamentView() {
                       <div className="flex items-center justify-between">
                         <div className="text-center flex-1">
                           <p className="text-sm font-semibold">{m.team1.name}</p>
-                          <p className="text-2xl font-bold text-primary">{m.score1 ?? '-'}</p>
+                          <p className={`text-2xl font-bold ${dt.neonText} casino-score`}>{m.score1 ?? '-'}</p>
                         </div>
                         <div className="px-4 text-xs text-muted-foreground font-bold">VS</div>
                         <div className="text-center flex-1">
                           <p className="text-sm font-semibold">{m.team2.name}</p>
-                          <p className="text-2xl font-bold text-primary">{m.score2 ?? '-'}</p>
+                          <p className={`text-2xl font-bold ${dt.neonText} casino-score`}>{m.score2 ?? '-'}</p>
                         </div>
                       </div>
                       {m.mvpPlayer && (
@@ -379,7 +384,7 @@ export function TournamentView() {
 
                   {/* Finalize button */}
                   {selected.status === 'scoring' && selected.matches.some(m => m.status === 'completed') && (
-                    <div className="mt-3 p-3 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className={`mt-3 p-3 rounded-xl ${dt.bg} border ${dt.border}`}>
                       <p className="text-xs font-semibold mb-2">Assign MVP & Finalize</p>
                       <div className="flex flex-wrap gap-1.5">
                         {selected.teams.flatMap(t => t.teamPlayers).map(tp => (
