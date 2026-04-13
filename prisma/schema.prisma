@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,20 +7,215 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+// ============================================
+// IDM LEAGUE - ESPORTS PLATFORM SCHEMA
+// ============================================
+
+model Player {
   id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
+  name      String
+  gamertag  String   @unique
+  division  String   // "male" | "female"
+  tier      String   @default("B") // "S" | "A" | "B"
+  avatar    String?
+  points    Int      @default(0)
+  totalWins Int      @default(0)
+  totalMvp  Int      @default(0)
+  streak    Int      @default(0) // current win streak
+  maxStreak Int      @default(0)
+  matches   Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  teamPlayers    TeamPlayer[]
+  participations Participation[]
+  mvpMatches     Match[]       @relation("MvpPlayer")
+  clubMembers    ClubMember[]
 }
 
-model Post {
+model Season {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  name      String
+  number    Int
+  division  String   // "male" | "female"
+  status    String   @default("active") // "active" | "completed" | "upcoming"
+  startDate DateTime
+  endDate   DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tournaments Tournament[]
+  donations   Donation[]
+  clubs       Club[]
+  leagueMatches LeagueMatch[]
+  playoffMatches PlayoffMatch[]
+}
+
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String
+  weekNumber  Int
+  division    String   // "male" | "female"
+  status      String   @default("setup") // "setup" | "registration" | "approval" | "team_generation" | "bracket_generation" | "main_event" | "scoring" | "completed"
+  seasonId    String
+  prizePool   Int      @default(0) // in IDR
+  bpm         Int?
+  location    String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  season        Season         @relation(fields: [seasonId], references: [id])
+  teams         Team[]
+  matches       Match[]
+  participations Participation[]
+  donations     Donation[]
+
+  @@unique([weekNumber, division, seasonId])
+}
+
+model Team {
+  id           String  @id @default(cuid())
+  name         String
+  tournamentId String
+  power        Int     @default(0)
+  isWinner     Boolean @default(false)
+  rank         Int?
+
+  tournament  Tournament  @relation(fields: [tournamentId], references: [id])
+  teamPlayers TeamPlayer[]
+  matchAsTeam1 Match[]    @relation("Team1")
+  matchAsTeam2 Match[]    @relation("Team2")
+}
+
+model TeamPlayer {
+  id       String @id @default(cuid())
+  teamId   String
+  playerId String
+
+  team   Team   @relation(fields: [teamId], references: [id])
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([teamId, playerId])
+}
+
+model Match {
+  id           String   @id @default(cuid())
+  tournamentId String
+  team1Id      String
+  team2Id      String
+  score1       Int?
+  score2       Int?
+  status       String   @default("pending") // "pending" | "live" | "completed"
+  mvpPlayerId  String?
+  round        Int      @default(1)
+  scheduledAt  DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+  team1      Team       @relation("Team1", fields: [team1Id], references: [id])
+  team2      Team       @relation("Team2", fields: [team2Id], references: [id])
+  mvpPlayer  Player?    @relation("MvpPlayer", fields: [mvpPlayerId], references: [id])
+}
+
+model Participation {
+  id           String   @id @default(cuid())
+  playerId     String
+  tournamentId String
+  status       String   @default("registered") // "registered" | "approved" | "rejected" | "assigned"
+  pointsEarned Int      @default(0)
+  isMvp        Boolean  @default(false)
+  isWinner     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  player     Player     @relation(fields: [playerId], references: [id])
+  tournament Tournament @relation(fields: [tournamentId], references: [id])
+
+  @@unique([playerId, tournamentId])
+}
+
+model Donation {
+  id           String   @id @default(cuid())
+  donorName    String
+  amount       Int      // in IDR
+  message      String?
+  type         String   @default("weekly") // "weekly" | "season"
+  tournamentId String?
+  seasonId     String?
+  createdAt    DateTime @default(now())
+
+  tournament Tournament? @relation(fields: [tournamentId], references: [id])
+  season     Season?     @relation(fields: [seasonId], references: [id])
+}
+
+// ============================================
+// IDM LEAGUE - CLUB & LEAGUE SYSTEM
+// ============================================
+
+model Club {
+  id       String  @id @default(cuid())
+  name     String
+  division String  // "male" | "female"
+  logo     String?
+  seasonId String
+  wins     Int     @default(0)
+  losses   Int     @default(0)
+  points   Int     @default(0)
+  gameDiff Int     @default(0)
+
+  season      Season        @relation(fields: [seasonId], references: [id])
+  members     ClubMember[]
+  homeMatches LeagueMatch[] @relation("HomeClub")
+  awayMatches LeagueMatch[] @relation("AwayClub")
+  playoffHome PlayoffMatch[] @relation("PlayoffHome")
+  playoffAway PlayoffMatch[] @relation("PlayoffAway")
+
+  @@unique([name, seasonId])
+}
+
+model ClubMember {
+  id       String @id @default(cuid())
+  clubId   String
+  playerId String
+  role     String @default("member") // "captain" | "member"
+
+  club    Club    @relation(fields: [clubId], references: [id])
+  player  Player  @relation(fields: [playerId], references: [id])
+
+  @@unique([clubId, playerId])
+}
+
+model LeagueMatch {
+  id       String  @id @default(cuid())
+  seasonId String
+  club1Id  String
+  club2Id  String
+  score1   Int?
+  score2   Int?
+  week     Int
+  status   String  @default("upcoming") // "upcoming" | "live" | "completed"
+  format   String  @default("BO3") // "BO3" | "BO5"
+
+  season Season @relation(fields: [seasonId], references: [id])
+  club1  Club   @relation("HomeClub", fields: [club1Id], references: [id])
+  club2  Club   @relation("AwayClub", fields: [club2Id], references: [id])
+}
+
+model PlayoffMatch {
+  id       String  @id @default(cuid())
+  seasonId String
+  club1Id  String
+  club2Id  String
+  score1   Int?
+  score2   Int?
+  round    String  // "semifinal1" | "semifinal2" | "grand_final"
+  status   String  @default("upcoming") // "upcoming" | "live" | "completed"
+  format   String  @default("BO5")
+
+  season Season @relation(fields: [seasonId], references: [id])
+  club1  Club   @relation("PlayoffHome", fields: [club1Id], references: [id])
+  club2  Club   @relation("PlayoffAway", fields: [club2Id], references: [id])
 }
