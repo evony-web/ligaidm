@@ -12,11 +12,11 @@ export async function POST(request: Request) {
     const zai = await ZAI.create();
 
     const stylePrompt = division === 'female'
-      ? 'Stylized realism female esports player avatar, soft elegant features, warm tone with pink and purple accents, smooth shading, cinematic lighting, professional gaming portrait, clean background, high quality'
-      : 'Stylized realism male esports player avatar, strong jawline, cool tone with blue and cyan accents, cinematic lighting, professional gaming portrait, clean background, high quality';
+      ? 'Stylized realism female dance competitor avatar, soft elegant features, warm tone with pink and purple accents, smooth shading, cinematic lighting, professional dance portrait, clean background, high quality'
+      : 'Stylized realism male dance competitor avatar, strong confident features, cool tone with blue and cyan accents, cinematic lighting, professional dance portrait, clean background, high quality';
 
     const response = await zai.images.generations.create({
-      prompt: `${stylePrompt}, gamer tag name "${name}"`,
+      prompt: `${stylePrompt}, dancer tag name "${name}"`,
       size: '864x1152',
     });
 

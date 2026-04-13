@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Trophy, Flame, Crown, Shield, Target,
   TrendingUp, Award, Zap, Calendar, Star, BarChart3,
-  ChevronRight, Activity, Gamepad2, MapPin, Users, Crosshair, CircleDot
+  ChevronRight, Activity, Gamepad2, MapPin, Users, CircleDot
 } from 'lucide-react';
 import { TierBadge } from './tier-badge';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ interface PlayerProfileProps {
   rank?: number;
 }
 
-/* ─── Stat Block — Esports HUD style ─── */
+/* ─── Stat Block — Dance Tournament HUD style ─── */
 function StatBlock({ icon: Icon, label, value, sub, color, highlight, size = 'normal' }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
@@ -63,7 +63,7 @@ function StatBlock({ icon: Icon, label, value, sub, color, highlight, size = 'no
   );
 }
 
-/* ─── Match History Row — Esports style ─── */
+/* ─── Match History Row — Dance Tournament style ─── */
 function MatchHistoryRow({ match }: { match: { week: number; result: string; score: string; mvp: boolean; opponent: string; highScore: string } }) {
   const dt = useDivisionTheme();
   const isWin = match.result === 'WIN';
@@ -115,13 +115,13 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
   // Generate match history for demo
   const recentMatches = [
     { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', highScore: '985K' },
-    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Wolves', highScore: '872K' },
-    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Elite', highScore: '756K' },
-    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Raiders', highScore: '1.1M' },
-    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Squad', highScore: '923K' },
+    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Groove', highScore: '872K' },
+    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Rhythm', highScore: '756K' },
+    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Dancers', highScore: '1.1M' },
+    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Crew', highScore: '923K' },
   ];
 
-  // Performance chart data (simulated)
+  // Performance chart data (demo — would be derived from actual match results in production)
   const performanceData = [65, 72, 68, 80, 85, 78, 90, 88, 92, 95];
   const maxPerf = Math.max(...performanceData);
 
@@ -142,7 +142,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
           className="bg-background w-full sm:max-w-lg sm:rounded-2xl overflow-hidden max-h-[92vh] overflow-y-auto custom-scrollbar"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* ═══ HERO BANNER — Pinterest Esports Profile Style ═══ */}
+          {/* ═══ HERO BANNER — Dance Tournament Profile Style ═══ */}
           <div className={`relative h-44 overflow-hidden`}>
             {/* Background gradient — division themed */}
             <div className={`absolute inset-0 bg-gradient-to-br ${
@@ -244,7 +244,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               <p className="text-[10px] text-muted-foreground mt-2 max-w-xs mx-auto">{tier.desc}</p>
             </div>
 
-            {/* ═══ Main Stats Grid — Esports HUD Style ═══ */}
+            {/* ═══ Main Stats Grid — Dance Tournament HUD Style ═══ */}
             <div className="grid grid-cols-4 gap-2 mb-4">
               <StatBlock icon={Trophy} label="Points" value={player.points} color={dt.text} highlight size="large" />
               <StatBlock icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${player.totalWins}W/${losses}L`} color="text-green-500" />
@@ -252,7 +252,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               <StatBlock icon={Activity} label="Matches" value={player.matches} color="text-blue-400" />
             </div>
 
-            {/* ═══ Performance Graph — Esports Bar Chart ═══ */}
+            {/* ═══ Performance Graph — Dance Tournament Bar Chart ═══ */}
             <div className={`p-3.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle} mb-4`}>
               <div className="flex items-center gap-2 mb-3">
                 <BarChart3 className={`w-4 h-4 ${dt.text}`} />
@@ -364,7 +364,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               </div>
             </div>
 
-            {/* ═══ Recent Matches — Esports Match History ═══ */}
+            {/* ═══ Recent Matches — Dance Tournament Match History ═══ */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2.5">
                 <Calendar className={`w-4 h-4 ${dt.text}`} />

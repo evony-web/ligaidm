@@ -23,7 +23,7 @@ import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
 import { BracketView } from './bracket-view';
 import { ParticipantGrid } from './participant-grid';
-import { EsportsMatchCard } from './match-card';
+import { DanceMatchCard } from './match-card';
 import { useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 
@@ -588,7 +588,7 @@ export function Dashboard() {
               </SectionCard>
             </motion.div>
 
-            {/* Featured Match — EsportsMatchCard style */}
+            {/* Featured Match — DanceMatchCard style */}
             {t?.matches?.filter(m => m.status === 'completed').length > 0 && (
               <motion.div variants={item}>
                 <div className="flex items-center gap-2 mb-3">
@@ -599,7 +599,7 @@ export function Dashboard() {
                   <Badge className={`${dt.casinoBadge} ml-auto`}>RESULT</Badge>
                 </div>
                 {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
-                  <EsportsMatchCard
+                  <DanceMatchCard
                     key={m.id}
                     team1={m.team1}
                     team2={m.team2}
@@ -962,7 +962,7 @@ export function Dashboard() {
           </motion.div>
         </TabsContent>
 
-        {/* ═══════════════ PARTICIPANTS TAB — Esports Poster Grid ═══════════════ */}
+        {/* ═══════════════ PARTICIPANTS TAB — Tournament Poster Grid ═══════════════ */}
         <TabsContent value="participants" className="mt-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>

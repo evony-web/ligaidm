@@ -293,7 +293,7 @@ export function LandingPage() {
               {[
                 { text: 'Season 1', glow: true },
                 { text: 'Dance Tournament', glow: false },
-                { text: 'MPL-Style', glow: false },
+                { text: 'Pro League', glow: false },
               ].map((badge, i) => (
                 <motion.div
                   key={i}
@@ -310,7 +310,7 @@ export function LandingPage() {
 
             {/* Tagline */}
             <motion.p variants={fadeUp} className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-10 mt-8 leading-relaxed">
-              Platform esports premium dengan sistem tournament mingguan, liga profesional MPL-style,
+              Platform dance premium dengan sistem tournament mingguan, liga profesional,
               matchmaking cerdas, dan komunitas yang kompetitif.
             </motion.p>
 
@@ -609,12 +609,12 @@ export function LandingPage() {
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Sparkles} label="Platform Features" title="Built for Champions" subtitle="Every feature designed to elevate competitive gaming" />
+            <SectionHeader icon={Sparkles} label="Platform Features" title="Built for Champions" subtitle="Every feature designed to elevate competitive dance" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 { icon: Music, title: 'Weekly Tournament', desc: '1 tournament per week per division. Solo registration, auto-balanced teams, 1 main event match.', color: 'from-[#d4a853] to-[#b8860b]', badge: 'Weekly', shape: 'card-tilt' },
-                { icon: Trophy, title: 'IDM League', desc: 'MPL-style round robin with BO3 format. Club-based competition with playoffs and grand final.', color: 'from-[#e8d5a3] to-[#d4a853]', badge: 'Pro', shape: 'card-tilt' },
+                { icon: Trophy, title: 'IDM League', desc: 'Pro league round robin with BO3 format. Club-based competition with playoffs and grand final.', color: 'from-[#e8d5a3] to-[#d4a853]', badge: 'Pro', shape: 'card-tilt' },
                 { icon: Zap, title: 'Smart Matchmaking', desc: 'Snake draft system with S+A+B tier balancing. Auto-swap if power imbalance detected.', color: 'from-amber-500 to-amber-600', badge: 'AI', shape: 'card-tilt' },
                 { icon: TrendingUp, title: 'Seasonal Ranking', desc: 'Win +2pts, MVP based on prize, participation +10, streak bonuses up to +30.', color: 'from-green-500 to-green-600', badge: 'Live', shape: 'card-tilt' },
                 { icon: Gift, title: 'Donation & Sawer', desc: 'Live prize pool tracker, top contributors, real-time donation notifications.', color: 'from-pink-500 to-pink-600', badge: 'New', shape: 'card-tilt' },
@@ -847,7 +847,7 @@ export function LandingPage() {
             viewport={{ once: true, margin: '-50px' }}
             variants={stagger}
           >
-            <SectionHeader icon={Flame} label="Community" title="By The Numbers" subtitle="Growing esports community" />
+            <SectionHeader icon={Flame} label="Community" title="By The Numbers" subtitle="Growing dance community" />
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
               {[
@@ -954,7 +954,7 @@ export function LandingPage() {
             <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground flex-wrap">
               <span>Weekly Tournaments</span>
               <span className="text-[#d4a853]/30">|</span>
-              <span>MPL-Style League</span>
+              <span>Pro League</span>
               <span className="text-[#d4a853]/30">|</span>
               <span>Smart Matchmaking</span>
               <span className="text-[#d4a853]/30">|</span>

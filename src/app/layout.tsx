@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "IDM League - Idol Meta Fan Made Edition",
-  description: "Premium Esports Tournament & League Platform",
+  description: "Premium Dance Tournament & League Platform",
   manifest: "/manifest.json",
   icons: {
     icon: "/logo1.webp",

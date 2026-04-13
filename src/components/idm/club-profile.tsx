@@ -55,18 +55,18 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
 
   // Demo members if none provided
   const members = club.members || [
-    { id: 'demo-1', name: 'Player One', gamertag: 'AceStrike', tier: 'S', points: 150 },
-    { id: 'demo-2', name: 'Player Two', gamertag: 'ShadowFury', tier: 'A', points: 120 },
-    { id: 'demo-3', name: 'Player Three', gamertag: 'NovaBlade', tier: 'B', points: 80 },
+    { id: 'demo-1', name: 'Player One', gamertag: 'AceStep', tier: 'S', points: 150 },
+    { id: 'demo-2', name: 'Player Two', gamertag: 'ShadowFlow', tier: 'A', points: 120 },
+    { id: 'demo-3', name: 'Player Three', gamertag: 'NovaGroove', tier: 'B', points: 80 },
   ];
 
   // Demo match history
   const recentMatches = [
     { week: 5, result: 'WIN' as const, score: '2-0', opponent: 'Phoenix Rise' },
-    { week: 4, result: 'WIN' as const, score: '2-1', opponent: 'Storm Wolves' },
-    { week: 3, result: 'LOSS' as const, score: '1-2', opponent: 'Dragon Elite' },
-    { week: 2, result: 'WIN' as const, score: '2-0', opponent: 'Iron Clad' },
-    { week: 1, result: 'WIN' as const, score: '2-1', opponent: 'Nova Squad' },
+    { week: 4, result: 'WIN' as const, score: '2-1', opponent: 'Storm Dancers' },
+    { week: 3, result: 'LOSS' as const, score: '1-2', opponent: 'Dragon Rhythm' },
+    { week: 2, result: 'WIN' as const, score: '2-0', opponent: 'Iron Beat' },
+    { week: 1, result: 'WIN' as const, score: '2-1', opponent: 'Nova Crew' },
   ];
 
   return (

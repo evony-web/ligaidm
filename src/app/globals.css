@@ -41,7 +41,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  /* IDM Esports custom colors — Royal Gold Edition */
+  /* IDM Dance Tournament custom colors — Royal Gold Edition */
   --color-idm-gold: var(--idm-gold);
   --color-idm-glow: var(--idm-glow);
   --color-idm-champagne: var(--idm-champagne);

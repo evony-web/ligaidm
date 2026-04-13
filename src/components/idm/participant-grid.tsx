@@ -30,7 +30,7 @@ interface ParticipantGridProps {
   onPlayerClick: (player: Player) => void;
 }
 
-/* ─── Esports Poster-style Participant Card — Pinterest PUBGM Roster Style ─── */
+/* ─── Dance Tournament Poster-style Participant Card ─── */
 function ParticipantCard({ player, rank, onClick }: {
   player: Player;
   rank: number;
@@ -173,7 +173,7 @@ function ParticipantCard({ player, rank, onClick }: {
   );
 }
 
-/* ─── Esports Roster-style Participant Row — Pinterest Tournament List ─── */
+/* ─── Dance Tournament Roster-style Participant Row ─── */
 function ParticipantTableRow({ player, rank, onClick }: {
   player: Player;
   rank: number;
@@ -299,7 +299,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
     <Card className={`${dt.casinoCard} overflow-hidden`}>
       <div className={dt.casinoBar} />
 
-      {/* Header — Esports tournament roster banner style */}
+      {/* Header — Dance tournament roster banner style */}
       <div className={`relative px-4 py-3 border-b ${dt.borderSubtle}`}>
         <div className="flex items-center gap-2.5">
           <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} flex items-center justify-center shrink-0 shadow-md`}>
@@ -368,7 +368,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
         </div>
       </div>
 
-      {/* List View — Esports Roster Style */}
+      {/* List View — Dance Tournament Roster Style */}
       {viewMode === 'list' && (
         <div className="max-h-[520px] overflow-y-auto custom-scrollbar">
           {displayedPlayers.length > 0 ? (
@@ -389,7 +389,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
         </div>
       )}
 
-      {/* Grid View — Esports Poster/Roster Card Style */}
+      {/* Grid View — Dance Tournament Poster/Roster Card Style */}
       {viewMode === 'grid' && (
         <div className="p-3 max-h-[600px] overflow-y-auto custom-scrollbar">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

@@ -8,7 +8,7 @@ datasource db {
 }
 
 // ============================================
-// IDM LEAGUE - ESPORTS PLATFORM SCHEMA
+// IDM LEAGUE - DANCE TOURNAMENT PLATFORM SCHEMA
 // ============================================
 
 model Player {

@@ -8,7 +8,7 @@ import { useAppStore } from '@/lib/store';
 import { useState } from 'react';
 
 /* ─── Match data interface ─── */
-interface EsportsMatchCardProps {
+interface DanceMatchCardProps {
   team1: { id: string; name: string };
   team2: { id: string; name: string };
   score1: number | null;
@@ -53,10 +53,10 @@ function TeamLogo({ name, isWinner, size = 'md' }: { name: string; isWinner: boo
   );
 }
 
-/* ─── Pinterest Esports Match Card — Tournament Infographic Banner Style ─── */
-export function EsportsMatchCard({
+/* ─── Tournament Match Card — Dance Competition Banner Style ─── */
+export function DanceMatchCard({
   team1, team2, score1, score2, status, week, mvpPlayer, onClick
-}: EsportsMatchCardProps) {
+}: DanceMatchCardProps) {
   const dt = useDivisionTheme();
   const division = useAppStore(s => s.division);
   const [expanded, setExpanded] = useState(false);
@@ -106,7 +106,7 @@ export function EsportsMatchCard({
           </div>
         </div>
 
-        {/* ═══ Match Layout — Esports Infographic Banner Style ═══ */}
+        {/* ═══ Match Layout — Dance Competition Banner Style ═══ */}
         <div className="px-4 pb-3 pt-2">
           <div className="flex items-center gap-3">
             {/* Team 1 — Left Side */}
@@ -126,7 +126,7 @@ export function EsportsMatchCard({
               </div>
             </div>
 
-            {/* ═══ Score Center — Esports Scoreboard Style ═══ */}
+            {/* ═══ Score Center — Dance Scoreboard Style ═══ */}
             <div className="flex flex-col items-center shrink-0 px-2">
               {/* Score display */}
               <div className="flex items-center gap-2">
