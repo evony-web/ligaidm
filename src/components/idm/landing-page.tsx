@@ -75,6 +75,17 @@ export function LandingPage() {
 
       {/* ========== HERO SECTION - Premium ========== */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image - Desktop */}
+        <div className="absolute inset-0 hidden sm:block">
+          <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/60" />
+        </div>
+        {/* Background Image - Mobile */}
+        <div className="absolute inset-0 sm:hidden">
+          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
+        </div>
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
@@ -188,6 +199,11 @@ export function LandingPage() {
 
       {/* ========== CHAMPIONS BANNER (FULL WIDTH) ========== */}
       <section className="relative py-20 overflow-hidden">
+        {/* Section Background Pattern */}
+        <div className="absolute inset-0">
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.06] dark:opacity-[0.1]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
+        </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
@@ -433,8 +449,13 @@ export function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative py-20 px-4 bg-muted/30 overflow-hidden">
+        {/* Section Background Pattern */}
+        <div className="absolute inset-0">
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.05] dark:opacity-[0.08]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30" />
+        </div>
+        <div className="relative z-10 max-w-4xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-12">
               <span className="text-xs font-semibold text-primary uppercase tracking-[0.2em]">Tournament Flow</span>
@@ -563,6 +584,9 @@ export function LandingPage() {
 
       {/* ========== CTA SECTION ========== */}
       <section className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.06] dark:opacity-[0.1]" aria-hidden="true" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-idm-amber/5" />
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="relative z-10 max-w-2xl mx-auto text-center">
           <motion.div variants={fadeUp}>

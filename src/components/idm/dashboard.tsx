@@ -140,9 +140,16 @@ export function Dashboard() {
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
 
       {/* HERO BANNER - Premium */}
-      <motion.div variants={item} className="relative rounded-2xl overflow-hidden card-premium">
+      <motion.div variants={item} className="relative rounded-2xl overflow-hidden card-premium min-h-[200px]">
+        {/* Banner Background Image */}
+        <div className="absolute inset-0 hidden sm:block">
+          <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+        </div>
+        <div className="absolute inset-0 sm:hidden">
+          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-        <div className="absolute bottom-4 left-5 right-5">
+        <div className="absolute bottom-4 left-5 right-5 z-10">
           <div className="flex items-center gap-2 mb-1">
             <Badge className="bg-primary/20 text-primary text-[10px] border border-primary/20 px-2 py-0.5">
               🐉 Season {data.season?.number || 1}
