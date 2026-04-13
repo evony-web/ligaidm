@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Swords, Radio, Clock, Flame } from 'lucide-react';
+import { Crown, Swords, Radio, Clock, Flame, Zap, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { useState } from 'react';
@@ -36,31 +36,7 @@ function getStatusConfig(status: string): { label: string; cls: string; pulse?: 
   }
 }
 
-/* ─── Team Avatar Circle ─── */
-function TeamAvatar({ name, isWinner, size = 'md' }: {
-  name: string;
-  isWinner: boolean;
-  size?: 'sm' | 'md' | 'lg';
-}) {
-  const dt = useDivisionTheme();
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-[10px]',
-    md: 'w-10 h-10 text-xs',
-    lg: 'w-12 h-12 text-sm',
-  };
-
-  return (
-    <div className={`${sizeClasses[size]} rounded-full flex items-center justify-center font-bold ${
-      isWinner
-        ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg`
-        : `${dt.iconBg} ${dt.text}`
-    }`}>
-      {name.slice(0, 2).toUpperCase()}
-    </div>
-  );
-}
-
-/* ─── Main EsportsMatchCard Component ─── */
+/* ─── MPL-style Match Card ─── */
 export function EsportsMatchCard({
   team1, team2, score1, score2, status, week, mvpPlayer, onClick
 }: EsportsMatchCardProps) {
@@ -70,6 +46,7 @@ export function EsportsMatchCard({
   const winner1 = hasScore && score1! > score2!;
   const winner2 = hasScore && score2! > score1!;
   const isLive = status === 'live' || status === 'main_event';
+  const isCompleted = status === 'completed' || status === 'scoring';
   const statusConfig = getStatusConfig(status);
 
   const handleClick = () => {
@@ -94,8 +71,8 @@ export function EsportsMatchCard({
       <div className={`absolute top-0 right-0 rotate-90 ${dt.cornerAccent}`} />
 
       <div className="relative z-10 p-4">
-        {/* Status badge — top center */}
-        <div className="flex items-center justify-between mb-3">
+        {/* Header: Week + Status */}
+        <div className="flex items-center justify-between mb-4">
           {week && (
             <Badge className={`${dt.casinoBadge} text-[9px]`}>
               <Clock className="w-2.5 h-2.5 mr-1" />
@@ -110,41 +87,75 @@ export function EsportsMatchCard({
           </div>
         </div>
 
-        {/* VS-Style Layout */}
-        <div className="flex items-center justify-between gap-3">
-          {/* Team 1 — Left Side */}
-          <div className="flex-1 text-center">
-            <TeamAvatar name={team1.name} isWinner={winner1} size="lg" />
-            <p className={`text-xs font-bold mt-2 truncate ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
-              {team1.name || 'TBD'}
-            </p>
+        {/* MPL-style Match Layout: Team vs Team with score */}
+        <div className="space-y-1">
+          {/* Team 1 Row */}
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+            winner1 ? `${dt.bgSubtle} border ${dt.border}` : ''
+          }`}>
+            {/* Team Logo/Avatar */}
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+              winner1 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg` :
+              `${dt.iconBg} ${dt.text}`
+            }`}>
+              {team1.name.slice(0, 2).toUpperCase()}
+            </div>
+            {/* Team Name */}
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold truncate ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
+                {team1.name || 'TBD'}
+              </p>
+              {winner1 && (
+                <p className={`text-[9px] ${dt.text} font-medium flex items-center gap-0.5`}>
+                  <Zap className="w-2.5 h-2.5" /> Winner
+                </p>
+              )}
+            </div>
+            {/* Score */}
+            <div className={`text-2xl font-black tabular-nums w-10 text-right ${
+              winner1 ? dt.neonGradient : 'text-foreground/40'
+            }`}>
+              {hasScore ? score1 : '-'}
+            </div>
           </div>
 
-          {/* Score / VS — Center */}
-          <div className="flex flex-col items-center justify-center shrink-0 px-2">
-            {hasScore ? (
-              <div className="flex items-center gap-2">
-                <span className={`text-2xl font-black tabular-nums ${winner1 ? dt.neonGradient : 'text-foreground/60'}`}>
-                  {score1}
-                </span>
-                <span className="text-xs text-muted-foreground font-bold">:</span>
-                <span className={`text-2xl font-black tabular-nums ${winner2 ? dt.neonGradient : 'text-foreground/60'}`}>
-                  {score2}
-                </span>
-              </div>
-            ) : (
-              <div className={`w-10 h-10 rounded-full ${dt.iconBg} flex items-center justify-center`}>
-                <Swords className={`w-5 h-5 ${dt.neonText}`} />
-              </div>
-            )}
+          {/* VS Divider */}
+          <div className="flex items-center gap-2 px-3 py-1">
+            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+            <div className={`w-7 h-7 rounded-full ${dt.iconBg} flex items-center justify-center`}>
+              <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+            </div>
+            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
           </div>
 
-          {/* Team 2 — Right Side */}
-          <div className="flex-1 text-center">
-            <TeamAvatar name={team2.name} isWinner={winner2} size="lg" />
-            <p className={`text-xs font-bold mt-2 truncate ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
-              {team2.name || 'TBD'}
-            </p>
+          {/* Team 2 Row */}
+          <div className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+            winner2 ? `${dt.bgSubtle} border ${dt.border}` : ''
+          }`}>
+            {/* Team Logo/Avatar */}
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+              winner2 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white shadow-lg` :
+              `${dt.iconBg} ${dt.text}`
+            }`}>
+              {team2.name.slice(0, 2).toUpperCase()}
+            </div>
+            {/* Team Name */}
+            <div className="flex-1 min-w-0">
+              <p className={`text-sm font-semibold truncate ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
+                {team2.name || 'TBD'}
+              </p>
+              {winner2 && (
+                <p className={`text-[9px] ${dt.text} font-medium flex items-center gap-0.5`}>
+                  <Zap className="w-2.5 h-2.5" /> Winner
+                </p>
+              )}
+            </div>
+            {/* Score */}
+            <div className={`text-2xl font-black tabular-nums w-10 text-right ${
+              winner2 ? dt.neonGradient : 'text-foreground/40'
+            }`}>
+              {hasScore ? score2 : '-'}
+            </div>
           </div>
         </div>
 
@@ -176,7 +187,7 @@ export function EsportsMatchCard({
               </div>
               {hasScore && (
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-muted-foreground">Score</span>
+                  <span className="text-muted-foreground">Final Score</span>
                   <span className={`font-semibold ${dt.neonText}`}>
                     {team1.name} {score1} - {score2} {team2.name}
                   </span>
@@ -194,9 +205,7 @@ export function EsportsMatchCard({
 
         {/* Expand indicator */}
         <div className="flex items-center justify-center mt-2">
-          <span className="text-[8px] text-muted-foreground">
-            {expanded ? 'Click to collapse' : 'Click for details'}
-          </span>
+          <ChevronRight className={`w-3 h-3 text-muted-foreground transition-transform ${expanded ? 'rotate-90' : ''}`} />
         </div>
       </div>
     </motion.div>

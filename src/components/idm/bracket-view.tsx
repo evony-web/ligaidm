@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
-import { Crown } from 'lucide-react';
+import { Crown, Swords, Trophy } from 'lucide-react';
 
 /* ─── Match interface ─── */
 interface Match {
@@ -29,14 +29,14 @@ function getRoundLabel(roundIdx: number, totalRounds: number): string {
     return roundIdx === 0 ? 'Semi Final' : 'Final';
   }
   const fromEnd = totalRounds - 1 - roundIdx;
-  if (fromEnd === 0) return 'Final';
+  if (fromEnd === 0) return 'Grand Final';
   if (fromEnd === 1) return 'Semi Final';
   if (fromEnd === 2) return 'Quarter Final';
   return `Round ${roundIdx + 1}`;
 }
 
-/* ─── Single bracket match card ─── */
-function BracketMatchCard({ match, roundIdx }: { match: Match; roundIdx: number }) {
+/* ─── Single bracket match card — MPL style ─── */
+function BracketMatchCard({ match }: { match: Match }) {
   const dt = useDivisionTheme();
   const hasScore = match.score1 !== null && match.score2 !== null;
   const winner1 = hasScore && match.score1! > match.score2!;
@@ -46,16 +46,16 @@ function BracketMatchCard({ match, roundIdx }: { match: Match; roundIdx: number 
 
   return (
     <div
-      className={`bracket-match-card rounded-lg overflow-hidden border ${
-        isLive ? `border-red-500/40 ${dt.neonPulse}` :
-        isCompleted ? dt.border :
-        dt.borderSubtle
-      } transition-all hover:shadow-md`}
+      className={`bracket-match-card rounded-lg overflow-hidden ${
+        isLive ? `border-2 border-red-500/60 ${dt.neonPulse}` :
+        isCompleted ? `border ${dt.border}` :
+        `border ${dt.borderSubtle}`
+      } transition-all hover:shadow-lg`}
       style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}
     >
       {/* Team 1 */}
-      <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold mr-1.5 shrink-0 ${
+      <div className={`flex items-center px-3 py-2 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
+        <div className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-bold mr-2 shrink-0 ${
           winner1 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white` :
           `${dt.iconBg} ${dt.text}`
         }`}>
@@ -64,13 +64,13 @@ function BracketMatchCard({ match, roundIdx }: { match: Match; roundIdx: number 
         <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
           {match.team1.name || 'TBD'}
         </span>
-        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
+        <span className={`text-xs font-bold tabular-nums w-6 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
           {hasScore ? match.score1 : '-'}
         </span>
       </div>
       {/* Team 2 */}
-      <div className={`flex items-center px-2.5 py-1.5 ${winner2 ? dt.bgSubtle : ''}`}>
-        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold mr-1.5 shrink-0 ${
+      <div className={`flex items-center px-3 py-2 ${winner2 ? dt.bgSubtle : ''}`}>
+        <div className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-bold mr-2 shrink-0 ${
           winner2 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white` :
           `${dt.iconBg} ${dt.text}`
         }`}>
@@ -79,13 +79,13 @@ function BracketMatchCard({ match, roundIdx }: { match: Match; roundIdx: number 
         <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
           {match.team2.name || 'TBD'}
         </span>
-        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
+        <span className={`text-xs font-bold tabular-nums w-6 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
           {hasScore ? match.score2 : '-'}
         </span>
       </div>
       {/* MVP indicator */}
       {match.mvpPlayer && (
-        <div className={`flex items-center gap-1 px-2.5 py-1 border-t ${dt.borderSubtle}`}>
+        <div className={`flex items-center gap-1 px-3 py-1 border-t ${dt.borderSubtle}`}>
           <Crown className="w-2.5 h-2.5 text-yellow-500" />
           <span className="text-[9px] text-yellow-500 font-medium truncate">MVP: {match.mvpPlayer.gamertag}</span>
         </div>
@@ -94,11 +94,12 @@ function BracketMatchCard({ match, roundIdx }: { match: Match; roundIdx: number 
   );
 }
 
-/* ─── SVG Connector Line Component ─── */
+/* ─── SVG Connector Lines Component — MPL Style ─── */
 interface ConnectorPath {
   key: string;
   d: string;
   color: string;
+  isWinner?: boolean;
 }
 
 function BracketConnectors({ paths }: { paths: ConnectorPath[] }) {
@@ -108,18 +109,155 @@ function BracketConnectors({ paths }: { paths: ConnectorPath[] }) {
       style={{ width: '100%', height: '100%', overflow: 'visible' }}
     >
       {paths.map((p) => (
-        <path
-          key={p.key}
-          d={p.d}
-          stroke={p.color}
-          strokeWidth="1.5"
-          fill="none"
-          opacity="0.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <g key={p.key}>
+          {/* Glow layer */}
+          <path
+            d={p.d}
+            stroke={p.color}
+            strokeWidth="3"
+            fill="none"
+            opacity="0.15"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Main line */}
+          <path
+            d={p.d}
+            stroke={p.color}
+            strokeWidth="1.5"
+            fill="none"
+            opacity={p.isWinner ? "0.7" : "0.4"}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </g>
       ))}
     </svg>
+  );
+}
+
+/* ─── Group Stage Table ─── */
+function GroupStageView({ matches, roundsData }: { matches: Match[]; roundsData: { round: number; label: string; matches: Match[] }[] }) {
+  const dt = useDivisionTheme();
+
+  // Extract unique teams and build standings
+  const teamStats = useMemo(() => {
+    const teams = new Map<string, { name: string; wins: number; losses: number; points: number; gamesWon: number; gamesLost: number }>();
+    matches.forEach(m => {
+      const hasScore = m.score1 !== null && m.score2 !== null;
+      if (!teams.has(m.team1.name)) teams.set(m.team1.name, { name: m.team1.name, wins: 0, losses: 0, points: 0, gamesWon: 0, gamesLost: 0 });
+      if (!teams.has(m.team2.name)) teams.set(m.team2.name, { name: m.team2.name, wins: 0, losses: 0, points: 0, gamesWon: 0, gamesLost: 0 });
+      if (hasScore) {
+        const t1 = teams.get(m.team1.name)!;
+        const t2 = teams.get(m.team2.name)!;
+        t1.gamesWon += m.score1!; t1.gamesLost += m.score2!;
+        t2.gamesWon += m.score2!; t2.gamesLost += m.score1!;
+        if (m.score1! > m.score2!) { t1.wins++; t1.points += 3; t2.losses++; }
+        else if (m.score2! > m.score1!) { t2.wins++; t2.points += 3; t1.losses++; }
+        else { t1.points++; t2.points++; }
+      }
+    });
+    return Array.from(teams.values()).sort((a, b) => b.points - a.points || b.wins - a.wins);
+  }, [matches]);
+
+  return (
+    <div className="space-y-5">
+      {/* Group Standings Table */}
+      <div className={`rounded-xl overflow-hidden border ${dt.border}`}>
+        <div className={`flex items-center gap-2.5 px-4 py-2.5 border-b ${dt.borderSubtle}`}>
+          <Trophy className={`w-4 h-4 ${dt.neonText}`} />
+          <h3 className="text-xs font-semibold uppercase tracking-wider">Group Standings</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className={`border-b ${dt.borderSubtle} bg-muted/20`}>
+                <th className="w-8 text-center py-2 font-semibold">#</th>
+                <th className="text-left py-2 px-3 font-semibold">Team</th>
+                <th className="w-12 text-center py-2 font-semibold">W</th>
+                <th className="w-12 text-center py-2 font-semibold">L</th>
+                <th className="w-16 text-center py-2 font-semibold">GW</th>
+                <th className="w-16 text-center py-2 font-semibold">GL</th>
+                <th className="w-14 text-center py-2 font-semibold">Pts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teamStats.map((t, i) => (
+                <tr key={t.name} className={`border-b ${dt.borderSubtle} ${i < 2 ? dt.bgSubtle : ''} hover:${dt.bgSubtle} transition-colors`}>
+                  <td className="text-center py-2">
+                    <span className={`w-5 h-5 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${
+                      i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                      i === 1 ? 'bg-green-500/20 text-green-500' :
+                      'text-muted-foreground'
+                    }`}>{i + 1}</span>
+                  </td>
+                  <td className="py-2 px-3">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded flex items-center justify-center text-[8px] font-bold ${
+                        i < 2 ? `bg-gradient-to-br ${dt.division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white` :
+                        `${dt.iconBg} ${dt.text}`
+                      }`}>{t.name.slice(0, 2).toUpperCase()}</div>
+                      <span className={`font-semibold truncate ${i < 2 ? dt.neonText : ''}`}>{t.name}</span>
+                    </div>
+                  </td>
+                  <td className="text-center font-semibold text-green-500">{t.wins}</td>
+                  <td className="text-center font-semibold text-red-500">{t.losses}</td>
+                  <td className="text-center text-muted-foreground">{t.gamesWon}</td>
+                  <td className="text-center text-muted-foreground">{t.gamesLost}</td>
+                  <td className="text-center font-bold">{t.points}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Match Schedule by Round */}
+      {roundsData.map((round) => (
+        <div key={round.round}>
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`px-3 py-1.5 rounded-lg ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
+              {round.label}
+            </div>
+            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+            <span className="text-[10px] text-muted-foreground">{round.matches.length} matches</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {round.matches.map((m) => {
+              const hasScore = m.score1 !== null && m.score2 !== null;
+              const winner1 = hasScore && m.score1! > m.score2!;
+              const winner2 = hasScore && m.score2! > m.score1!;
+              const isLive = m.status === 'live' || m.status === 'main_event';
+              return (
+                <motion.div
+                  key={m.id}
+                  whileHover={{ scale: 1.01 }}
+                  className={`rounded-lg overflow-hidden border ${isLive ? `border-red-500/30 ${dt.neonPulse}` : dt.borderSubtle} transition-all hover:${dt.border}`}
+                  style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}
+                >
+                  <div className={`flex items-center px-3 py-2 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
+                    <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
+                      {m.team1.name || 'TBD'}
+                    </span>
+                    <span className={`text-xs font-bold tabular-nums w-6 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
+                      {hasScore ? m.score1 : '-'}
+                    </span>
+                  </div>
+                  <div className={`flex items-center px-3 py-2 ${winner2 ? dt.bgSubtle : ''}`}>
+                    <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
+                      {m.team2.name || 'TBD'}
+                    </span>
+                    <span className={`text-xs font-bold tabular-nums w-6 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
+                      {hasScore ? m.score2 : '-'}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -129,6 +267,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [connectors, setConnectors] = useState<ConnectorPath[]>([]);
+  const [activeType, setActiveType] = useState(bracketType);
 
   /* Group matches by round — auto-split if all in one round */
   const roundsData = useMemo(() => {
@@ -142,20 +281,15 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
     }, {});
 
     // If all matches are in a single round, auto-split into bracket rounds
-    // (e.g., 4 matches → QF(4) → SF(2) → Final(1), 2 matches → SF(2) → Final(1))
     if (Object.keys(grouped).length === 1 && bracketType !== 'group_stage' && bracketType !== 'round_robin') {
       const allMatches = Object.values(grouped)[0];
       const totalMatches = allMatches.length;
 
-      // Calculate bracket rounds from total matches
-      // Total matches in single elim = n-1 where n = number of teams
-      // Round 1 = totalMatches/2 (or closest power of 2), each subsequent round = half
       const rounds: { round: number; label: string; matches: Match[] }[] = [];
       let remaining = [...allMatches];
       let roundNum = 1;
       let matchesInRound = Math.pow(2, Math.floor(Math.log2(totalMatches)));
 
-      // If total matches don't fit a power of 2, first round has the remainder
       if (matchesInRound < totalMatches) {
         matchesInRound = totalMatches - matchesInRound / 2;
       }
@@ -165,7 +299,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
         rounds.push({
           round: roundNum,
           label: getRoundLabel(roundNum - 1, Math.ceil(Math.log2(totalMatches + 1))),
-          matches: roundMatches.map((m, i) => ({ ...m, round: roundNum })),
+          matches: roundMatches.map((m) => ({ ...m, round: roundNum })),
         });
         matchesInRound = Math.max(1, Math.floor(matchesInRound / 2));
         roundNum++;
@@ -185,7 +319,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
     return sortedRounds;
   }, [matches, bracketType]);
 
-  /* Calculate SVG connector paths after layout */
+  /* Calculate SVG connector paths after layout — MPL Style */
   const calculateConnectors = useCallback(() => {
     if (!containerRef.current || roundsData.length < 2) {
       setConnectors([]);
@@ -194,7 +328,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
 
     const containerRect = containerRef.current.getBoundingClientRect();
     const newConnectors: ConnectorPath[] = [];
-    const strokeColor = dt.color; // Hex color from theme
+    const strokeColor = dt.color;
 
     for (let r = 0; r < roundsData.length - 1; r++) {
       const currentRound = roundsData[r];
@@ -210,7 +344,6 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
         const nextX = nextRect.left - containerRect.left;
 
         // Find the two feeder matches from the current round
-        // In a standard bracket: match ni in next round is fed by matches (ni*2) and (ni*2+1) in current round
         const feederIdx1 = ni * 2;
         const feederIdx2 = ni * 2 + 1;
         const feederMatch1 = currentRound.matches[feederIdx1];
@@ -223,59 +356,67 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
 
         if (!feederEl1 && !feederEl2) continue;
 
-        // Calculate midpoints
-        const getY = (el: HTMLDivElement | null) => {
-          if (!el) return nextY; // fallback to next match Y
+        const getCenter = (el: HTMLDivElement | null) => {
+          if (!el) return { x: nextX, y: nextY };
           const rect = el.getBoundingClientRect();
-          return rect.top + rect.height / 2 - containerRect.top;
+          return {
+            x: rect.right - containerRect.left,
+            y: rect.top + rect.height / 2 - containerRect.top,
+          };
         };
 
-        const getX = (el: HTMLDivElement | null) => {
-          if (!el) return nextX;
-          const rect = el.getBoundingClientRect();
-          return rect.right - containerRect.left;
-        };
+        const p1 = getCenter(feederEl1);
+        const p2 = getCenter(feederEl2);
 
-        const y1 = getY(feederEl1);
-        const y2 = getY(feederEl2);
-        const x1 = getX(feederEl1);
-        const x2 = getX(feederEl2);
+        // Midpoint X between feeder and next match
+        const midX = nextX - (nextX - Math.max(p1.x, p2.x)) / 2;
 
-        // Midpoint X for the vertical connector
-        const midX = nextX - (nextX - Math.max(x1, x2)) / 2;
+        // MPL-style bracket connectors:
+        // Horizontal from feeder right edge → midX, then vertical to merge, then horizontal to next match left edge
+        
+        // Check if feeder1 is winner to highlight path
+        const f1Winner = feederMatch1 && feederMatch1.score1 !== null && feederMatch1.score2 !== null &&
+          ((feederMatch1.score1! > feederMatch1.score2!) || (feederMatch1.score2! > feederMatch1.score1!));
+        const f2Winner = feederMatch2 && feederMatch2.score1 !== null && feederMatch2.score2 !== null &&
+          ((feederMatch2.score1! > feederMatch2.score2!) || (feederMatch2.score2! > feederMatch2.score1!));
 
-        // Draw the connector path:
-        // From right of feeder1 → horizontal to midX → vertical to feeder2 Y → horizontal to left of next match
-        // We draw two separate L-shaped paths that meet at the vertical line
-
-        // Path for feeder 1: right edge → midX → down to next match Y → to left edge of next match
+        // Feeder 1 → midX → merge point → next match
         if (feederEl1) {
-          const d1 = `M ${x1} ${y1} H ${midX} V ${nextY} H ${nextX}`;
+          const d1 = `M ${p1.x} ${p1.y} H ${midX} V ${nextY} H ${nextX}`;
           newConnectors.push({
             key: `conn-${r}-${ni}-1`,
             d: d1,
             color: strokeColor,
+            isWinner: f1Winner,
           });
         }
 
-        // Path for feeder 2: right edge → midX → vertical line (just the vertical part from y2 to nextY)
+        // Feeder 2 → midX (just the horizontal arm to the vertical line)
         if (feederEl2 && feederEl1) {
-          // The vertical part from y2 is already covered by the first path,
-          // but we need the horizontal from feeder2 to midX
-          const d2 = `M ${x2} ${y2} H ${midX}`;
+          const d2 = `M ${p2.x} ${p2.y} H ${midX}`;
           newConnectors.push({
             key: `conn-${r}-${ni}-2`,
             d: d2,
             color: strokeColor,
+            isWinner: f2Winner,
           });
         } else if (feederEl2 && !feederEl1) {
-          const d2 = `M ${x2} ${y2} H ${midX} V ${nextY} H ${nextX}`;
+          const d2 = `M ${p2.x} ${p2.y} H ${midX} V ${nextY} H ${nextX}`;
           newConnectors.push({
             key: `conn-${r}-${ni}-2`,
             d: d2,
             color: strokeColor,
+            isWinner: f2Winner,
           });
         }
+
+        // Small circle at junction point (MPL style)
+        newConnectors.push({
+          key: `conn-${r}-${ni}-dot`,
+          d: `M ${midX - 2} ${nextY} h 4`,
+          color: strokeColor,
+          isWinner: true,
+        });
       }
     }
 
@@ -283,8 +424,6 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
   }, [roundsData, dt.color]);
 
   useEffect(() => {
-    // Calculate connectors after mount and on resize
-    // Use multiple attempts to ensure DOM is ready
     const attempts = [50, 200, 500, 1000];
     const timers = attempts.map(delay => setTimeout(calculateConnectors, delay));
     const handleResize = () => calculateConnectors();
@@ -304,104 +443,104 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
     }
   }, []);
 
-  /* ─── Render: Group Stage / Round Robin Table ─── */
-  if (bracketType === 'group_stage' || bracketType === 'round_robin') {
+  /* ─── Render: Group Stage ─── */
+  if (bracketType === 'group_stage') {
     return (
-      <div className="space-y-4">
-        {roundsData.map((round) => (
-          <div key={round.round}>
-            <div className={`flex items-center gap-2 mb-2`}>
-              <div className={`px-2.5 py-1 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
-                {round.label}
-              </div>
-              <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-              <span className="text-[9px] text-muted-foreground">{round.matches.length} matches</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {round.matches.map((m) => {
-                const hasScore = m.score1 !== null && m.score2 !== null;
-                const winner1 = hasScore && m.score1! > m.score2!;
-                const winner2 = hasScore && m.score2! > m.score1!;
-                const isLive = m.status === 'live' || m.status === 'main_event';
-                return (
-                  <motion.div
-                    key={m.id}
-                    whileHover={{ scale: 1.01 }}
-                    className={`rounded-lg overflow-hidden border ${isLive ? `border-red-500/30 ${dt.neonPulse}` : dt.borderSubtle} transition-all hover:${dt.border}`}
-                    style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}
-                  >
-                    <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
-                      <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
-                        {m.team1.name || 'TBD'}
-                      </span>
-                      <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
-                        {hasScore ? m.score1 : '-'}
-                      </span>
-                    </div>
-                    <div className={`flex items-center px-2.5 py-1.5 ${winner2 ? dt.bgSubtle : ''}`}>
-                      <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
-                        {m.team2.name || 'TBD'}
-                      </span>
-                      <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
-                        {hasScore ? m.score2 : '-'}
-                      </span>
-                    </div>
-                    {m.mvpPlayer && (
-                      <div className={`flex items-center gap-1 px-2.5 py-0.5 border-t ${dt.borderSubtle}`}>
-                        <Crown className="w-2.5 h-2.5 text-yellow-500" />
-                        <span className="text-[8px] text-yellow-500 truncate">MVP: {m.mvpPlayer.gamertag}</span>
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+      <div>
+        <GroupStageView matches={matches} roundsData={roundsData} />
+      </div>
+    );
+  }
+
+  /* ─── Render: Round Robin ─── */
+  if (bracketType === 'round_robin') {
+    // Round Robin shows all matches organized by round with a standings table
+    return (
+      <div className="space-y-5">
+        {/* Standings Table */}
+        <GroupStageView matches={matches} roundsData={roundsData} />
       </div>
     );
   }
 
   /* ─── Render: Single/Double Elimination Bracket with SVG Connectors ─── */
   return (
-    <div className="relative" ref={containerRef}>
-      {/* SVG connector overlay */}
-      {connectors.length > 0 && <BracketConnectors paths={connectors} />}
+    <div>
+      {/* Bracket Type Selector */}
+      <div className={`flex items-center gap-1 p-1 rounded-lg ${dt.bgSubtle} ${dt.border} w-fit mb-4`}>
+        {[
+          { value: 'single_elimination', label: 'Single Elim', icon: Swords },
+          { value: 'double_elimination', label: 'Double Elim', icon: Trophy },
+          { value: 'group_stage', label: 'Group Stage', icon: Trophy },
+          { value: 'round_robin', label: 'Round Robin', icon: Trophy },
+        ].map(type => (
+          <button
+            key={type.value}
+            onClick={() => setActiveType(type.value as any)}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all ${
+              activeType === type.value ? `${dt.bg} ${dt.text} shadow-sm` : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <type.icon className="w-3 h-3" />
+            {type.label}
+          </button>
+        ))}
+      </div>
 
-      {/* Bracket columns */}
-      <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
-        <div className="flex gap-8 min-w-max px-1">
-          {roundsData.map((round, roundIdx) => {
-            // Calculate the gap multiplier for proper bracket spacing
-            // Round 0 has normal gap, each subsequent round doubles the gap
-            const gapMultiplier = Math.pow(2, roundIdx);
-            const gapSize = `${gapMultiplier * 20 + 12}px`;
+      <div className="relative" ref={containerRef}>
+        {/* SVG connector overlay */}
+        {connectors.length > 0 && <BracketConnectors paths={connectors} />}
 
-            return (
-              <div key={round.round} className="flex flex-col" style={{ minWidth: '190px' }}>
-                {/* Round label */}
-                <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
-                  {round.label}
-                  {roundIdx === roundsData.length - 1 && (
-                    <span className="ml-1.5">🏆</span>
-                  )}
-                </div>
-                {/* Match cards with spacing that doubles per round */}
-                <div className="flex-1 flex flex-col justify-around" style={{ gap: gapSize }}>
-                  {round.matches.map((m, matchIdx) => (
-                    <div
-                      key={m.id}
-                      ref={(el) => setCardRef(`round-${roundIdx}-match-${m.id}`, el)}
-                    >
-                      <BracketMatchCard match={m} roundIdx={roundIdx} />
+        {/* Bracket columns — MPL horizontal layout */}
+        <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
+          <div className="flex gap-10 min-w-max px-1">
+            {roundsData.map((round, roundIdx) => {
+              // Calculate vertical spacing for proper bracket alignment
+              const gapMultiplier = Math.pow(2, roundIdx);
+
+              return (
+                <div key={round.round} className="flex flex-col" style={{ minWidth: '200px' }}>
+                  {/* Round label — MPL pill style */}
+                  <div className="text-center mb-4">
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
+                      {roundIdx === roundsData.length - 1 && <span>🏆</span>}
+                      {round.label}
                     </div>
-                  ))}
+                  </div>
+                  {/* Match cards with proper spacing */}
+                  <div className="flex-1 flex flex-col justify-around" style={{ gap: `${gapMultiplier * 24 + 16}px` }}>
+                    {round.matches.map((m) => (
+                      <div
+                        key={m.id}
+                        ref={(el) => setCardRef(`round-${roundIdx}-match-${m.id}`, el)}
+                      >
+                        <BracketMatchCard match={m} />
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
+
+      {/* Double Elimination: Losers Bracket */}
+      {activeType === 'double_elimination' && roundsData.length > 1 && (
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <div className={`px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-wider`}>
+              Losers Bracket
+            </div>
+            <div className={`flex-1 h-px ${dt.borderSubtle}`} />
+          </div>
+          <div className={`p-4 rounded-xl border ${dt.borderSubtle} ${dt.bgSubtle}`}>
+            <p className="text-xs text-muted-foreground text-center">
+              Losers bracket matches will appear here when teams are eliminated from the winners bracket.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
