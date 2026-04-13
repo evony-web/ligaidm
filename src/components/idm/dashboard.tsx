@@ -836,11 +836,11 @@ export function Dashboard() {
         <TabsContent value="matches" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
-            {/* Bracket View — when tournament has matches */}
-            {t?.matches && t.matches.length > 0 && (
-              <motion.div variants={item}>
-                <SectionCard title="Tournament Bracket" icon={Swords} badge={`${t.matches.length} Matches`}>
-                  {/* Horizontal scrolling bracket */}
+            {/* Bracket View — always visible, uses tournament matches OR league matches */}
+            <motion.div variants={item}>
+              <SectionCard title="Bracket" icon={Swords} badge={t?.matches?.length ? `${t.matches.length} Matches` : 'League'}>
+                {t?.matches && t.matches.length > 0 ? (
+                  /* Tournament bracket with rounds */
                   <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
                     <div className="flex gap-8 min-w-max px-1">
                       {Object.entries(
@@ -852,11 +852,9 @@ export function Dashboard() {
                         }, {} as Record<number, typeof t.matches>)
                       ).map(([round, matches], roundIdx) => (
                         <div key={round} className="flex flex-col">
-                          {/* Round header */}
                           <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider`}>
                             {roundIdx === 0 ? 'Quarter Final' : roundIdx === 1 ? 'Semi Final' : roundIdx === 2 ? 'Final' : `Round ${round}`}
                           </div>
-                          {/* Match cards with spacing that doubles each round */}
                           <div className="flex-1 flex flex-col justify-around" style={{ gap: `${Math.pow(2, roundIdx) * 16}px` }}>
                             {matches.map((m, matchIdx) => (
                               <BracketMatch
@@ -876,9 +874,91 @@ export function Dashboard() {
                       ))}
                     </div>
                   </div>
-                </SectionCard>
-              </motion.div>
-            )}
+                ) : (
+                  /* League bracket — clubs matched by week in bracket-style layout */
+                  <div className="overflow-x-auto custom-scrollbar pb-2 -mx-1">
+                    <div className="flex gap-6 min-w-max px-1">
+                      {/* Generate bracket columns from league matches */}
+                      {(() => {
+                        const allWeeks = [...new Set([
+                          ...recentMatches.map(m => m.week),
+                          ...upcomingMatches.map(m => m.week)
+                        ])].sort((a, b) => a - b);
+                        const totalWeeks = data.seasonProgress?.totalWeeks || 8;
+
+                        // Create bracket rounds from weeks
+                        // Group weeks into rounds: early weeks = group stage, later weeks = playoffs
+                        const roundNames = ['Group Stage', 'Quarter Final', 'Semi Final', 'Final'];
+                        const rounds: { name: string; matches: { club1: string; club2: string; score1: number; score2: number; completed: boolean }[] }[] = [];
+
+                        // Group stage — all completed + upcoming league matches per week
+                        allWeeks.forEach(week => {
+                          const weekMatches = [
+                            ...recentMatches.filter(m => m.week === week),
+                            ...upcomingMatches.filter(m => m.week === week)
+                          ];
+                          if (weekMatches.length > 0) {
+                            rounds.push({
+                              name: `Week ${week}`,
+                              matches: weekMatches.map(m => ({
+                                club1: m.club1.name,
+                                club2: m.club2.name,
+                                score1: m.score1,
+                                score2: m.score2,
+                                completed: m.status === 'completed'
+                              }))
+                            });
+                          }
+                        });
+
+                        return rounds.map((round, roundIdx) => (
+                          <div key={roundIdx} className="flex flex-col">
+                            <div className={`text-center mb-3 px-3 py-1.5 rounded-md ${dt.bg} ${dt.text} text-[10px] font-bold uppercase tracking-wider whitespace-nowrap`}>
+                              {round.name}
+                            </div>
+                            <div className="flex-1 flex flex-col" style={{ gap: '8px' }}>
+                              {round.matches.map((m, matchIdx) => {
+                                const winner1 = m.completed && m.score1 > m.score2;
+                                const winner2 = m.completed && m.score2 > m.score1;
+                                return (
+                                  <div key={matchIdx} className="relative">
+                                    {roundIdx > 0 && (
+                                      <div className="absolute -left-4 top-1/2 w-4 flex items-center">
+                                        <div className={`w-full h-px ${dt.borderSubtle}`} />
+                                      </div>
+                                    )}
+                                    <div className={`rounded-lg overflow-hidden border ${dt.borderSubtle} transition-all hover:${dt.border} hover:shadow-sm`} style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}>
+                                      <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
+                                        <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
+                                          {winner1 && <span className="mr-1">▸</span>}
+                                          {m.club1}
+                                        </span>
+                                        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
+                                          {m.completed ? m.score1 : '-'}
+                                        </span>
+                                      </div>
+                                      <div className={`flex items-center px-2.5 py-1.5 ${winner2 ? dt.bgSubtle : ''}`}>
+                                        <span className={`text-[11px] font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-foreground/80'}`}>
+                                          {winner2 && <span className="mr-1">▸</span>}
+                                          {m.club2}
+                                        </span>
+                                        <span className={`text-xs font-bold tabular-nums w-5 text-right ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
+                                          {m.completed ? m.score2 : '-'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                )}
+              </SectionCard>
+            </motion.div>
 
             {/* Completed Matches — grouped by week (Toornament match list style) */}
             {Object.keys(matchesByWeek).length > 0 && (
