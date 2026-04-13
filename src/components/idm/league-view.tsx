@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, Swords, Crown } from 'lucide-react';
+import { Trophy, Calendar, Swords, Crown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -122,31 +122,65 @@ export function LeagueView() {
               <motion.div key={week} variants={item}>
                 <Card className="glass border-0">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <h3 className="text-sm font-semibold">Week {week}</h3>
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-primary" />
+                        <h3 className="text-sm font-semibold">Week {week}</h3>
+                      </div>
+                      <Badge className="bg-primary/10 text-primary text-[10px] border-0">
+                        {leagueMatches.filter(m => m.week === week && m.status === 'completed').length}/{leagueMatches.filter(m => m.week === week).length} Played
+                      </Badge>
                     </div>
                     <div className="space-y-2">
                       {leagueMatches.filter(m => m.week === week).map(m => (
-                        <div key={m.id} className={`flex items-center justify-between p-3 rounded-xl transition-colors ${
-                          m.status === 'completed' ? 'bg-muted/50' : 'bg-primary/5 border border-primary/10'
+                        <div key={m.id} className={`p-3 rounded-xl transition-all ${
+                          m.status === 'completed'
+                            ? 'bg-muted/30 border border-border/20'
+                            : 'bg-primary/5 border border-primary/10 card-hover'
                         }`}>
-                          <div className="flex items-center gap-3 flex-1">
-                            <span className={`text-sm font-medium ${m.status === 'completed' && m.score1! > m.score2! ? 'text-primary font-bold' : ''}`}>
-                              {m.club1.name}
-                            </span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                m.status === 'completed' && m.score1! > m.score2! ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {m.club1.name.slice(0, 2).toUpperCase()}
+                              </div>
+                              <span className={`text-sm font-medium truncate ${
+                                m.status === 'completed' && m.score1! > m.score2! ? 'text-primary font-bold' : ''
+                              }`}>
+                                {m.club1.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mx-3">
+                              {m.status === 'completed' ? (
+                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary/10">
+                                  <span className={`text-base font-bold ${m.score1! > m.score2! ? 'text-primary' : 'text-muted-foreground'}`}>{m.score1}</span>
+                                  <span className="text-[10px] text-muted-foreground">-</span>
+                                  <span className={`text-base font-bold ${m.score2! > m.score1! ? 'text-primary' : 'text-muted-foreground'}`}>{m.score2}</span>
+                                </div>
+                              ) : (
+                                <Badge className="bg-primary/10 text-primary text-[10px] border-0">vs</Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                              <span className={`text-sm font-medium truncate ${
+                                m.status === 'completed' && m.score2! > m.score1! ? 'text-primary font-bold' : ''
+                              }`}>
+                                {m.club2.name}
+                              </span>
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                                m.status === 'completed' && m.score2! > m.score1! ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              }`}>
+                                {m.club2.name.slice(0, 2).toUpperCase()}
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {m.status === 'completed' ? (
-                              <span className="text-lg font-bold text-primary">{m.score1} - {m.score2}</span>
-                            ) : (
-                              <Badge className="bg-primary/10 text-primary text-[10px] border-0">vs</Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-3 flex-1 justify-end">
-                            <span className={`text-sm font-medium ${m.status === 'completed' && m.score2! > m.score1! ? 'text-primary font-bold' : ''}`}>
-                              {m.club2.name}
-                            </span>
+                          <div className="flex items-center justify-center mt-2">
+                            <Badge className={`text-[9px] border-0 ${
+                              m.format === 'BO5' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-muted text-muted-foreground'
+                            }`}>
+                              {m.format}
+                            </Badge>
                           </div>
                         </div>
                       ))}

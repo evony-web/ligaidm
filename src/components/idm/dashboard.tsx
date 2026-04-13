@@ -5,7 +5,8 @@ import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
   Heart, MapPin, Users, Trophy, Clock, Flame,
-  TrendingUp, Award, Gift, Zap, Crown, Sparkles
+  TrendingUp, Award, Gift, Zap, Crown, Sparkles,
+  Activity, Radio
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,8 @@ import { Progress } from '@/components/ui/progress';
 import { TierBadge } from './tier-badge';
 import { CountdownTimer } from './countdown-timer';
 import { PlayerCard } from './player-card';
-import { useEffect, useCallback } from 'react';
+import { PlayerProfile } from './player-profile';
+import { useEffect, useCallback, useState } from 'react';
 
 interface StatsData {
   hasData: boolean;
@@ -34,7 +36,7 @@ interface StatsData {
   totalPlayers: number;
   totalPrizePool: number;
   seasonDonationTotal: number;
-  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; totalMvp: number; club?: string }[];
+  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; maxStreak: number; totalMvp: number; matches: number; club?: string; division?: string }[];
   recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
   upcomingMatches: { id: string; club1: { name: string }; club2: { name: string }; week: number }[];
   seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
@@ -76,6 +78,7 @@ function StatusBadge({ status }: { status: string }) {
 
 export function Dashboard() {
   const { division } = useAppStore();
+  const [selectedPlayer, setSelectedPlayer] = useState<StatsData['topPlayers'][0] | null>(null);
   const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['stats', division],
     queryFn: async () => {
@@ -86,6 +89,7 @@ export function Dashboard() {
 
   // Donation popup simulation
   const showDonationPopup = useAppStore(s => s.showDonationPopup);
+  const addNotification = useAppStore(s => s.addNotification);
 
   const simulateDonation = useCallback(() => {
     const donors = ['Andi', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fitri', 'Galih', 'Hana'];
@@ -93,7 +97,8 @@ export function Dashboard() {
     const donor = donors[Math.floor(Math.random() * donors.length)];
     const amount = amounts[Math.floor(Math.random() * amounts.length)];
     showDonationPopup(`🔥 Donasi masuk ${formatCurrency(amount)} dari ${donor}`);
-  }, [showDonationPopup]);
+    addNotification('donation', `${donor} donated ${formatCurrency(amount)}`);
+  }, [showDonationPopup, addNotification]);
 
   useEffect(() => {
     const interval = setInterval(simulateDonation, 15000 + Math.random() * 10000);
@@ -111,6 +116,7 @@ export function Dashboard() {
   const t = data.activeTournament;
 
   return (
+    <>
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
 
       {/* HERO BANNER */}
@@ -186,6 +192,41 @@ export function Dashboard() {
         </Card>
       </motion.div>
 
+      {/* LIVE MATCH TICKER */}
+      {data.recentMatches?.length > 0 && (
+        <motion.div variants={item}>
+          <Card className="glass border-0 overflow-hidden">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 border-b border-primary/10">
+                <Radio className="w-3.5 h-3.5 text-primary" />
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Recent Results</span>
+                <span className="live-dot w-1.5 h-1.5 rounded-full bg-red-500 ml-1" />
+              </div>
+              <div className="overflow-x-auto">
+                <div className="flex gap-3 p-3 min-w-max">
+                  {data.recentMatches.slice(0, 5).map(m => (
+                    <div key={m.id} className="flex items-center gap-3 px-4 py-2 rounded-xl bg-muted/30 border border-border/30 shrink-0">
+                      <div className="text-right min-w-[70px]">
+                        <p className={`text-xs font-semibold ${m.score1 > m.score2 ? 'text-primary' : 'text-muted-foreground'}`}>{m.club1.name}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-primary/10">
+                        <span className="text-sm font-bold text-primary">{m.score1}</span>
+                        <span className="text-[10px] text-muted-foreground">-</span>
+                        <span className="text-sm font-bold text-primary">{m.score2}</span>
+                      </div>
+                      <div className="text-left min-w-[70px]">
+                        <p className={`text-xs font-semibold ${m.score2 > m.score1 ? 'text-primary' : 'text-muted-foreground'}`}>{m.club2.name}</p>
+                      </div>
+                      <Badge className="text-[9px] border-0 bg-muted text-muted-foreground">W{m.week}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* TOP 3 PLAYER CARDS */}
       <motion.div variants={item}>
         <div className="flex items-center gap-2 mb-2">
@@ -205,6 +246,7 @@ export function Dashboard() {
               rank={idx + 1}
               isMvp={p.totalMvp > 0 && idx === 0}
               club={p.club}
+              onClick={() => setSelectedPlayer(p)}
             />
           ))}
         </div>
@@ -298,7 +340,7 @@ export function Dashboard() {
               </div>
               <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
                 {data.topPlayers?.slice(0, 5).map((p, idx) => (
-                  <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div key={p.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => setSelectedPlayer(p)}>
                     <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                       idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
                       idx === 1 ? 'bg-gray-400/20 text-gray-400' :
@@ -364,6 +406,106 @@ export function Dashboard() {
         </motion.div>
       </div>
 
+      {/* ACTIVITY FEED */}
+      <motion.div variants={item}>
+        <Card className="glass border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-semibold">Activity Feed</h3>
+              <span className="live-dot w-2 h-2 rounded-full bg-red-500 ml-auto" />
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+              {/* Recent Match Events */}
+              {data.recentMatches?.slice(0, 3).map((m, i) => (
+                <div key={`match-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/30">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Trophy className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      <span className="text-primary">{m.club1.name}</span> vs <span className="text-primary">{m.club2.name}</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">Week {m.week} • League Match</p>
+                  </div>
+                  <Badge className={`text-[10px] border-0 ${
+                    m.score1 > m.score2
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-blue-500/10 text-blue-500'
+                  }`}>
+                    {m.score1}-{m.score2}
+                  </Badge>
+                </div>
+              ))}
+
+              {/* Top Player Events */}
+              {data.topPlayers?.slice(0, 2).map((p) => (
+                <div key={`player-${p.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                  <div className="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center shrink-0">
+                    <Crown className="w-4 h-4 text-yellow-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      <span className="text-yellow-500">{p.gamertag}</span> earned MVP
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{p.points} pts • {p.totalMvp}x MVP this season</p>
+                  </div>
+                  <TierBadge tier={p.tier} />
+                </div>
+              ))}
+
+              {/* Streak Events */}
+              {data.topPlayers?.filter(p => p.streak >= 2).slice(0, 1).map((p) => (
+                <div key={`streak-${p.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-orange-500/5 border border-orange-500/10">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                    <Flame className="w-4 h-4 text-orange-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      <span className="text-orange-500">{p.gamertag}</span> is on a {p.streak}-win streak!
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">+{Math.min(p.streak * 5, 30)} bonus pts</p>
+                  </div>
+                  <Badge className="bg-orange-500/10 text-orange-500 text-[10px] border-0">🔥{p.streak}</Badge>
+                </div>
+              ))}
+
+              {/* Donation Events */}
+              {data.topDonors?.slice(0, 1).map((d, i) => (
+                <div key={`donation-${i}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <Gift className="w-4 h-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      <span className="text-primary">{d.donorName}</span> donated
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{d.donationCount} contributions this season</p>
+                  </div>
+                  <span className="text-xs font-bold text-primary">{formatCurrency(d.totalAmount)}</span>
+                </div>
+              ))}
+
+              {/* Upcoming Match Event */}
+              {data.upcomingMatches?.slice(0, 1).map((m) => (
+                <div key={`upcoming-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-idm-purple/5 border border-idm-purple/10">
+                  <div className="w-8 h-8 rounded-lg bg-idm-purple/10 flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-idm-purple" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium">
+                      <span className="text-idm-purple">{m.club1.name}</span> vs <span className="text-idm-purple">{m.club2.name}</span>
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">Week {m.week} • Upcoming</p>
+                  </div>
+                  <Badge className="bg-idm-purple/10 text-idm-purple text-[10px] border-0">BO3</Badge>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* UPCOMING MATCHES */}
       {data.upcomingMatches?.length > 0 && (
         <motion.div variants={item}>
@@ -387,5 +529,15 @@ export function Dashboard() {
         </motion.div>
       )}
     </motion.div>
+
+      {/* Player Profile Modal */}
+      {selectedPlayer && (
+        <PlayerProfile
+          player={selectedPlayer}
+          onClose={() => setSelectedPlayer(null)}
+          rank={data.topPlayers?.findIndex(p => p.id === selectedPlayer.id) + 1}
+        />
+      )}
+    </>
   );
 }

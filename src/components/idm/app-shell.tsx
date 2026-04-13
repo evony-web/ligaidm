@@ -5,15 +5,18 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Swords,
-  Sun, Moon, Menu, X
+  Sun, Moon, Menu, X, Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
 import { Dashboard } from './dashboard';
 import { TournamentView } from './tournament-view';
 import { LeagueView } from './league-view';
 import { AdminPanel } from './admin-panel';
+import { LandingPage } from './landing-page';
 import { DonationPopup } from './donation-popup';
+import { NotificationStack } from './notification-stack';
 import { useEffect, useState } from 'react';
 
 const navItems = [
@@ -103,6 +106,14 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-2 space-y-1">
+        <button
+          onClick={() => { setCurrentView('landing'); onNav?.(); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300"
+        >
+          <Home className="w-4 h-4" />
+          Home
+        </button>
+        <Separator className="my-1" />
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -140,12 +151,28 @@ export function AppShell() {
   const { currentView, donationPopup, hideDonationPopup } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Landing page is standalone - no sidebar/header
+  if (currentView === 'landing') {
+    return (
+      <>
+        <LandingPage />
+        <DonationPopup
+          show={donationPopup.show}
+          message={donationPopup.message}
+          onClose={hideDonationPopup}
+        />
+        <NotificationStack />
+      </>
+    );
+  }
+
   const renderView = () => {
     switch (currentView) {
       case 'dashboard': return <Dashboard />;
       case 'tournament': return <TournamentView />;
       case 'league': return <LeagueView />;
       case 'admin': return <AdminPanel />;
+      default: return <Dashboard />;
     }
   };
 
@@ -196,8 +223,20 @@ export function AppShell() {
       </div>
 
       {/* Mobile Bottom Nav */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-border">
-        <div className="flex justify-around py-2 px-2">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-strong border-t border-border safe-area-bottom">
+        <div className="flex justify-around py-1.5 px-1">
+          <button
+            onClick={() => useAppStore.getState().setCurrentView('landing')}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
+              currentView === 'landing' ? 'text-primary' : 'text-muted-foreground'
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Home</span>
+            {currentView === 'landing' && (
+              <motion.div layoutId="mobileNav" className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+            )}
+          </button>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -205,7 +244,7 @@ export function AppShell() {
               <button
                 key={item.id}
                 onClick={() => useAppStore.getState().setCurrentView(item.id)}
-                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 ${
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
                   isActive
                     ? 'text-primary'
                     : 'text-muted-foreground'
@@ -213,6 +252,9 @@ export function AppShell() {
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
                 <span className="text-[10px] font-medium">{item.label}</span>
+                {isActive && (
+                  <motion.div layoutId="mobileNav" className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                )}
               </button>
             );
           })}
@@ -225,6 +267,9 @@ export function AppShell() {
         message={donationPopup.message}
         onClose={hideDonationPopup}
       />
+
+      {/* Notification Stack */}
+      <NotificationStack />
 
       {/* Footer */}
       <footer className="mt-auto py-3 text-center text-xs text-muted-foreground border-t border-border hidden lg:block">

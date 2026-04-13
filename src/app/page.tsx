@@ -11,7 +11,6 @@ export default function Home() {
     },
   }));
   const [seeded, setSeeded] = useState(false);
-  const [seeding, setSeeding] = useState(true);
 
   useEffect(() => {
     async function checkAndSeed() {
