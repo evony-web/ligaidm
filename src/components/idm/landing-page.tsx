@@ -81,7 +81,7 @@ export function LandingPage() {
             {/* Logo & Title */}
             <motion.div variants={fadeUp} className="mb-6">
               <div className="w-24 h-24 mx-auto mb-5 rounded-2xl overflow-hidden glow-champion card-champion">
-                <img src="/idm-logo.png" alt="IDM League" className="w-full h-full object-cover" />
+                <img src="/logo.webp" alt="IDM League" className="w-full h-full object-cover" />
               </div>
               <h1 className="text-5xl sm:text-6xl lg:text-8xl font-black text-gradient-fury mb-2">
                 IDM League
@@ -600,7 +600,7 @@ export function LandingPage() {
       <footer className="py-10 px-4 border-t border-border text-center bg-muted/20">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <img src="/idm-logo.png" alt="IDM" className="w-8 h-8 rounded-lg object-cover" />
+            <img src="/logo1.webp" alt="IDM" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-lg text-gradient-fury font-bold">IDM League</span>
           </div>
           <p className="text-xs text-muted-foreground mb-3">Idol Meta Fan Made Edition — Premium Esports Platform</p>

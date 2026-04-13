@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Premium Esports Tournament & League Platform",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo.svg",
+    icon: "/logo1.webp",
   },
 };
 

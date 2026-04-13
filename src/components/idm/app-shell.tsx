@@ -90,7 +90,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       <div className="p-4 pb-3">
         <div className="flex items-center gap-2.5 mb-1">
           <div className="w-11 h-11 rounded-xl overflow-hidden glow-pulse shrink-0">
-            <img src="/idm-logo.png" alt="IDM" className="w-full h-full object-cover" />
+            <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="text-gradient-fury text-base font-bold leading-tight">IDM League</h1>
@@ -207,7 +207,7 @@ export function AppShell() {
       <header className="lg:hidden sticky top-0 z-40 glass-strong px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-lg overflow-hidden glow-pulse">
-            <img src="/idm-logo.png" alt="IDM" className="w-full h-full object-cover" />
+            <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
           </div>
           <span className="text-gradient-fury text-sm font-bold">IDM League</span>
         </div>
