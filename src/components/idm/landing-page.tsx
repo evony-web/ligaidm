@@ -74,34 +74,7 @@ export function LandingPage() {
     <div className="min-h-screen bg-background overflow-hidden">
 
       {/* ========== HERO SECTION - Premium ========== */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-dragon-pattern bg-noise">
-        {/* Background */}
-        <div className="absolute inset-0">
-          <img src="/arena-bg.png" alt="Arena" className="w-full h-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
-          <div className="absolute inset-0 bg-mesh-fury opacity-60" />
-        </div>
-
-        {/* Animated particles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none bg-particles">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-primary rounded-full"
-              style={{ left: `${10 + i * 12}%`, top: `${15 + (i % 4) * 22}%` }}
-              animate={{
-                y: [0, -40, 0],
-                opacity: [0.1, 0.8, 0.1],
-                scale: [1, 2, 1],
-              }}
-              transition={{
-                duration: 3 + i * 0.7,
-                repeat: Infinity,
-                delay: i * 0.4,
-              }}
-            />
-          ))}
-        </div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
@@ -214,14 +187,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== CHAMPIONS BANNER (FULL WIDTH) ========== */}
-      <section className="relative py-20 overflow-hidden bg-dragon-pattern bg-noise">
-        {/* Full-width background */}
-        <div className="absolute inset-0">
-          <img src="/champion-banner.png" alt="Champions" className="w-full h-full object-cover opacity-40" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-background" />
-          <div className="absolute inset-0 bg-mesh-fury opacity-20" />
-        </div>
+      <section className="relative py-20 overflow-hidden">
 
         <div className="relative z-10 max-w-6xl mx-auto px-4">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
@@ -431,7 +397,7 @@ export function LandingPage() {
       <div className="section-divider max-w-4xl mx-auto" />
 
       {/* ========== FEATURES SECTION ========== */}
-      <section className="py-20 px-4 bg-mesh-fury bg-dragon-pattern bg-noise">
+      <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-12">
@@ -467,7 +433,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== HOW IT WORKS ========== */}
-      <section className="py-20 px-4 bg-muted/30 bg-dragon-pattern">
+      <section className="py-20 px-4 bg-muted/30">
         <div className="max-w-4xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-12">
@@ -507,7 +473,7 @@ export function LandingPage() {
       </section>
 
       {/* ========== TOP LEADERBOARD PREVIEW ========== */}
-      <section className="py-20 px-4 bg-mesh-fury bg-noise">
+      <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp} className="text-center mb-10">
@@ -596,9 +562,8 @@ export function LandingPage() {
       </section>
 
       {/* ========== CTA SECTION ========== */}
-      <section className="py-24 px-4 relative overflow-hidden bg-dragon-pattern bg-noise">
+      <section className="py-24 px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-idm-purple/5" />
-        <div className="absolute inset-0 bg-mesh-fury opacity-30" />
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="relative z-10 max-w-2xl mx-auto text-center">
           <motion.div variants={fadeUp}>
             <Sparkles className="w-10 h-10 text-primary mx-auto mb-5" />

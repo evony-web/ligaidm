@@ -85,7 +85,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
   const { currentView, setCurrentView, division } = useAppStore();
 
   return (
-    <div className="flex flex-col h-full bg-dragon-pattern bg-noise">
+    <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-4 pb-3">
         <div className="flex items-center gap-2.5 mb-1">
@@ -202,7 +202,7 @@ export function AppShell() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background bg-dragon-pattern">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Mobile Header */}
       <header className="lg:hidden sticky top-0 z-40 glass-strong px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -233,7 +233,7 @@ export function AppShell() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 min-w-0 bg-mesh-fury">
+        <main className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentView}

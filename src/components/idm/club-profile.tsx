@@ -85,7 +85,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header Banner */}
-          <div className="relative h-40 overflow-hidden bg-dragon-pattern">
+          <div className="relative h-40 overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-idm-purple/20 to-primary/10" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
 

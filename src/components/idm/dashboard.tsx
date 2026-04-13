@@ -141,10 +141,7 @@ export function Dashboard() {
 
       {/* HERO BANNER - Premium */}
       <motion.div variants={item} className="relative rounded-2xl overflow-hidden card-premium">
-        <img src="/idm-hero.png" alt="IDM League Arena" className="w-full h-36 lg:h-52 object-cover opacity-50" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-        <div className="absolute inset-0 bg-mesh-fury opacity-40" />
-        <div className="absolute inset-0 bg-dragon-pattern opacity-50" />
         <div className="absolute bottom-4 left-5 right-5">
           <div className="flex items-center gap-2 mb-1">
             <Badge className="bg-primary/20 text-primary text-[10px] border border-primary/20 px-2 py-0.5">
@@ -162,7 +159,6 @@ export function Dashboard() {
       {/* HERO CARD - Premium with mesh background */}
       <motion.div variants={item}>
         <Card className="card-premium card-glow-hover overflow-hidden relative">
-          <div className="absolute inset-0 bg-mesh-fury opacity-30 pointer-events-none" />
           <CardContent className="relative p-4 lg:p-6">
             <div className="flex items-start justify-between mb-3">
               <div>

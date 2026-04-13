@@ -75,7 +75,7 @@ export function LeagueView() {
 
       {/* Header */}
       <motion.div variants={item} className="relative rounded-2xl overflow-hidden card-premium">
-        <div className="absolute inset-0 bg-mesh-fury opacity-20" />
+
         <div className="relative p-4 lg:p-5">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center glow-pulse">

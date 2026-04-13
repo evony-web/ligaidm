@@ -86,9 +86,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
         >
           {/* Header Banner */}
           <div className="relative h-32 bg-gradient-to-br from-primary/20 via-idm-purple/10 to-primary/5 overflow-hidden">
-            <div className="absolute inset-0 opacity-20">
-              <img src="/arena-bg.png" alt="" className="w-full h-full object-cover" />
-            </div>
+
             <button
               onClick={onClose}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors z-10"
