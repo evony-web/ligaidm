@@ -18,6 +18,7 @@ import { PlayerCard } from './player-card';
 import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
 import { useEffect, useCallback, useState } from 'react';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 interface StatsData {
   hasData: boolean;
@@ -84,19 +85,21 @@ function SectionHeader({ icon: Icon, title, badge, className = '' }: {
   badge?: string;
   className?: string;
 }) {
+  const dt = useDivisionTheme();
   return (
     <div className={`flex items-center gap-2 mb-3 ${className}`}>
-      <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-        <Icon className="w-3.5 h-3.5 text-primary" />
+      <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+        <Icon className={`w-3.5 h-3.5 ${dt.text}`} />
       </div>
       <h3 className="text-sm font-semibold section-header-line">{title}</h3>
-      {badge && <Badge className="bg-primary/10 text-primary text-[10px] border-0 ml-auto">{badge}</Badge>}
+      {badge && <Badge className={`${dt.badgeBg} text-[10px] border ml-auto`}>{badge}</Badge>}
     </div>
   );
 }
 
 export function Dashboard() {
   const { division } = useAppStore();
+  const dt = useDivisionTheme();
   const [selectedPlayer, setSelectedPlayer] = useState<StatsData['topPlayers'][0] | null>(null);
   const [selectedClub, setSelectedClub] = useState<StatsData['clubs'][0] | null>(null);
   const { data, isLoading } = useQuery<StatsData>({
@@ -128,7 +131,7 @@ export function Dashboard() {
   if (isLoading || !data?.hasData) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className={`w-8 h-8 border-2 ${dt.border} border-t-transparent rounded-full animate-spin`} />
       </div>
     );
   }
@@ -154,11 +157,11 @@ export function Dashboard() {
             <Badge className="bg-primary/20 text-primary text-[10px] border border-primary/20 px-2 py-0.5">
               🐉 Season {data.season?.number || 1}
             </Badge>
-            <Badge className="bg-idm-amber/20 text-idm-amber text-[10px] border border-idm-amber/20 px-2 py-0.5">
+            <Badge className={`${dt.badgeBg} text-[10px] px-2 py-0.5`}>
               {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
             </Badge>
           </div>
-          <h2 className="text-2xl lg:text-3xl font-black text-gradient-fury">IDM League Arena</h2>
+          <h2 className={`text-2xl lg:text-3xl font-black ${dt.gradientText}`}>IDM League Arena</h2>
           <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
         </div>
       </motion.div>
@@ -170,10 +173,10 @@ export function Dashboard() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                  <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Weekly Tournament</p>
+                  <Sparkles className={`w-3.5 h-3.5 ${dt.text}`} />
+                  <p className={`text-[10px] font-semibold ${dt.text} uppercase tracking-wider`}>Weekly Tournament</p>
                 </div>
-                <h2 className="text-xl lg:text-2xl font-bold text-gradient-fury">
+                <h2 className={`text-xl lg:text-2xl font-bold ${dt.gradientText}`}>
                   {t?.name || `Week 5 Tournament`}
                 </h2>
                 <div className="mt-2"><StatusBadge status={t?.status || 'registration'} /></div>
@@ -188,19 +191,19 @@ export function Dashboard() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Clock className="w-3.5 h-3.5 text-primary" />
+                <Clock className={`w-3.5 h-3.5 ${dt.text}`} />
                 <span>{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <MapPin className="w-3.5 h-3.5 text-primary" />
+                <MapPin className={`w-3.5 h-3.5 ${dt.text}`} />
                 <span>{t?.location || 'Online'}</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Users className="w-3.5 h-3.5 text-primary" />
+                <Users className={`w-3.5 h-3.5 ${dt.text}`} />
                 <span>{data.totalPlayers} Players</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Flame className="w-3.5 h-3.5 text-primary" />
+                <Flame className={`w-3.5 h-3.5 ${dt.text}`} />
                 <span>Week {t?.weekNumber || 5}</span>
               </div>
             </div>
@@ -230,9 +233,9 @@ export function Dashboard() {
         <motion.div variants={item}>
           <Card className="card-premium overflow-hidden">
             <CardContent className="p-0">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border-b border-primary/10">
-                <Radio className="w-3.5 h-3.5 text-primary" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Recent Results</span>
+              <div className={`flex items-center gap-2 px-4 py-2.5 ${dt.bgSubtle} border-b ${dt.borderSubtle}`}>
+                <Radio className={`w-3.5 h-3.5 ${dt.text}`} />
+                <span className={`text-[10px] font-bold ${dt.text} uppercase tracking-wider`}>Recent Results</span>
                 <span className="live-dot w-1.5 h-1.5 rounded-full bg-red-500 ml-1" />
               </div>
               <div className="overflow-x-auto">
@@ -240,15 +243,15 @@ export function Dashboard() {
                   {data.recentMatches.slice(0, 5).map(m => (
                     <div key={m.id} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border/30 shrink-0 card-glow-hover interactive-scale">
                       <div className="text-right min-w-[70px]">
-                        <p className={`text-xs font-semibold ${m.score1 > m.score2 ? 'text-primary' : 'text-muted-foreground'}`}>{m.club1.name}</p>
+                        <p className={`text-xs font-semibold ${m.score1 > m.score2 ? dt.text : 'text-muted-foreground'}`}>{m.club1.name}</p>
                       </div>
-                      <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-primary/10">
-                        <span className="text-sm font-bold text-primary">{m.score1}</span>
+                      <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${dt.bg}`}>
+                        <span className={`text-sm font-bold ${dt.text}`}>{m.score1}</span>
                         <span className="text-[10px] text-muted-foreground">-</span>
-                        <span className="text-sm font-bold text-primary">{m.score2}</span>
+                        <span className={`text-sm font-bold ${dt.text}`}>{m.score2}</span>
                       </div>
                       <div className="text-left min-w-[70px]">
-                        <p className={`text-xs font-semibold ${m.score2 > m.score1 ? 'text-primary' : 'text-muted-foreground'}`}>{m.club2.name}</p>
+                        <p className={`text-xs font-semibold ${m.score2 > m.score1 ? dt.text : 'text-muted-foreground'}`}>{m.club2.name}</p>
                       </div>
                       <Badge className="text-[9px] border-0 bg-muted text-muted-foreground">W{m.week}</Badge>
                     </div>
@@ -307,14 +310,14 @@ export function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div className="text-center flex-1">
                           <p className="text-sm font-semibold">{m.team1.name}</p>
-                          <p className="text-3xl font-bold text-primary mt-1">{m.score1}</p>
+                          <p className={`text-3xl font-bold ${dt.text} mt-1`}>{m.score1}</p>
                         </div>
                         <div className="px-4 text-center">
                           <span className="text-xs text-muted-foreground font-bold">VS</span>
                         </div>
                         <div className="text-center flex-1">
                           <p className="text-sm font-semibold">{m.team2.name}</p>
-                          <p className="text-3xl font-bold text-primary mt-1">{m.score2}</p>
+                          <p className={`text-3xl font-bold ${dt.text} mt-1`}>{m.score2}</p>
                         </div>
                       </div>
                       {m.mvpPlayer && (
@@ -340,22 +343,22 @@ export function Dashboard() {
                     <div>
                       <div className="flex justify-between text-xs mb-1.5">
                         <span className="text-muted-foreground">{data.season?.name}</span>
-                        <span className="font-semibold text-primary">{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
+                        <span className={`font-semibold ${dt.text}`}>{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
                       </div>
                       <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
-                      <p className="text-[10px] text-primary font-semibold mt-1">{data.seasonProgress?.percentage}% Complete</p>
+                      <p className={`text-[10px] ${dt.text} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-2">
-                      <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10 card-glow-hover interactive-scale">
-                        <p className="text-lg font-bold text-primary">{data.totalPlayers}</p>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale`}>
+                        <p className={`text-lg font-bold ${dt.text}`}>{data.totalPlayers}</p>
                         <p className="text-[10px] text-muted-foreground">Players</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10 card-glow-hover interactive-scale cursor-pointer" onClick={() => setSelectedClub(data.clubs?.[0])}>
-                        <p className="text-lg font-bold text-primary">{data.clubs?.length || 0}</p>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
+                        <p className={`text-lg font-bold ${dt.text}`}>{data.clubs?.length || 0}</p>
                         <p className="text-[10px] text-muted-foreground">Clubs</p>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-primary/5 text-center border border-primary/10 card-glow-hover interactive-scale">
-                        <p className="text-sm font-bold text-primary">{formatCurrency(data.seasonDonationTotal || 0)}</p>
+                      <div className={`p-2.5 rounded-xl ${dt.bgSubtle} text-center border ${dt.borderSubtle} card-glow-hover interactive-scale`}>
+                        <p className={`text-sm font-bold ${dt.text}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
                         <p className="text-[10px] text-muted-foreground">Funded</p>
                       </div>
                     </div>
@@ -382,11 +385,11 @@ export function Dashboard() {
                           <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
                             i === 0 ? 'bg-yellow-500/20 text-yellow-500 glow-champion' :
                             i === 1 ? 'bg-gray-400/20 text-gray-400' :
-                            'bg-primary/10 text-primary'
+                            `${dt.iconBg} ${dt.text}`
                           }`}>{i + 1}</span>
                           {d.donorName}
                         </span>
-                        <span className="font-semibold text-primary">{formatCurrency(d.totalAmount)}</span>
+                        <span className={`font-semibold ${dt.text}`}>{formatCurrency(d.totalAmount)}</span>
                       </div>
                     ))}
                   </div>
@@ -405,7 +408,7 @@ export function Dashboard() {
                         <div key={m.id} className="p-3 rounded-xl bg-muted/50 text-center card-glow-hover interactive-scale border border-border/30">
                           <p className="text-[10px] text-muted-foreground mb-1">Week {m.week}</p>
                           <p className="text-sm font-semibold">{m.club1.name} <span className="text-muted-foreground">vs</span> {m.club2.name}</p>
-                          <Badge className="mt-1.5 bg-primary/10 text-primary text-[10px] border-0">BO3</Badge>
+                          <Badge className={`mt-1.5 ${dt.badgeBg} text-[10px] border`}>BO3</Badge>
                         </div>
                       ))}
                     </div>
@@ -426,7 +429,7 @@ export function Dashboard() {
               <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
                 {data.topPlayers?.slice(0, 10).map((p, idx) => (
                   <div key={p.id} className={`flex items-center gap-3 p-2.5 rounded-lg transition-colors cursor-pointer interactive-scale ${
-                    idx < 3 ? 'bg-primary/5 border border-primary/10' : 'hover:bg-muted/50 border border-transparent'
+                    idx < 3 ? `${dt.bgSubtle} border ${dt.borderSubtle}` : 'hover:bg-muted/50 border border-transparent'
                   }`} onClick={() => setSelectedPlayer(p)}>
                     <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                       idx === 0 ? 'bg-yellow-500/20 text-yellow-500 glow-champion' :
@@ -436,7 +439,7 @@ export function Dashboard() {
                     }`}>
                       {idx + 1}
                     </span>
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shrink-0">
+                    <div className={`w-8 h-8 rounded-full ${dt.iconBg} flex items-center justify-center text-[10px] font-bold ${dt.text} shrink-0`}>
                       {p.gamertag.slice(0, 2).toUpperCase()}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -472,7 +475,7 @@ export function Dashboard() {
                 {data.clubs?.map((club, idx) => (
                   <div key={club.id} className={`flex items-center gap-3 p-3 rounded-xl transition-colors cursor-pointer interactive-scale ${
                     idx === 0 ? 'card-gold glow-champion' :
-                    idx < 4 ? 'bg-primary/5 border border-primary/10 card-glow-hover' :
+                    idx < 4 ? `${dt.bgSubtle} border ${dt.borderSubtle} card-glow-hover` :
                     'hover:bg-muted/50 border border-transparent card-glow-hover'
                   }`} onClick={() => setSelectedClub(club)}>
                     <span className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
@@ -483,8 +486,8 @@ export function Dashboard() {
                     }`}>
                       {idx + 1}
                     </span>
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Shield className="w-5 h-5 text-primary" />
+                    <div className={`w-10 h-10 rounded-xl ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Shield className={`w-5 h-5 ${dt.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate">{club.name}</p>
@@ -497,7 +500,7 @@ export function Dashboard() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={`text-lg font-bold ${idx === 0 ? 'text-gradient-gold' : 'text-primary'}`}>{club.points}</p>
+                      <p className={`text-lg font-bold ${idx === 0 ? 'text-gradient-gold' : dt.text}`}>{club.points}</p>
                       <p className="text-[9px] text-muted-foreground">points</p>
                     </div>
                   </div>
@@ -516,12 +519,12 @@ export function Dashboard() {
                 {/* Recent Match Events */}
                 {data.recentMatches?.slice(0, 3).map((m) => (
                   <div key={`match-${m.id}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/30 border border-border/30 card-glow-hover">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Trophy className="w-4 h-4 text-primary" />
+                    <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Trophy className={`w-4 h-4 ${dt.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">
-                        <span className="text-primary">{m.club1.name}</span> vs <span className="text-primary">{m.club2.name}</span>
+                        <span className={dt.text}>{m.club1.name}</span> vs <span className={dt.text}>{m.club2.name}</span>
                       </p>
                       <p className="text-[10px] text-muted-foreground">Week {m.week} • League Match</p>
                     </div>
@@ -569,17 +572,17 @@ export function Dashboard() {
 
                 {/* Donation Events */}
                 {data.topDonors?.slice(0, 1).map((d, i) => (
-                  <div key={`donation-${i}`} className="flex items-center gap-3 p-2.5 rounded-lg bg-primary/5 border border-primary/10 card-glow-hover">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Gift className="w-4 h-4 text-primary" />
+                  <div key={`donation-${i}`} className={`flex items-center gap-3 p-2.5 rounded-lg ${dt.bgSubtle} border ${dt.borderSubtle} card-glow-hover`}>
+                    <div className={`w-8 h-8 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                      <Gift className={`w-4 h-4 ${dt.text}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium">
-                        <span className="text-primary">{d.donorName}</span> donated
+                        <span className={dt.text}>{d.donorName}</span> donated
                       </p>
                       <p className="text-[10px] text-muted-foreground">{d.donationCount} contributions this season</p>
                     </div>
-                    <span className="text-xs font-bold text-primary">{formatCurrency(d.totalAmount)}</span>
+                    <span className={`text-xs font-bold ${dt.text}`}>{formatCurrency(d.totalAmount)}</span>
                   </div>
                 ))}
 

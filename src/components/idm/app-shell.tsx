@@ -18,6 +18,7 @@ import { LandingPage } from './landing-page';
 import { DonationPopup } from './donation-popup';
 import { NotificationStack } from './notification-stack';
 import { useEffect, useState } from 'react';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 const navItems = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: Gamepad2 },
@@ -34,7 +35,7 @@ function DivisionToggle() {
         onClick={() => setDivision('male')}
         className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
           division === 'male'
-            ? 'bg-primary text-primary-foreground shadow-md'
+            ? 'bg-idm-male text-white shadow-md'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -44,7 +45,7 @@ function DivisionToggle() {
         onClick={() => setDivision('female')}
         className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-300 ${
           division === 'female'
-            ? 'bg-primary text-primary-foreground shadow-md'
+            ? 'bg-idm-female text-white shadow-md'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -83,6 +84,7 @@ function ThemeToggle() {
 
 function SidebarContent({ onNav }: { onNav?: () => void }) {
   const { currentView, setCurrentView, division } = useAppStore();
+  const dt = useDivisionTheme();
 
   return (
     <div className="flex flex-col h-full">
@@ -112,7 +114,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
           onClick={() => { setCurrentView('landing'); onNav?.(); }}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
             currentView === 'landing'
-              ? 'bg-primary/10 text-primary glow-pulse'
+              ? `${dt.navActive} glow-pulse`
               : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
         >
@@ -133,14 +135,14 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
               onClick={() => { setCurrentView(item.id); onNav?.(); }}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                 isActive
-                  ? 'bg-primary/10 text-primary glow-pulse'
+                  ? `${dt.navActive} glow-pulse`
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
               {item.label}
               {isActive && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                <div className={`ml-auto w-1.5 h-1.5 rounded-full ${division === 'male' ? 'bg-idm-male' : 'bg-idm-female'}`} />
               )}
             </button>
           );
@@ -150,11 +152,11 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       {/* Season Status */}
       <div className="mx-3 p-3 rounded-xl card-premium mb-3">
         <div className="flex items-center gap-2 mb-2">
-          <Flame className="w-3 h-3 text-primary" />
-          <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Season 1</span>
+          <Flame className={`w-3 h-3 ${dt.text}`} />
+          <span className={`text-[10px] font-semibold ${dt.text} uppercase tracking-wider`}>Season 1</span>
         </div>
         <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-primary to-idm-amber" />
+          <div className={`h-full w-3/5 rounded-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`} />
         </div>
         <p className="text-[9px] text-muted-foreground mt-1.5">60% Complete • Week 5/8</p>
       </div>
@@ -173,8 +175,9 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
 }
 
 export function AppShell() {
-  const { currentView, donationPopup, hideDonationPopup } = useAppStore();
+  const { currentView, donationPopup, hideDonationPopup, division } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const dt = useDivisionTheme();
 
   // Landing page is standalone - no sidebar/header
   if (currentView === 'landing') {
@@ -255,13 +258,13 @@ export function AppShell() {
           <button
             onClick={() => useAppStore.getState().setCurrentView('landing')}
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
-              currentView === 'landing' ? 'text-primary' : 'text-muted-foreground'
+              currentView === 'landing' ? dt.text : 'text-muted-foreground'
             }`}
           >
             <Home className={`w-5 h-5 ${currentView === 'landing' ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
             <span className="text-[10px] font-medium">Home</span>
             {currentView === 'landing' && (
-              <motion.div layoutId="mobileNav" className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+              <motion.div layoutId="mobileNav" className={`absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full ${division === 'male' ? 'bg-idm-male' : 'bg-idm-female'}`} />
             )}
           </button>
           {navItems.map((item) => {
@@ -273,14 +276,14 @@ export function AppShell() {
                 onClick={() => useAppStore.getState().setCurrentView(item.id)}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
                   isActive
-                    ? 'text-primary'
+                    ? dt.text
                     : 'text-muted-foreground'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
                 <span className="text-[10px] font-medium">{item.label}</span>
                 {isActive && (
-                  <motion.div layoutId="mobileNav" className="absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                  <motion.div layoutId="mobileNav" className={`absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full ${division === 'male' ? 'bg-idm-male' : 'bg-idm-female'}`} />
                 )}
               </button>
             );

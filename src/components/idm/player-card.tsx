@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Crown, Flame, Trophy } from 'lucide-react';
 import { TierBadge } from './tier-badge';
+import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 interface PlayerCardProps {
   gamertag: string;
@@ -21,6 +22,7 @@ export function PlayerCard({
   gamertag, tier, points, totalWins, totalMvp, streak, rank, isMvp, club, onClick
 }: PlayerCardProps) {
   const isChampion = rank === 1;
+  const dt = useDivisionTheme();
 
   return (
     <motion.div
@@ -56,8 +58,8 @@ export function PlayerCard({
       <div className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold mx-auto mb-2 ${
         isChampion ? 'bg-yellow-500/10 text-yellow-500 glow-champion' :
         tier === 'S' ? 'bg-red-500/10 text-red-500' :
-        tier === 'A' ? 'bg-yellow-500/10 text-yellow-500' :
-        'bg-green-500/10 text-green-500'
+        tier === 'A' ? `${dt.iconBg} ${dt.text}` :
+        `${dt.iconBg} ${dt.text}`
       }`}>
         {gamertag.slice(0, 2).toUpperCase()}
       </div>
@@ -76,7 +78,7 @@ export function PlayerCard({
       {/* Stats */}
       <div className="grid grid-cols-3 gap-1 mt-2 pt-2 border-t border-border/30">
         <div className="text-center">
-          <p className={`text-xs font-bold ${isChampion ? 'text-gradient-gold' : 'text-primary'}`}>{points}</p>
+          <p className={`text-xs font-bold ${isChampion ? 'text-gradient-gold' : dt.text}`}>{points}</p>
           <p className="text-[9px] text-muted-foreground">PTS</p>
         </div>
         <div className="text-center">

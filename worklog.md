@@ -134,3 +134,43 @@ Stage Summary:
 - 15+ new CSS classes for division-specific styling
 - All champion cards, leaderboard, buttons use division-specific colors
 - Gold brand theme preserved for non-division elements
+
+---
+Task ID: 5
+Agent: Main Agent
+Task: Apply division-specific colors to dashboard, app-shell, and player-card (replacing gold/primary)
+
+Work Log:
+- Created useDivisionTheme hook at /home/z/my-project/src/hooks/use-division-theme.ts
+  - Returns DivisionTheme object with text, bg, border, glow, gradientText, iconBg, navActive, badgeBg etc.
+  - Male: text-idm-male (cyan), Female: text-idm-female (purple)
+- Updated app-shell.tsx:
+  - DivisionToggle: Active male = bg-idm-male text-white, Active female = bg-idm-female text-white
+  - Sidebar nav: Active items use dt.navActive (division-specific bg+text) instead of bg-primary/10 text-primary
+  - Active indicator dot: division color instead of bg-primary
+  - Season status: Division color for flame icon, text, and progress bar gradient
+  - Mobile bottom nav: Same division-color treatment for active states
+- Updated dashboard.tsx:
+  - SectionHeader: Icon bg, icon text, and badge all use division colors
+  - Hero banner: Division badge and title use division gradient text
+  - Tournament info: Clock/MapPin/Users/Flame icons use division color
+  - Live match ticker: Header, scores, and winning team text use division colors
+  - Latest match scores: Division color instead of text-primary
+  - Season progress: All stats boxes, progress percentage use division colors
+  - Top donors: 3rd place donor uses division color, amounts use division color
+  - Upcoming matches: BO3 badge uses division badge styling
+  - Leaderboard: Top-3 background, avatar bg/text use division colors
+  - Club standings: Shield icon, top-4 backgrounds use division colors
+  - Activity feed: All event icons/text use division colors
+  - Loading spinner: Division border color
+- Updated player-card.tsx:
+  - Avatar colors use division theme for non-champion cards
+  - Points stat uses division color instead of text-primary
+- Lint passes clean, dev server running successfully
+
+Stage Summary:
+- All dashboard components now use division-specific colors (cyan for male, purple for female)
+- App shell navigation, toggle, and indicators use division colors
+- Player cards use division-aware styling
+- Gold/primary colors preserved only for universal brand elements (logo, season badge, MVP crown, prize pool)
+- useDivisionTheme hook provides reusable division theme object
