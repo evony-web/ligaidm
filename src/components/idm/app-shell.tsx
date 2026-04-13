@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Swords,
-  Sun, Moon, Menu, X, Home, Flame
+  Sun, Moon, Menu, X, Home, Flame, Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -14,6 +14,7 @@ import { Dashboard } from './dashboard';
 import { TournamentView } from './tournament-view';
 import { LeagueView } from './league-view';
 import { AdminPanel } from './admin-panel';
+import { MatchDayCenter } from './match-day-center';
 import { LandingPage } from './landing-page';
 import { DonationPopup } from './donation-popup';
 import { NotificationStack } from './notification-stack';
@@ -22,6 +23,7 @@ import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 const navItems = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: Gamepad2 },
+  { id: 'matchday' as const, label: 'Match Day', icon: Radio },
   { id: 'tournament' as const, label: 'Tournament', icon: Swords },
   { id: 'league' as const, label: 'League', icon: Trophy },
   { id: 'admin' as const, label: 'Admin', icon: Shield },
@@ -197,6 +199,7 @@ export function AppShell() {
   const renderView = () => {
     switch (currentView) {
       case 'dashboard': return <Dashboard />;
+      case 'matchday': return <MatchDayCenter />;
       case 'tournament': return <TournamentView />;
       case 'league': return <LeagueView />;
       case 'admin': return <AdminPanel />;

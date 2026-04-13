@@ -34,3 +34,34 @@ Stage Summary:
 - No changes to bracket-view (per user request)
 - All code compiles cleanly, lint passes with zero errors
 - Dev server running successfully on port 3000
+
+---
+Task ID: 2
+Agent: Main
+Task: Build Match Day Center feature and fix duplicate bracket tabs
+
+Work Log:
+- Created new MatchDayCenter component at src/components/idm/match-day-center.tsx
+- Feature includes:
+  - Live Match Hero banner with large team logos, animated scores, and VS display
+  - Match selection tabs for switching between tournament matches
+  - Prediction Voting system with visual vote bars and interactive vote buttons
+  - Head-to-Head comparison with side-by-side stats (Wins, Losses, Points, Game Diff, Kill Avg, Obj Rate)
+  - AI Win Probability visualization
+  - Match Timeline with event icons (kill, objective, tower, MVP, start, end)
+  - Key Moments highlight cards
+  - Tournament Results and League Results match rows
+  - Community Insight section with fan confidence metrics
+- Added 'matchday' view type to AppView in store.ts
+- Added Radio icon import and Match Day nav item to app-shell.tsx
+- Added MatchDayCenter import and render case to app-shell.tsx
+- Fixed duplicate bracket tabs by removing the internal bracket type selector from bracket-view.tsx
+  (the bracket-view had its own Single Elim / Double Elim / Group Stage / Round Robin tabs that
+  duplicated the selector in dashboard.tsx)
+
+Stage Summary:
+- New Match Day Center feature fully functional with 4 tab sections
+- Navigation updated with Match Day entry (icon: Radio)
+- Duplicate bracket tabs bug fixed
+- All code compiles cleanly, lint passes with zero errors
+- Dev server running successfully on port 3000

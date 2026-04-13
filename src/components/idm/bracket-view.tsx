@@ -466,27 +466,6 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
   /* ─── Render: Single/Double Elimination Bracket with SVG Connectors ─── */
   return (
     <div>
-      {/* Bracket Type Selector */}
-      <div className={`flex items-center gap-1 p-1 rounded-lg ${dt.bgSubtle} ${dt.border} w-fit mb-4`}>
-        {[
-          { value: 'single_elimination', label: 'Single Elim', icon: Swords },
-          { value: 'double_elimination', label: 'Double Elim', icon: Trophy },
-          { value: 'group_stage', label: 'Group Stage', icon: Trophy },
-          { value: 'round_robin', label: 'Round Robin', icon: Trophy },
-        ].map(type => (
-          <button
-            key={type.value}
-            onClick={() => setActiveType(type.value as any)}
-            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-medium transition-all ${
-              activeType === type.value ? `${dt.bg} ${dt.text} shadow-sm` : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <type.icon className="w-3 h-3" />
-            {type.label}
-          </button>
-        ))}
-      </div>
-
       <div className="relative" ref={containerRef}>
         {/* SVG connector overlay */}
         {connectors.length > 0 && <BracketConnectors paths={connectors} />}
