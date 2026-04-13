@@ -71,42 +71,29 @@ export function SplashScreen({ onFinish }: { onFinish: () => void }) {
           {/* Main Content */}
           <div className="relative z-10 flex flex-col items-center">
 
-            {/* Logo1 (icon/emblem) - positioned above main logo */}
+            {/* Main Logo */}
             <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: phase === 'hold' ? 1 : 0.8, rotate: 0 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-              className="mb-2"
+              initial={{ opacity: 0, y: 20, scale: 0.8 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3, ease: 'easeOut' }}
+              className="mb-5"
             >
               <div className="relative">
                 {/* Outer glow ring */}
                 <motion.div
-                  className="absolute -inset-3 rounded-full"
+                  className="absolute -inset-4 rounded-3xl"
                   animate={{
                     boxShadow: [
-                      '0 0 20px rgba(45,212,191,0.3), 0 0 60px rgba(45,212,191,0.1)',
-                      '0 0 40px rgba(45,212,191,0.5), 0 0 80px rgba(45,212,191,0.2)',
-                      '0 0 20px rgba(45,212,191,0.3), 0 0 60px rgba(45,212,191,0.1)',
+                      '0 0 25px rgba(45,212,191,0.25), 0 0 60px rgba(45,212,191,0.08)',
+                      '0 0 40px rgba(45,212,191,0.4), 0 0 80px rgba(139,92,246,0.15)',
+                      '0 0 25px rgba(45,212,191,0.25), 0 0 60px rgba(45,212,191,0.08)',
                     ],
                   }}
-                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
-                {/* Logo1 image */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-teal-400/30 bg-black/50 backdrop-blur-sm">
-                  <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
+                <div className="w-40 h-40 sm:w-48 sm:h-48 rounded-2xl overflow-hidden border border-white/10 shadow-2xl bg-black/30 backdrop-blur-sm">
+                  <img src="/logo.webp" alt="IDM League" className="w-full h-full object-cover" />
                 </div>
-              </div>
-            </motion.div>
-
-            {/* Main Logo (logo.webp) */}
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: 'easeOut' }}
-              className="mb-4"
-            >
-              <div className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-                <img src="/logo.webp" alt="IDM League" className="w-full h-full object-cover" />
               </div>
             </motion.div>
 
