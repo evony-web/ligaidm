@@ -197,7 +197,7 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             {/* Division badge */}
             <div className="absolute top-3 left-3 z-10" style={{ marginTop: isTop3 ? '28px' : 0 }}>
               <Badge className={`${dt.casinoBadge} text-[9px] backdrop-blur-sm`}>
-                {division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}
+                {division === 'male' ? '🕺 Male Division' : '💃 Female Division'}
               </Badge>
             </div>
 

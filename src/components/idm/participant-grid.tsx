@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Shield, Flame, Search, List, Grid3X3, Trophy, Zap, Target, Users, ChevronDown, ChevronUp, Crown, Star, Swords } from 'lucide-react';
+import { Shield, Flame, Search, List, Grid3X3, Trophy, Zap, Target, Users, ChevronDown, ChevronUp, Crown, Star, Music } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { TierBadge } from './tier-badge';
@@ -307,7 +307,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           </div>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider">Participant Roster</h3>
-            <p className="text-[9px] text-muted-foreground">{division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}</p>
+            <p className="text-[9px] text-muted-foreground">{division === 'male' ? '🕺 Male Division' : '💃 Female Division'}</p>
           </div>
           <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Gift, Trophy, Swords, Crown, Flame } from 'lucide-react';
+import { X, Gift, Trophy, Music, Crown, Flame } from 'lucide-react';
 
 interface Notification {
   id: string;
@@ -11,7 +11,7 @@ interface Notification {
 
 const iconMap = {
   donation: Gift,
-  match: Swords,
+  match: Music,
   mvp: Crown,
   streak: Flame,
   victory: Trophy,

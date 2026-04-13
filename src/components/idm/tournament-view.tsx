@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
-  Swords, Users, Play, CheckCircle, Crown, Clock,
+  Music, Users, Play, CheckCircle, Crown, Clock,
   Trophy, ChevronRight, Zap, UserPlus
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -152,7 +152,7 @@ export function TournamentView() {
     return (
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
         <div className="flex items-center gap-2 mb-2">
-          <Swords className={`w-5 h-5 ${dt.neonText}`} />
+          <Music className={`w-5 h-5 ${dt.neonText}`} />
           <h2 className="text-lg font-bold text-gradient-fury">Weekly Tournaments</h2>
         </div>
 
@@ -230,7 +230,7 @@ export function TournamentView() {
                   )}
                   {selected.status === 'team_generation' && (
                     <Button size="sm" onClick={() => generateBracketMutation.mutate()}>
-                      <Swords className="w-3 h-3 mr-1" /> Generate Bracket
+                      <Music className="w-3 h-3 mr-1" /> Generate Bracket
                     </Button>
                   )}
                   {selected.status === 'bracket_generation' && (
@@ -293,7 +293,7 @@ export function TournamentView() {
                 <CardContent className="p-0 relative z-10">
                   <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
                     <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                      <Swords className={`w-3 h-3 ${dt.neonText}`} />
+                      <Music className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-xs font-semibold uppercase tracking-wider">Teams</h3>
                     <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{selected.teams?.length || 0}</Badge>

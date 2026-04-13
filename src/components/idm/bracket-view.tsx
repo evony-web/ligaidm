@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
-import { Crown, Swords, Trophy } from 'lucide-react';
+import { Crown, Music, Trophy } from 'lucide-react';
 
 /* ─── Match interface ─── */
 interface Match {
@@ -504,12 +504,12 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
         </div>
       </div>
 
-      {/* Double Elimination: Losers Bracket */}
+      {/* Double Elimination: Elimination Bracket */}
       {activeType === 'double_elimination' && roundsData.length > 1 && (
         <div className="mt-6">
           <div className="flex items-center gap-2 mb-3">
             <div className={`px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 text-[10px] font-bold uppercase tracking-wider`}>
-              Losers Bracket
+              Elimination Bracket
             </div>
             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
           </div>

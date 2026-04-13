@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Heart, MapPin, Users, Trophy, Clock, Flame,
   TrendingUp, Award, Gift, Zap, Crown, Sparkles,
-  Radio, Shield, Swords,
+  Radio, Shield, Music,
   Gamepad2, Calendar, Target, Wallet, Search, List, Grid3X3, ChevronDown, ChevronUp, Filter
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,7 +24,7 @@ import { ClubProfile } from './club-profile';
 import { BracketView } from './bracket-view';
 import { ParticipantGrid } from './participant-grid';
 import { EsportsMatchCard } from './match-card';
-import { useEffect, useCallback, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 
 /* ─── Data Interfaces (unchanged) ─── */
@@ -325,23 +325,6 @@ export function Dashboard() {
     },
   });
 
-  const showDonationPopup = useAppStore(s => s.showDonationPopup);
-  const addNotification = useAppStore(s => s.addNotification);
-
-  const simulateDonation = useCallback(() => {
-    const donors = ['Andi', 'Budi', 'Citra', 'Dewi', 'Eko', 'Fitri', 'Galih', 'Hana'];
-    const amounts = [25000, 50000, 100000];
-    const donor = donors[Math.floor(Math.random() * donors.length)];
-    const amount = amounts[Math.floor(Math.random() * amounts.length)];
-    showDonationPopup(`🔥 Donasi masuk ${formatCurrency(amount)} dari ${donor}`);
-    addNotification('donation', `${donor} donated ${formatCurrency(amount)}`);
-  }, [showDonationPopup, addNotification]);
-
-  useEffect(() => {
-    const interval = setInterval(simulateDonation, 15000 + Math.random() * 10000);
-    return () => clearInterval(interval);
-  }, [simulateDonation]);
-
   /* Group matches by week for the Matches tab */
   const recentMatches = data?.recentMatches ?? [];
   const upcomingMatches = data?.upcomingMatches ?? [];
@@ -423,7 +406,7 @@ export function Dashboard() {
               🐉 Season {data.season?.number || 1}
             </Badge>
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
-              {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
+              {division === 'male' ? '🕺 Male' : '💃 Female'}
             </Badge>
           </div>
           <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Stage'}</h2>
@@ -483,7 +466,7 @@ export function Dashboard() {
             {[
               { value: 'overview', label: 'Overview', icon: Trophy },
               { value: 'standings', label: 'Standings', icon: Award },
-              { value: 'matches', label: 'Matches', icon: Swords },
+              { value: 'matches', label: 'Matches', icon: Music },
               { value: 'participants', label: 'Participants', icon: Gamepad2 },
             ].map(tab => (
               <TabsTrigger
@@ -610,7 +593,7 @@ export function Dashboard() {
               <motion.div variants={item}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                    <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                    <Music className={`w-3.5 h-3.5 ${dt.neonText}`} />
                   </div>
                   <h3 className="text-sm font-semibold">Featured Match</h3>
                   <Badge className={`${dt.casinoBadge} ml-auto`}>RESULT</Badge>
@@ -842,7 +825,7 @@ export function Dashboard() {
                   {/* Header with bracket type selector */}
                   <div className={`flex items-center gap-2.5 px-4 py-3 border-b ${dt.borderSubtle}`}>
                     <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                      <Swords className={`w-3 h-3 ${dt.neonText}`} />
+                      <Music className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-xs font-semibold uppercase tracking-wider">Bracket</h3>
                     <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{t?.matches?.length || recentMatches.length} Matches</Badge>
@@ -850,8 +833,8 @@ export function Dashboard() {
                   {/* Bracket type sub-tabs */}
                   <div className={`flex items-center gap-1 px-4 py-2 border-b ${dt.borderSubtle}`}>
                     {[
-                      { value: 'single_elimination', label: 'Single Elim', icon: Swords },
-                      { value: 'double_elimination', label: 'Double Elim', icon: Swords },
+                      { value: 'single_elimination', label: 'Single Elim', icon: Music },
+                      { value: 'double_elimination', label: 'Double Elim', icon: Music },
                       { value: 'group_stage', label: 'Group Stage', icon: Users },
                       { value: 'round_robin', label: 'Round Robin', icon: Calendar },
                     ].map(bt => (

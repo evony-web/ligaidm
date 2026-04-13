@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
-  Shield, Users, Swords, Trophy, Gift, Plus, Check,
+  Shield, Users, Music, Trophy, Gift, Plus, Check,
   Play, Zap, Crown, Settings, UserPlus, X, Save
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -252,7 +252,7 @@ export function AdminPanel() {
       <Tabs defaultValue="players" className="w-full">
         <TabsList className="w-full grid grid-cols-5 bg-muted/50 h-auto">
           <TabsTrigger value="players" className="text-xs py-2"><Users className="w-3 h-3 mr-1" />Players</TabsTrigger>
-          <TabsTrigger value="tournaments" className="text-xs py-2"><Swords className="w-3 h-3 mr-1" />Tourney</TabsTrigger>
+          <TabsTrigger value="tournaments" className="text-xs py-2"><Music className="w-3 h-3 mr-1" />Tourney</TabsTrigger>
           <TabsTrigger value="matches" className="text-xs py-2"><Trophy className="w-3 h-3 mr-1" />Matches</TabsTrigger>
           <TabsTrigger value="clubs" className="text-xs py-2"><Settings className="w-3 h-3 mr-1" />Clubs</TabsTrigger>
           <TabsTrigger value="donations" className="text-xs py-2"><Gift className="w-3 h-3 mr-1" />Donate</TabsTrigger>
@@ -381,7 +381,7 @@ export function AdminPanel() {
                           )}
                           {t.status === 'team_generation' && (
                             <Button size="sm" variant="outline" className="text-[10px] h-7" onClick={() => generateBracket.mutate(t.id)}>
-                              <Swords className="w-3 h-3 mr-1" /> Gen Bracket
+                              <Music className="w-3 h-3 mr-1" /> Gen Bracket
                             </Button>
                           )}
                         </div>

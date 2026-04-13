@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Swords, Radio, Clock, Flame, Zap, ChevronRight, Trophy, Shield } from 'lucide-react';
+import { Crown, Music, Radio, Clock, Flame, Zap, ChevronRight, Trophy, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { useAppStore } from '@/lib/store';
@@ -142,9 +142,9 @@ export function EsportsMatchCard({
                     {isLive ? (
                       <Radio className="w-4 h-4 text-red-500 live-dot" />
                     ) : isCompleted ? (
-                      <Swords className={`w-3.5 h-3.5 ${dt.neonText}`} />
+                      <Music className={`w-3.5 h-3.5 ${dt.neonText}`} />
                     ) : (
-                      <Swords className={`w-3.5 h-3.5 ${dt.text}`} />
+                      <Music className={`w-3.5 h-3.5 ${dt.text}`} />
                     )}
                   </div>
                 </div>

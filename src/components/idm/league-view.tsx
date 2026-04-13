@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
-import { Trophy, Calendar, Swords, Crown, Shield, Users, Flame, BarChart3, TrendingUp, Zap } from 'lucide-react';
+import { Trophy, Calendar, Music, Crown, Shield, Users, Flame, BarChart3, TrendingUp, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -89,7 +89,7 @@ export function LeagueView() {
               <div className="flex items-center gap-2 mt-0.5">
                 <Badge className={`${dt.casinoBadge}`}>{data.season?.name}</Badge>
                 <Badge className={`${dt.casinoBadge}`}>
-                  {division === 'male' ? '⚔️ Male' : '🗡️ Female'}
+                  {division === 'male' ? '🕺 Male' : '💃 Female'}
                 </Badge>
               </div>
             </div>
@@ -401,7 +401,7 @@ export function LeagueView() {
                     {/* Connector */}
                     <div className="hidden lg:flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <div className="w-8 h-px bg-border" />
-                      <Swords className={`w-4 h-4 ${dt.neonText}`} />
+                      <Music className={`w-4 h-4 ${dt.neonText}`} />
                       <div className="w-8 h-px bg-border" />
                     </div>
 

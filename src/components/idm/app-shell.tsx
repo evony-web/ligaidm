@@ -4,7 +4,7 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Gamepad2, Trophy, Users, Shield, Swords,
+  Gamepad2, Trophy, Users, Shield, Music,
   Sun, Moon, Menu, X, Home, Flame, Radio
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import { useDivisionTheme } from '@/hooks/use-division-theme';
 const navItems = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: Gamepad2 },
   { id: 'matchday' as const, label: 'Match Day', icon: Radio },
-  { id: 'tournament' as const, label: 'Tournament', icon: Swords },
+  { id: 'tournament' as const, label: 'Tournament', icon: Music },
   { id: 'league' as const, label: 'League', icon: Trophy },
   { id: 'admin' as const, label: 'Admin', icon: Shield },
 ];
@@ -41,7 +41,7 @@ function DivisionToggle() {
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
-        ⚔️ Male
+        🕺 Male
       </button>
       <button
         onClick={() => setDivision('female')}
@@ -51,7 +51,7 @@ function DivisionToggle() {
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
-        🗡️ Female
+        💃 Female
       </button>
     </div>
   );
@@ -71,14 +71,14 @@ function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className="relative w-16 h-8 rounded-full bg-muted transition-all duration-300 hover:scale-105"
-      title={isDark ? 'Switch to Light Fury' : 'Switch to Night Fury'}
+      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
     >
       <div className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center text-xs ${
         isDark
           ? 'left-9 bg-amber-500 text-white glow-gold'
           : 'left-1 bg-violet-500 text-white'
       }`}>
-        {isDark ? '🌙' : '🐉'}
+        {isDark ? '🌙' : '✨'}
       </div>
     </button>
   );
@@ -167,7 +167,7 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
       <div className="p-4 pt-2 border-t border-border">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {division === 'male' ? '🐉 Light Fury' : '🐉 Night Fury'}
+            {division === 'male' ? '✨ Light Mode' : '🌙 Dark Mode'}
           </span>
           <ThemeToggle />
         </div>

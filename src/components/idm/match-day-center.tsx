@@ -783,9 +783,9 @@ export function MatchDayCenter() {
                   </div>
                   <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} border text-center`}>
                     <p className={`text-2xl font-black ${dt.neonGradient}`}>
-                      {tournamentMatches.length > 0 ? Math.abs(Math.round((Math.random() * 30) + 35)) : 0}%
+                      {predState ? Math.round((Math.max(predState.team1Votes, predState.team2Votes) / (predState.team1Votes + predState.team2Votes)) * 100) : 0}%
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Fan Confidence</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Consensus</p>
                   </div>
                 </div>
               </SectionCard>

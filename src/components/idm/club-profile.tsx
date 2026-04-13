@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, Trophy, Shield, Crown, Swords, Target,
+  X, Trophy, Shield, Crown, Music, Target,
   TrendingUp, Award, Zap, Users, Star, BarChart3,
   Flame, ChevronRight, MapPin
 } from 'lucide-react';
@@ -136,7 +136,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               <div className="flex items-center justify-center gap-2 mt-2">
                 {club.division && (
                   <Badge className={`text-[10px] border-0 ${dt.badgeBg}`}>
-                    {club.division === 'male' ? '⚔️ Male Division' : '🗡️ Female Division'}
+                    {club.division === 'male' ? '🕺 Male Division' : '💃 Female Division'}
                   </Badge>
                 )}
                 {isUndefeated && (
@@ -147,7 +147,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
               </div>
               <p className="text-[10px] text-muted-foreground mt-2 max-w-xs mx-auto">
                 {rank === 1
-                  ? 'League Champion — Dominant force with exceptional performance'
+                  ? 'League Champion — Top performing crew with exceptional performance'
                   : rank === 2
                   ? 'Runner-up — Strong contender pushing for the title'
                   : 'Competitive club in the IDM League season'
@@ -159,7 +159,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             <div className="grid grid-cols-3 gap-2 mb-4">
               <StatBlock icon={Trophy} label="Points" value={club.points} color={dt.text} />
               <StatBlock icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${club.wins}W/${club.losses}L`} color="text-green-500" />
-              <StatBlock icon={Swords} label="Game Diff" value={club.gameDiff > 0 ? `+${club.gameDiff}` : club.gameDiff} color="text-yellow-500" />
+              <StatBlock icon={Music} label="Game Diff" value={club.gameDiff > 0 ? `+${club.gameDiff}` : club.gameDiff} color="text-yellow-500" />
             </div>
 
             {/* Detailed Stats */}
@@ -271,7 +271,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                 )}
                 {club.gameDiff >= 5 && (
                   <Badge className="bg-amber-500/10 text-amber-500 text-[10px] border-0">
-                    <Swords className="w-3 h-3 mr-1" /> Dominant (+{club.gameDiff} GD)
+                    <Music className="w-3 h-3 mr-1" /> Powerhouse (+{club.gameDiff} GD)
                   </Badge>
                 )}
                 {totalMatches >= 5 && (
@@ -290,7 +290,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
             {/* Recent Matches */}
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
-                <Swords className={`w-4 h-4 ${dt.text}`} />
+                <Music className={`w-4 h-4 ${dt.text}`} />
                 <h3 className="text-sm font-semibold">Recent Matches</h3>
               </div>
               <div className="space-y-1.5">

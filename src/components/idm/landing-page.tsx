@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
 import {
-  Trophy, Swords, Users, Shield, Crown, Flame,
+  Trophy, Music, Users, Shield, Crown, Flame,
   Gamepad2, ChevronRight, Star, Zap, Gift, TrendingUp,
   ArrowRight, Sparkles, Target, ChevronDown, Play,
   Medal, Clock, Wallet
@@ -322,7 +322,7 @@ export function LandingPage() {
                   className="w-full sm:w-auto btn-male px-10 py-7 text-base font-bold rounded-2xl transition-all"
                   onClick={() => enterApp('male')}
                 >
-                  <Swords className="w-5 h-5 mr-2" />
+                  <Music className="w-5 h-5 mr-2" />
                   Male Division
                   <ChevronRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -428,7 +428,7 @@ export function LandingPage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-[#0c0a06]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
                       <div className="absolute inset-0 flex items-center justify-between px-5">
                         <div className="flex items-center gap-2">
-                          <Swords className="w-5 h-5 text-[#22d3ee]" />
+                          <Music className="w-5 h-5 text-[#22d3ee]" />
                           <h3 className="text-sm font-bold text-[#22d3ee]">MALE DIVISION</h3>
                         </div>
                         <Badge className="bg-[#06b6d4]/20 text-[#22d3ee] text-[10px] border border-[#06b6d4]/30">Active</Badge>
@@ -613,7 +613,7 @@ export function LandingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { icon: Swords, title: 'Weekly Tournament', desc: '1 tournament per week per division. Solo registration, auto-balanced teams, 1 main event match.', color: 'from-[#d4a853] to-[#b8860b]', badge: 'Weekly', shape: 'card-tilt' },
+                { icon: Music, title: 'Weekly Tournament', desc: '1 tournament per week per division. Solo registration, auto-balanced teams, 1 main event match.', color: 'from-[#d4a853] to-[#b8860b]', badge: 'Weekly', shape: 'card-tilt' },
                 { icon: Trophy, title: 'IDM League', desc: 'MPL-style round robin with BO3 format. Club-based competition with playoffs and grand final.', color: 'from-[#e8d5a3] to-[#d4a853]', badge: 'Pro', shape: 'card-tilt' },
                 { icon: Zap, title: 'Smart Matchmaking', desc: 'Snake draft system with S+A+B tier balancing. Auto-swap if power imbalance detected.', color: 'from-amber-500 to-amber-600', badge: 'AI', shape: 'card-tilt' },
                 { icon: TrendingUp, title: 'Seasonal Ranking', desc: 'Win +2pts, MVP based on prize, participation +10, streak bonuses up to +30.', color: 'from-green-500 to-green-600', badge: 'Live', shape: 'card-tilt' },
@@ -742,7 +742,7 @@ export function LandingPage() {
                 <Card className="bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#06b6d4]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
                   <CardContent className="p-0">
                     <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#06b6d4]/10 to-transparent border-b border-[#06b6d4]/10">
-                      <Swords className="w-4 h-4 text-[#22d3ee]" />
+                      <Music className="w-4 h-4 text-[#22d3ee]" />
                       <span className="text-xs font-bold text-[#22d3ee] uppercase tracking-wider">Male Division</span>
                     </div>
                     <div className="p-3 space-y-1">
