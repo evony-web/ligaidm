@@ -1,10 +1,14 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   const body = await request.json();
   const { playerId } = body;

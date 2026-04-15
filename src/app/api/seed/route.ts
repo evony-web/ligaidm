@@ -1,7 +1,11 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(request: Request) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   try {
     // Clear existing data
     await db.teamPlayer.deleteMany();
@@ -19,45 +23,45 @@ export async function POST() {
 
     // ======== PLAYERS ========
     const maleNames = [
-      { name: 'Andi Groove', gamertag: 'GrooveMaster', tier: 'S' },
-      { name: 'Budi Beat', gamertag: 'BeatDrop', tier: 'S' },
-      { name: 'Cahya Rhythm', gamertag: 'RhythmKing', tier: 'S' },
-      { name: 'Dimas Step', gamertag: 'StepWizard', tier: 'S' },
-      { name: 'Eko Flow', gamertag: 'FlowRider', tier: 'S' },
-      { name: 'Fajar Bass', gamertag: 'BassWalker', tier: 'S' },
-      { name: 'Galih Move', gamertag: 'MoveMaker', tier: 'A' },
-      { name: 'Hadi Tempo', gamertag: 'TempoShift', tier: 'A' },
-      { name: 'Irfan Break', gamertag: 'BreakFlow', tier: 'A' },
-      { name: 'Joko Sync', gamertag: 'SyncStar', tier: 'A' },
-      { name: 'Kemal Vibe', gamertag: 'VibeCrafter', tier: 'A' },
-      { name: 'Lukman Pulse', gamertag: 'PulseRider', tier: 'A' },
-      { name: 'Rizal Shuffle', gamertag: 'ShuffleAce', tier: 'B' },
-      { name: 'Surya Pop', gamertag: 'PopLock', tier: 'B' },
-      { name: 'Tono Slide', gamertag: 'SlideMaster', tier: 'B' },
-      { name: 'Umar Echo', gamertag: 'EchoBeat', tier: 'B' },
-      { name: 'Wawan Bounce', gamertag: 'BounceBack', tier: 'B' },
-      { name: 'Yoga Chill', gamertag: 'ChillStep', tier: 'B' },
+      { name: 'Andi Groove', gamertag: 'GrooveMaster', tier: 'S', city: 'Makassar' },
+      { name: 'Budi Beat', gamertag: 'BeatDrop', tier: 'S', city: 'Jakarta' },
+      { name: 'Cahya Rhythm', gamertag: 'RhythmKing', tier: 'S', city: 'Bandung' },
+      { name: 'Dimas Step', gamertag: 'StepWizard', tier: 'S', city: 'Surabaya' },
+      { name: 'Eko Flow', gamertag: 'FlowRider', tier: 'S', city: 'Makassar' },
+      { name: 'Fajar Bass', gamertag: 'BassWalker', tier: 'S', city: 'Yogyakarta' },
+      { name: 'Galih Move', gamertag: 'MoveMaker', tier: 'A', city: 'Semarang' },
+      { name: 'Hadi Tempo', gamertag: 'TempoShift', tier: 'A', city: 'Medan' },
+      { name: 'Irfan Break', gamertag: 'BreakFlow', tier: 'A', city: 'Makassar' },
+      { name: 'Joko Sync', gamertag: 'SyncStar', tier: 'A', city: 'Jakarta' },
+      { name: 'Kemal Vibe', gamertag: 'VibeCrafter', tier: 'A', city: 'Bandung' },
+      { name: 'Lukman Pulse', gamertag: 'PulseRider', tier: 'A', city: 'Surabaya' },
+      { name: 'Rizal Shuffle', gamertag: 'ShuffleAce', tier: 'B', city: 'Makassar' },
+      { name: 'Surya Pop', gamertag: 'PopLock', tier: 'B', city: 'Denpasar' },
+      { name: 'Tono Slide', gamertag: 'SlideMaster', tier: 'B', city: 'Palembang' },
+      { name: 'Umar Echo', gamertag: 'EchoBeat', tier: 'B', city: 'Makassar' },
+      { name: 'Wawan Bounce', gamertag: 'BounceBack', tier: 'B', city: 'Manado' },
+      { name: 'Yoga Chill', gamertag: 'ChillStep', tier: 'B', city: 'Jakarta' },
     ];
 
     const femaleNames = [
-      { name: 'Ayu Groove', gamertag: 'GrooveQueen', tier: 'S' },
-      { name: 'Bella Beat', gamertag: 'BeatAngel', tier: 'S' },
-      { name: 'Citra Rhythm', gamertag: 'RhythmNova', tier: 'S' },
-      { name: 'Dewi Step', gamertag: 'StepDancer', tier: 'S' },
-      { name: 'Elsa Flow', gamertag: 'FlowBloom', tier: 'S' },
-      { name: 'Fitri Velvet', gamertag: 'VelvetMoves', tier: 'S' },
-      { name: 'Gita Ice', gamertag: 'IceGroove', tier: 'A' },
-      { name: 'Hana Ruby', gamertag: 'RubyStep', tier: 'A' },
-      { name: 'Indah Silver', gamertag: 'SilverBeat', tier: 'A' },
-      { name: 'Jade Emerald', gamertag: 'EmeraldDance', tier: 'A' },
-      { name: 'Kartika Diamond', gamertag: 'DiamondFlow', tier: 'A' },
-      { name: 'Lina Jade', gamertag: 'JadeRhythm', tier: 'A' },
-      { name: 'Maya Sway', gamertag: 'SwayBella', tier: 'B' },
-      { name: 'Nia Twirl', gamertag: 'TwirlStar', tier: 'B' },
-      { name: 'Olin Sparkle', gamertag: 'SparkleStep', tier: 'B' },
-      { name: 'Putri Moon', gamertag: 'MoonDance', tier: 'B' },
-      { name: 'Ratna Glide', gamertag: 'GlideFlow', tier: 'B' },
-      { name: 'Sari Snap', gamertag: 'SnapDancer', tier: 'B' },
+      { name: 'Ayu Groove', gamertag: 'GrooveQueen', tier: 'S', city: 'Makassar' },
+      { name: 'Bella Beat', gamertag: 'BeatAngel', tier: 'S', city: 'Jakarta' },
+      { name: 'Citra Rhythm', gamertag: 'RhythmNova', tier: 'S', city: 'Bandung' },
+      { name: 'Dewi Step', gamertag: 'StepDancer', tier: 'S', city: 'Surabaya' },
+      { name: 'Elsa Flow', gamertag: 'FlowBloom', tier: 'S', city: 'Yogyakarta' },
+      { name: 'Fitri Velvet', gamertag: 'VelvetMoves', tier: 'S', city: 'Makassar' },
+      { name: 'Gita Ice', gamertag: 'IceGroove', tier: 'A', city: 'Semarang' },
+      { name: 'Hana Ruby', gamertag: 'RubyStep', tier: 'A', city: 'Medan' },
+      { name: 'Indah Silver', gamertag: 'SilverBeat', tier: 'A', city: 'Makassar' },
+      { name: 'Jade Emerald', gamertag: 'EmeraldDance', tier: 'A', city: 'Jakarta' },
+      { name: 'Kartika Diamond', gamertag: 'DiamondFlow', tier: 'A', city: 'Bandung' },
+      { name: 'Lina Jade', gamertag: 'JadeRhythm', tier: 'A', city: 'Surabaya' },
+      { name: 'Maya Sway', gamertag: 'SwayBella', tier: 'B', city: 'Denpasar' },
+      { name: 'Nia Twirl', gamertag: 'TwirlStar', tier: 'B', city: 'Makassar' },
+      { name: 'Olin Sparkle', gamertag: 'SparkleStep', tier: 'B', city: 'Palembang' },
+      { name: 'Putri Moon', gamertag: 'MoonDance', tier: 'B', city: 'Manado' },
+      { name: 'Ratna Glide', gamertag: 'GlideFlow', tier: 'B', city: 'Makassar' },
+      { name: 'Sari Snap', gamertag: 'SnapDancer', tier: 'B', city: 'Jakarta' },
     ];
 
     const tierBasePoints: Record<string, number> = { S: 200, A: 100, B: 30 };
@@ -71,6 +75,8 @@ export async function POST() {
           gamertag: p.gamertag,
           division: 'male',
           tier: p.tier,
+          city: p.city,
+          registrationStatus: 'approved',
           points: base + Math.floor(Math.random() * base * 0.5),
           totalWins: Math.floor(Math.random() * 6) + (p.tier === 'S' ? 4 : p.tier === 'A' ? 2 : 0),
           totalMvp: Math.floor(Math.random() * 3),
@@ -92,6 +98,8 @@ export async function POST() {
           gamertag: p.gamertag,
           division: 'female',
           tier: p.tier,
+          city: p.city,
+          registrationStatus: 'approved',
           points: base + Math.floor(Math.random() * base * 0.5),
           totalWins: Math.floor(Math.random() * 6) + (p.tier === 'S' ? 4 : p.tier === 'A' ? 2 : 0),
           totalMvp: Math.floor(Math.random() * 3),
@@ -214,7 +222,7 @@ export async function POST() {
           seasonId: maleSeason.id,
           status,
           prizePool,
-          bpm: Math.floor(Math.random() * 21) + 120,
+          bpm: 120 + (week * 3), // Gradual BPM increase per week — organizer sets this
           location: 'Online - IDM Stage',
           scheduledAt: new Date(2025, 0, 6 + (week - 1) * 7, 19, 0),
           completedAt: isCompleted ? new Date(2025, 0, 6 + (week - 1) * 7, 21, 0) : null,
@@ -231,7 +239,7 @@ export async function POST() {
           seasonId: femaleSeason.id,
           status,
           prizePool,
-          bpm: Math.floor(Math.random() * 21) + 120,
+          bpm: 120 + (week * 3), // Gradual BPM increase per week — organizer sets this
           location: 'Online - IDM Stage',
           scheduledAt: new Date(2025, 0, 6 + (week - 1) * 7, 19, 0),
           completedAt: isCompleted ? new Date(2025, 0, 6 + (week - 1) * 7, 21, 0) : null,

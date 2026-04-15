@@ -17,19 +17,22 @@ export default function Home() {
   useEffect(() => {
     async function checkAndSeed() {
       try {
+        // Check if data exists
         const res = await fetch('/api/stats?division=male');
         const data = await res.json();
         if (!data.hasData) {
           await fetch('/api/seed', { method: 'POST' });
         }
+
+        // Initialize super admin if not exists
+        await fetch('/api/init-admin', { method: 'POST' });
+
         setSeeded(true);
       } catch {
         setSeeded(true);
       }
     }
     checkAndSeed();
-    // Initialize super admin account
-    fetch('/api/init-admin', { method: 'POST' }).catch(() => {});
   }, []);
 
   const handleSplashFinish = useCallback(() => {

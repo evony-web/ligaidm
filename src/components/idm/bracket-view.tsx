@@ -32,7 +32,7 @@ function getRoundLabel(roundIdx: number, totalRounds: number): string {
   if (fromEnd === 0) return 'Grand Final';
   if (fromEnd === 1) return 'Semi Final';
   if (fromEnd === 2) return 'Quarter Final';
-  return `Round ${roundIdx + 1}`;
+  return `Ronde ${roundIdx + 1}`;
 }
 
 /* ─── Single bracket match card — MPL style ─── */
@@ -166,14 +166,14 @@ function GroupStageView({ matches, roundsData }: { matches: Match[]; roundsData:
       <div className={`rounded-xl overflow-hidden border ${dt.border}`}>
         <div className={`flex items-center gap-2.5 px-4 py-2.5 border-b ${dt.borderSubtle}`}>
           <Trophy className={`w-4 h-4 ${dt.neonText}`} />
-          <h3 className="text-xs font-semibold uppercase tracking-wider">Group Standings</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wider">Klasemen Grup</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className={`border-b ${dt.borderSubtle} bg-muted/20`}>
                 <th className="w-8 text-center py-2 font-semibold">#</th>
-                <th className="text-left py-2 px-3 font-semibold">Team</th>
+                <th className="text-left py-2 px-3 font-semibold">Tim</th>
                 <th className="w-12 text-center py-2 font-semibold">W</th>
                 <th className="w-12 text-center py-2 font-semibold">L</th>
                 <th className="w-16 text-center py-2 font-semibold">GW</th>
@@ -183,7 +183,7 @@ function GroupStageView({ matches, roundsData }: { matches: Match[]; roundsData:
             </thead>
             <tbody>
               {teamStats.map((t, i) => (
-                <tr key={t.name} className={`border-b ${dt.borderSubtle} ${i < 2 ? dt.bgSubtle : ''} hover:${dt.bgSubtle} transition-colors`}>
+                <tr key={t.name} className={`border-b ${dt.borderSubtle} ${i < 2 ? dt.bgSubtle : ''} ${dt.hoverBgSubtle} transition-colors`}>
                   <td className="text-center py-2">
                     <span className={`w-5 h-5 rounded-full inline-flex items-center justify-center text-[9px] font-bold ${
                       i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
@@ -220,7 +220,7 @@ function GroupStageView({ matches, roundsData }: { matches: Match[]; roundsData:
               {round.label}
             </div>
             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-            <span className="text-[10px] text-muted-foreground">{round.matches.length} matches</span>
+            <span className="text-[10px] text-muted-foreground">{round.matches.length} pertandingan</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {round.matches.map((m) => {
@@ -232,7 +232,7 @@ function GroupStageView({ matches, roundsData }: { matches: Match[]; roundsData:
                 <motion.div
                   key={m.id}
                   whileHover={{ scale: 1.01 }}
-                  className={`rounded-lg overflow-hidden border ${isLive ? `border-red-500/30 ${dt.neonPulse}` : dt.borderSubtle} transition-all hover:${dt.border}`}
+                  className={`rounded-lg overflow-hidden border ${isLive ? `border-red-500/30 ${dt.neonPulse}` : dt.borderSubtle} transition-all ${dt.hoverBorder}`}
                   style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}
                 >
                   <div className={`flex items-center px-3 py-2 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
@@ -515,7 +515,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
           </div>
           <div className={`p-4 rounded-xl border ${dt.borderSubtle} ${dt.bgSubtle}`}>
             <p className="text-xs text-muted-foreground text-center">
-              Losers bracket matches will appear here when teams are eliminated from the winners bracket.
+              Pertandingan bracket kalahan akan muncul di sini saat tim tereliminasi dari bracket pemenang.
             </p>
           </div>
         </div>

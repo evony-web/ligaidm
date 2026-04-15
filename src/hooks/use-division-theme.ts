@@ -42,6 +42,10 @@ export interface DivisionTheme {
   /* Division-tinted background/glass tokens */
   bgMesh: string;
   glassStrong: string;
+  /* Hover utility tokens — static CSS classes for Tailwind-safe hover */
+  hoverBorder: string;
+  hoverBgSubtle: string;
+  hoverBg: string;
 }
 
 const maleTheme: DivisionTheme = {
@@ -72,7 +76,7 @@ const maleTheme: DivisionTheme = {
   prizeBorder: 'border-idm-male/15',
   prizeText: 'text-idm-male',
   /* Casino SpinWin tokens — male cyan */
-  casinoCard: 'casino-card casino-card-male casino-surface',
+  casinoCard: 'casino-card casino-card-male',
   casinoBar: 'casino-card-bar-male',
   casinoGlow: 'casino-glow-male',
   casinoBadge: 'casino-badge casino-badge-male',
@@ -83,6 +87,10 @@ const maleTheme: DivisionTheme = {
   /* Division-tinted background/glass tokens */
   bgMesh: 'bg-mesh-male',
   glassStrong: 'glass-strong glass-strong-male',
+  /* Hover utility tokens — static CSS classes */
+  hoverBorder: 'hover-border-male',
+  hoverBgSubtle: 'hover-bg-subtle-male',
+  hoverBg: 'hover-bg-male',
 };
 
 const femaleTheme: DivisionTheme = {
@@ -113,7 +121,7 @@ const femaleTheme: DivisionTheme = {
   prizeBorder: 'border-idm-female/15',
   prizeText: 'text-idm-female',
   /* Casino SpinWin tokens — female purple */
-  casinoCard: 'casino-card casino-card-female casino-surface',
+  casinoCard: 'casino-card casino-card-female',
   casinoBar: 'casino-card-bar-female',
   casinoGlow: 'casino-glow-female',
   casinoBadge: 'casino-badge casino-badge-female',
@@ -124,6 +132,10 @@ const femaleTheme: DivisionTheme = {
   /* Division-tinted background/glass tokens */
   bgMesh: 'bg-mesh-female',
   glassStrong: 'glass-strong glass-strong-female',
+  /* Hover utility tokens — static CSS classes */
+  hoverBorder: 'hover-border-female',
+  hoverBgSubtle: 'hover-bg-subtle-female',
+  hoverBg: 'hover-bg-female',
 };
 
 export function useDivisionTheme(): DivisionTheme {

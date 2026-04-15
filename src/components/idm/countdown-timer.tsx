@@ -46,10 +46,10 @@ export function CountdownTimer({ targetDate, className = '' }: CountdownTimerPro
   if (!mounted) return null;
 
   const units = [
-    { value: timeLeft.days, label: 'Days' },
-    { value: timeLeft.hours, label: 'Hrs' },
-    { value: timeLeft.minutes, label: 'Min' },
-    { value: timeLeft.seconds, label: 'Sec' },
+    { value: timeLeft.days, label: 'hari' },
+    { value: timeLeft.hours, label: 'jam' },
+    { value: timeLeft.minutes, label: 'menit' },
+    { value: timeLeft.seconds, label: 'detik' },
   ];
 
   return (

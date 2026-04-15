@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -26,6 +27,9 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const { id } = await params;
   const body = await request.json();
 
@@ -41,6 +45,10 @@ export async function PUT(
       ...(body.totalMvp !== undefined && { totalMvp: body.totalMvp }),
       ...(body.streak !== undefined && { streak: body.streak }),
       ...(body.isActive !== undefined && { isActive: body.isActive }),
+      ...(body.registrationStatus && { registrationStatus: body.registrationStatus }),
+      ...(body.city !== undefined && { city: body.city }),
+      ...(body.phone !== undefined && { phone: body.phone }),
+      ...(body.joki !== undefined && { joki: body.joki }),
     },
   });
 

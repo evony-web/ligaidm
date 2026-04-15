@@ -31,7 +31,7 @@ function getStatusConfig(status: string): { label: string; cls: string; pulse?: 
     case 'upcoming':
     case 'registration':
     case 'setup':
-      return { label: 'UPCOMING', cls: 'bg-muted text-muted-foreground' };
+      return { label: 'AKAN DATANG', cls: 'bg-muted text-muted-foreground' };
     default:
       return { label: 'VS', cls: '' };
   }
@@ -119,7 +119,7 @@ export function DanceMatchCard({
                   </p>
                   {winner1 && (
                     <p className={`text-[9px] ${dt.text} font-semibold flex items-center gap-0.5 mt-0.5`}>
-                      <Zap className="w-2.5 h-2.5" /> WINNER
+                      <Zap className="w-2.5 h-2.5" /> PEMENANG
                     </p>
                   )}
                 </div>
@@ -159,7 +159,7 @@ export function DanceMatchCard({
                 <span className="text-[8px] text-muted-foreground font-semibold mt-0.5 uppercase">Final</span>
               )}
               {isLive && (
-                <span className="text-[8px] text-red-500 font-bold mt-0.5 uppercase animate-pulse">In Progress</span>
+                <span className="text-[8px] text-red-500 font-bold mt-0.5 uppercase animate-pulse">Berlangsung</span>
               )}
               {isUpcoming && (
                 <span className="text-[8px] text-muted-foreground font-semibold mt-0.5 uppercase">vs</span>
@@ -175,7 +175,7 @@ export function DanceMatchCard({
                   </p>
                   {winner2 && (
                     <p className={`text-[9px] ${dt.text} font-semibold flex items-center gap-0.5 mt-0.5 justify-end`}>
-                      WINNER <Zap className="w-2.5 h-2.5" />
+                      PEMENANG <Zap className="w-2.5 h-2.5" />
                     </p>
                   )}
                 </div>
@@ -239,7 +239,7 @@ export function DanceMatchCard({
               </div>
               {hasScore && (
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-muted-foreground">Final Score</span>
+                  <span className="text-muted-foreground">Skor Akhir</span>
                   <span className={`font-semibold ${dt.neonText}`}>
                     {team1.name} {score1} - {score2} {team2.name}
                   </span>

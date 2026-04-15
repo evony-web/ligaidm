@@ -16,6 +16,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 import { TierBadge } from './tier-badge';
 import { CountdownTimer } from './countdown-timer';
 import { PlayerCard } from './player-card';
@@ -24,6 +25,7 @@ import { ClubProfile } from './club-profile';
 import { BracketView } from './bracket-view';
 import { ParticipantGrid } from './participant-grid';
 import { DanceMatchCard } from './match-card';
+import { WeekNavigator } from './week-navigator';
 import { useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 
@@ -53,6 +55,11 @@ interface StatsData {
   seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
   topDonors: { donorName: string; totalAmount: number; donationCount: number }[];
   clubs: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number }[];
+  weeklyChampions: { weekNumber: number; tournamentName: string; prizePool: number; completedAt: string | null;
+    winnerTeam: { name: string; players: { id: string; gamertag: string; tier: string; points: number; totalWins: number; totalMvp: number; streak: number; matches: number }[] } | null;
+    mvp: { id: string; gamertag: string; tier: string; totalMvp: number; points: number } | null
+  }[];
+  mvpHallOfFame: { id: string; gamertag: string; tier: string; totalMvp: number; points: number; totalWins: number; streak: number; weekNumber: number; tournamentName: string }[];
 }
 
 /* ─── Animation variants (subtler) ─── */
@@ -72,14 +79,14 @@ function formatCurrency(amount: number) {
 /* ─── StatusBadge ─── */
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
-    setup: { label: 'Setup', cls: 'bg-muted text-muted-foreground' },
-    registration: { label: 'Registration Open', cls: 'bg-green-500/10 text-green-500' },
-    approval: { label: 'Approval', cls: 'bg-yellow-500/10 text-yellow-500' },
-    team_generation: { label: 'Teams Ready', cls: 'bg-blue-500/10 text-blue-500' },
-    bracket_generation: { label: 'Bracket Ready', cls: 'bg-blue-500/10 text-blue-500' },
+    setup: { label: 'Persiapan', cls: 'bg-muted text-muted-foreground' },
+    registration: { label: 'Pendaftaran Dibuka', cls: 'bg-green-500/10 text-green-500' },
+    approval: { label: 'Persetujuan', cls: 'bg-yellow-500/10 text-yellow-500' },
+    team_generation: { label: 'Tim Siap', cls: 'bg-blue-500/10 text-blue-500' },
+    bracket_generation: { label: 'Bracket Siap', cls: 'bg-blue-500/10 text-blue-500' },
     main_event: { label: 'LIVE NOW', cls: 'bg-red-500/10 text-red-500', pulse: true },
-    scoring: { label: 'Scoring', cls: 'bg-yellow-500/10 text-yellow-500' },
-    completed: { label: 'Completed', cls: 'bg-muted text-muted-foreground' },
+    scoring: { label: 'Penilaian', cls: 'bg-yellow-500/10 text-yellow-500' },
+    completed: { label: 'Selesai', cls: 'bg-muted text-muted-foreground' },
   };
   const c = config[status] || { label: status, cls: 'bg-muted text-muted-foreground' };
   return (
@@ -103,7 +110,7 @@ function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }
     <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer overflow-hidden group ${className}`}>
       <div className={dt.casinoBar} />
       <div className="relative img-zoom h-28 sm:h-32">
-        <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover card-cover" aria-hidden="true" />
+        <img src={dt.division === 'male' ? '/bg-male.jpg' : '/bg-female.jpg'} alt="" className={`w-full h-full object-cover card-cover ${dt.division === 'male' ? 'object-[center_25%]' : ''}`} aria-hidden="true" />
         <div className="casino-img-overlay" />
         <div className={`absolute top-2 left-2 ${dt.cornerAccent}`} />
         <div className={`absolute top-2 right-2 rotate-90 ${dt.cornerAccent}`} />
@@ -155,12 +162,17 @@ function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
   week?: number; status?: string; mvp?: string; isLive?: boolean;
 }) {
   const dt = useDivisionTheme();
-  const isCompleted = status === 'completed' || (score1 !== score2);
-  const winner1 = score1 > score2;
-  const winner2 = score2 > score1;
+  const isUpcoming = status === 'upcoming';
+  const isCompleted = status === 'completed' || (!isUpcoming && score1 !== score2);
+  const winner1 = !isUpcoming && score1 > score2;
+  const winner2 = !isUpcoming && score2 > score1;
+
+  // For upcoming matches, show dash instead of 0
+  const displayScore1 = isUpcoming ? '-' : score1;
+  const displayScore2 = isUpcoming ? '-' : score2;
 
   return (
-    <div className={`group flex items-stretch rounded-lg overflow-hidden ${dt.bgSubtle} ${dt.borderSubtle} border transition-all hover:${dt.border} hover:shadow-sm`}>
+    <div className={`group flex items-stretch rounded-lg overflow-hidden ${dt.bgSubtle} ${dt.borderSubtle} border transition-all ${dt.hoverBorder} hover:shadow-sm`}>
       {/* Week/Round indicator — toornament style left bar */}
       {week && (
         <div className={`w-10 shrink-0 flex items-center justify-center ${dt.bg} border-r ${dt.borderSubtle}`}>
@@ -170,20 +182,20 @@ function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
       {/* Main match content */}
       <div className="flex-1 min-w-0">
         {/* Team 1 */}
-        <div className={`flex items-center px-3 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? '' : 'opacity-60'}`}>
+        <div className={`flex items-center px-3 py-1.5 border-b ${dt.borderSubtle} ${isUpcoming ? '' : winner1 ? '' : 'opacity-60'}`}>
           <span className={`text-xs font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-muted-foreground'}`}>
             {winner1 && <span className="mr-1">▸</span>}
             {club1}
           </span>
-          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner1 ? dt.neonText : 'text-foreground'}`}>{score1}</span>
+          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner1 ? dt.neonText : 'text-foreground'}`}>{displayScore1}</span>
         </div>
         {/* Team 2 */}
-        <div className={`flex items-center px-3 py-1.5 ${winner2 ? '' : 'opacity-60'}`}>
+        <div className={`flex items-center px-3 py-1.5 ${isUpcoming ? '' : winner2 ? '' : 'opacity-60'}`}>
           <span className={`text-xs font-semibold truncate flex-1 ${winner2 ? dt.neonText : 'text-muted-foreground'}`}>
             {winner2 && <span className="mr-1">▸</span>}
             {club2}
           </span>
-          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner2 ? dt.neonText : 'text-foreground'}`}>{score2}</span>
+          <span className={`text-sm font-bold tabular-nums w-6 text-right ${winner2 ? dt.neonText : 'text-foreground'}`}>{displayScore2}</span>
         </div>
       </div>
       {/* Status / MVP indicator */}
@@ -220,7 +232,7 @@ function BracketMatch({ team1, team2, score1, score2, status, round, matchIdx, i
           <div className={`w-full h-px ${dt.borderSubtle}`} />
         </div>
       )}
-      <div className={`rounded-lg overflow-hidden border ${dt.borderSubtle} ${isLive ? `border-red-500/30 ${dt.neonPulse}` : ''} transition-all hover:${dt.border} hover:shadow-sm`} style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}>
+      <div className={`rounded-lg overflow-hidden border ${dt.borderSubtle} ${isLive ? `border-red-500/30 ${dt.neonPulse}` : ''} transition-all ${dt.hoverBorder} hover:shadow-sm`} style={{ background: 'var(--card-bg, rgba(20,17,10,0.6))' }}>
         {/* Team 1 row */}
         <div className={`flex items-center px-2.5 py-1.5 border-b ${dt.borderSubtle} ${winner1 ? dt.bgSubtle : ''}`}>
           <span className={`text-[11px] font-semibold truncate flex-1 ${winner1 ? dt.neonText : 'text-foreground/80'}`}>
@@ -256,7 +268,7 @@ function ParticipantRow({ player, rank, onClick }: {
   return (
     <motion.div
       whileHover={{ x: 2 }}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors border border-transparent hover:${dt.border} hover:${dt.bgSubtle}`}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors border border-transparent ${dt.hoverBorder} ${dt.hoverBgSubtle}`}
       onClick={onClick}
     >
       {/* Rank */}
@@ -316,6 +328,9 @@ export function Dashboard() {
   const [showAllPlayers, setShowAllPlayers] = useState(false);
   const [showAllClubs, setShowAllClubs] = useState(false);
   const [bracketType, setBracketType] = useState<string>('single_elimination');
+  const [topPlayerTab, setTopPlayerTab] = useState<'top3' | 'champion' | 'mvp'>('top3');
+  const [selectedChampionWeek, setSelectedChampionWeek] = useState<number>(1);
+  const [selectedMvpWeek, setSelectedMvpWeek] = useState<number>(1);
 
   const { data, isLoading } = useQuery<StatsData>({
     queryKey: ['stats', division],
@@ -325,26 +340,9 @@ export function Dashboard() {
     },
   });
 
-  // Safe defaults to prevent crashes
-  const safeData: StatsData = {
-    hasData: data?.hasData ?? false,
-    division: data?.division ?? division,
-    season: data?.season ?? { id: '', name: '', number: 1, status: '' },
-    activeTournament: data?.activeTournament ?? null,
-    totalPlayers: data?.totalPlayers ?? 0,
-    totalPrizePool: data?.totalPrizePool ?? 0,
-    seasonDonationTotal: data?.seasonDonationTotal ?? 0,
-    topPlayers: data?.topPlayers ?? [],
-    recentMatches: data?.recentMatches ?? [],
-    upcomingMatches: data?.upcomingMatches ?? [],
-    seasonProgress: data?.seasonProgress ?? { totalWeeks: 0, completedWeeks: 0, percentage: 0 },
-    topDonors: data?.topDonors ?? [],
-    clubs: data?.clubs ?? [],
-  };
-
   /* Group matches by week for the Matches tab */
-  const recentMatches = safeData.recentMatches;
-  const upcomingMatches = safeData.upcomingMatches;
+  const recentMatches = data?.recentMatches ?? [];
+  const upcomingMatches = data?.upcomingMatches ?? [];
 
   const matchesByWeek = useMemo(() => {
     if (recentMatches.length === 0) return {} as Record<number, StatsData['recentMatches']>;
@@ -366,35 +364,64 @@ export function Dashboard() {
 
   /* Group tournament matches by round for bracket view */
   const tournamentMatchesByRound = useMemo(() => {
-    if (!safeData.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
-    return safeData.activeTournament.matches.reduce((acc, m) => {
+    if (!data?.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
+    return data.activeTournament.matches.reduce((acc, m) => {
       const round = 'round' in m ? (m as any).round || 1 : 1;
       if (!acc[round]) acc[round] = [];
       acc[round].push(m);
       return acc;
     }, {} as Record<number, StatsData['activeTournament']['matches']>);
-  }, [safeData.activeTournament?.matches]);
+  }, [data?.activeTournament?.matches]);
 
   /* Filtered participants */
   const filteredPlayers = useMemo(() => {
-    if (!searchQuery) return safeData.topPlayers;
-    return safeData.topPlayers.filter(p =>
+    if (!data?.topPlayers) return [];
+    if (!searchQuery) return data.topPlayers;
+    return data.topPlayers.filter(p =>
       p.gamertag.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.club && p.club.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [safeData.topPlayers, searchQuery]);
+  }, [data.topPlayers, searchQuery]);
 
-  if (isLoading || !data?.hasData) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className={`w-8 h-8 border-2 ${dt.border} border-t-transparent rounded-full animate-spin`} />
+      <div className="space-y-5 max-w-5xl mx-auto">
+        <Skeleton className="h-44 rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <Skeleton className="h-20 rounded-xl" />
+          <Skeleton className="h-20 rounded-xl" />
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-10 rounded-lg" />
+        <div className="space-y-3">
+          <Skeleton className="h-32 rounded-xl" />
+          <div className="grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-28 rounded-xl" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
 
-  const t = safeData.activeTournament;
-  const displayedPlayers = showAllPlayers ? safeData.topPlayers : safeData.topPlayers.slice(0, 10);
-  const displayedClubs = showAllClubs ? safeData.clubs : safeData.clubs.slice(0, 6);
+  if (!data?.hasData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Gamepad2 className={`w-12 h-12 ${dt.text} mb-4 opacity-30`} />
+        <h3 className="text-lg font-semibold mb-1">Belum Ada Data</h3>
+        <p className="text-sm text-muted-foreground max-w-xs">Mulai dengan menambahkan players dan membuat tournament melalui Panel Admin</p>
+      </div>
+    );
+  }
+
+  const t = data.activeTournament;
+  const displayedPlayers = showAllPlayers ? data.topPlayers : data.topPlayers?.slice(0, 10);
+  const displayedClubs = showAllClubs ? data.clubs : data.clubs?.slice(0, 6);
 
   return (
     <>
@@ -403,11 +430,8 @@ export function Dashboard() {
       {/* ========== HERO BANNER ========== */}
       <motion.div variants={item} className={`relative rounded-2xl overflow-hidden ${dt.casinoCard} ${dt.neonPulse} min-h-[180px] casino-shimmer`}>
         <div className={dt.casinoBar} />
-        <div className="absolute inset-0 hidden sm:block">
-          <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-        </div>
-        <div className="absolute inset-0 sm:hidden">
-          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+        <div className="absolute inset-0">
+          <img src={division === 'male' ? '/bg-male.jpg' : '/bg-female.jpg'} alt="" className={`w-full h-full object-cover ${division === 'male' ? 'object-[center_25%]' : ''}`} aria-hidden="true" />
         </div>
         <div className="casino-img-overlay" />
         <div className={`absolute top-1/3 right-1/4 w-64 h-64 rounded-full blur-3xl ${dt.bg} opacity-30`} />
@@ -419,16 +443,16 @@ export function Dashboard() {
         <div className="absolute bottom-4 left-5 right-5 z-10">
           <div className="flex items-center gap-2 mb-1">
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
-              🐉 Season {safeData.season.number || 1}
+              🐉 Season {data.season?.number || 1}
             </Badge>
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
               {division === 'male' ? '🕺 Male' : '💃 Female'}
             </Badge>
           </div>
-          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Stage'}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{safeData.season.name}</p>
+          <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Babak'}</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
-            <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
+            <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Segera Hadir'}</span>
             <span className="flex items-center gap-1"><MapPin className={`w-3 h-3 ${dt.neonText}`} />{t?.location || 'Online'}</span>
             <span className="flex items-center gap-1"><Flame className={`w-3 h-3 ${dt.neonText}`} />Week {t?.weekNumber || 5}</span>
             {t?.bpm && <span className="flex items-center gap-1"><Heart className="w-3 h-3 text-red-400 live-dot" />{t.bpm} BPM</span>}
@@ -448,18 +472,18 @@ export function Dashboard() {
             <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
             <span className={`text-lg font-bold ${dt.neonGradient}`}>{formatCurrency(t?.prizePool || 0)}</span>
           </div>
-          <Progress value={Math.min((safeData.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
-          <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(safeData.totalPrizePool)}</p>
+          <Progress value={data.totalPrizePool > 0 ? Math.min((data.totalPrizePool / (data.totalPrizePool * 2 || 1)) * 100, 100) : 0} className="mt-2 h-1.5" />
+          <p className="text-[10px] text-muted-foreground mt-1">Terkumpul: {formatCurrency(data.totalPrizePool)}</p>
         </div>
       </motion.div>
 
       {/* ========== QUICK STATS — Casino Pills ========== */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { icon: Users, value: `${safeData.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
-          { icon: Shield, value: `${safeData.clubs.length}`, label: 'Clubs', color: 'from-idm-female to-idm-female-light' },
-          { icon: Wallet, value: formatCurrency(safeData.totalPrizePool).replace('Rp', '').trim(), label: 'Prize Pool', color: 'from-[#d4a853] to-[#b8860b]' },
-          { icon: Target, value: `${safeData.seasonProgress.percentage}%`, label: 'Progress', color: 'from-green-500 to-green-600' },
+          { icon: Users, value: `${data.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
+          { icon: Shield, value: `${data.clubs?.length || 0}`, label: 'Clubs', color: 'from-idm-female to-idm-female-light' },
+          { icon: Wallet, value: formatCurrency(data.totalPrizePool).replace('Rp', '').trim(), label: 'Prize Pool', color: 'from-[#d4a853] to-[#b8860b]' },
+          { icon: Target, value: `${data.seasonProgress?.percentage || 0}%`, label: 'Progress', color: 'from-green-500 to-green-600' },
         ].map((stat, i) => (
           <motion.div key={i} whileHover={{ scale: 1.03, y: -2 }} className="group">
             <div className={`casino-pill ${dt.casinoGlow}`}>
@@ -480,10 +504,10 @@ export function Dashboard() {
         <div className={`border-b ${dt.border}`}>
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             {[
-              { value: 'overview', label: 'Overview', icon: Trophy },
-              { value: 'standings', label: 'Standings', icon: Award },
-              { value: 'matches', label: 'Matches', icon: Music },
-              { value: 'participants', label: 'Participants', icon: Gamepad2 },
+              { value: 'overview', label: 'Ringkasan', icon: Trophy },
+              { value: 'standings', label: 'Klasemen', icon: Award },
+              { value: 'matches', label: 'Match', icon: Music },
+              { value: 'participants', label: 'Peserta', icon: Gamepad2 },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -502,11 +526,11 @@ export function Dashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
             {/* Recent Results — Toornament match row style */}
-            {safeData.recentMatches.length > 0 && (
+            {data.recentMatches?.length > 0 ? (
               <motion.div variants={item}>
-                <SectionCard title="Recent Results" icon={Radio} badge="LIVE">
+                <SectionCard title="Hasil Terbaru" icon={Radio} badge="LIVE">
                   <div className="space-y-2">
-                    {safeData.recentMatches.slice(0, 6).map(m => (
+                    {data.recentMatches.slice(0, 6).map(m => (
                       <MatchRow
                         key={m.id}
                         club1={m.club1.name}
@@ -520,84 +544,309 @@ export function Dashboard() {
                   </div>
                 </SectionCard>
               </motion.div>
+            ) : (
+              <motion.div variants={item}>
+                <SectionCard title="Hasil Terbaru" icon={Radio} badge="LIVE">
+                  <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                    <Music className={`w-8 h-8 mx-auto mb-2 opacity-30 ${dt.text}`} />
+                    <p className="text-sm text-muted-foreground">Belum ada hasil match</p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1">Match yang sudah selesai akan muncul di sini</p>
+                  </div>
+                </SectionCard>
+              </motion.div>
             )}
 
-            {/* Top 3 Podium — keep PlayerCard component */}
+            {/* Top Players — Tabbed: Podium / Juara Pekan Ini */}
             <motion.div variants={item}>
               <div className="flex items-center gap-2 mb-3">
                 <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                   <Crown className={`w-3.5 h-3.5 ${dt.neonText}`} />
                 </div>
                 <h3 className="text-sm font-semibold">Top Players</h3>
-                <Badge className={`${dt.casinoBadge} ml-auto`}>PODIUM</Badge>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                {safeData.topPlayers.slice(0, 3).map((p, idx) => (
-                  <PlayerCard
-                    key={p.id}
-                    gamertag={p.gamertag}
-                    tier={p.tier}
-                    points={p.points}
-                    totalWins={p.totalWins}
-                    totalMvp={p.totalMvp}
-                    streak={p.streak}
-                    rank={idx + 1}
-                    isMvp={p.totalMvp > 0 && idx === 0}
-                    club={p.club}
-                    onClick={() => setSelectedPlayer(p)}
-                  />
-                ))}
-              </div>
-            </motion.div>
 
-            {/* Donation & Season Progress */}
+              {/* Sub-tabs — underline style */}
+              <div className={`flex items-center gap-1 mb-3 border-b ${dt.border}`}>
+                <button
+                  onClick={() => setTopPlayerTab('top3')}
+                  className={`relative px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                    topPlayerTab === 'top3'
+                      ? `border-current ${dt.text}`
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Trophy className="w-3 h-3 mr-1 inline" />
+                  Top 3
+                </button>
+                <button
+                  onClick={() => setTopPlayerTab('champion')}
+                  className={`relative px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                    topPlayerTab === 'champion'
+                      ? `border-current ${dt.text}`
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Crown className="w-3 h-3 mr-1 inline" />
+                  Juara Pekan Ini
+                </button>
+                <button
+                  onClick={() => setTopPlayerTab('mvp')}
+                  className={`relative px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                    topPlayerTab === 'mvp'
+                      ? `border-current ${dt.text}`
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Award className="w-3 h-3 mr-1 inline" />
+                  MVP
+                </button>
+              </div>
+
+              {/* Tab Content */}
+              {topPlayerTab === 'top3' && (
+                <>
+                  {data.topPlayers?.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-3">
+                      {data.topPlayers.slice(0, 3).map((p, idx) => (
+                        <PlayerCard
+                          key={p.id}
+                          gamertag={p.gamertag}
+                          tier={p.tier}
+                          points={p.points}
+                          totalWins={p.totalWins}
+                          totalMvp={p.totalMvp}
+                          streak={p.streak}
+                          rank={idx + 1}
+                          isMvp={p.totalMvp > 0 && idx === 0}
+                          club={p.club}
+                          onClick={() => setSelectedPlayer(p)}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <Users className={`w-8 h-8 mx-auto mb-2 opacity-30 ${dt.text}`} />
+                      <p className="text-sm text-muted-foreground">Belum ada peserta terdaftar</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">Peserta akan muncul setelah pendaftaran</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {topPlayerTab === 'champion' && (
+                <>
+                  {data.weeklyChampions?.length > 0 ? (
+                    (() => {
+                      const completedWeeks = data.weeklyChampions.map(c => c.weekNumber);
+                      const totalWeeks = data.seasonProgress?.totalWeeks || 11;
+                      const selected = data.weeklyChampions.find(c => c.weekNumber === selectedChampionWeek) || data.weeklyChampions[data.weeklyChampions.length - 1];
+                      const winnerTeam = selected.winnerTeam;
+                      const championPlayers = winnerTeam?.players || [];
+                      return (
+                        <div className="space-y-3">
+                          {/* Team banner */}
+                          <div className={`flex items-center gap-3 p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
+                            <div className={`w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shrink-0`}>
+                              <Crown className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-yellow-400 truncate">{winnerTeam?.name || 'TBD'}</p>
+                              <p className="text-[10px] text-muted-foreground">Week {selected.weekNumber} Champion • {selected.tournamentName}</p>
+                            </div>
+                            <Badge className="bg-yellow-500/15 text-yellow-500 border-0 text-[9px]">🏆 JUARA</Badge>
+                          </div>
+                          {/* 3 Players in the winning team */}
+                          {championPlayers.length > 0 ? (
+                            <div className="grid grid-cols-3 gap-3">
+                              {championPlayers.map((p, idx) => (
+                                <PlayerCard
+                                  key={p.id}
+                                  gamertag={p.gamertag}
+                                  tier={p.tier}
+                                  points={p.points}
+                                  totalWins={p.totalWins}
+                                  totalMvp={p.totalMvp}
+                                  streak={p.streak}
+                                  rank={idx + 1}
+                                  isMvp={selected.mvp?.id === p.id}
+                                  onClick={() => setSelectedPlayer({
+                                    ...p,
+                                    name: p.gamertag,
+                                    maxStreak: 0,
+                                    club: undefined,
+                                    division: undefined,
+                                  })}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                              <p className="text-sm text-muted-foreground">Belum ada data week ini</p>
+                            </div>
+                          )}
+                          {/* Week Navigator */}
+                          <WeekNavigator
+                            totalWeeks={totalWeeks}
+                            completedWeeks={completedWeeks}
+                            selectedWeek={selectedChampionWeek}
+                            onWeekChange={setSelectedChampionWeek}
+                            accent={division === 'male' ? '#06b6d4' : '#a855f7'}
+                            accentLight={division === 'male' ? '#22d3ee' : '#c084fc'}
+                            size="sm"
+                          />
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <Crown className={`w-8 h-8 mx-auto mb-2 opacity-30 text-yellow-500`} />
+                      <p className="text-sm text-muted-foreground">Belum ada juara pekan ini</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">Juara akan muncul setelah turnamen selesai</p>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {topPlayerTab === 'mvp' && (
+                <>
+                  {data.mvpHallOfFame?.length > 0 ? (
+                    (() => {
+                      const mvpWeeks = data.mvpHallOfFame.map(m => m.weekNumber);
+                      const totalWeeks = data.seasonProgress?.totalWeeks || 11;
+                      const selectedMvp = data.mvpHallOfFame.find(m => m.weekNumber === selectedMvpWeek) || data.mvpHallOfFame[data.mvpHallOfFame.length - 1];
+                      return (
+                        <div className="space-y-3">
+                          {/* Week label */}
+                          <div className={`flex items-center gap-2 px-1`}>
+                            <div className={`w-5 h-5 rounded bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shrink-0`}>
+                              <Award className="w-3 h-3 text-white" />
+                            </div>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Week {selectedMvp.weekNumber}</span>
+                            <span className="text-[9px] text-muted-foreground/50 truncate">{selectedMvp.tournamentName}</span>
+                          </div>
+                          {/* MVP Player Card + Stats */}
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="col-span-1">
+                              <PlayerCard
+                                gamertag={selectedMvp.gamertag}
+                                tier={selectedMvp.tier}
+                                points={selectedMvp.points}
+                                totalWins={selectedMvp.totalWins}
+                                totalMvp={selectedMvp.totalMvp}
+                                streak={selectedMvp.streak}
+                                rank={1}
+                                isMvp={true}
+                                onClick={() => setSelectedPlayer({
+                                  ...selectedMvp,
+                                  name: selectedMvp.gamertag,
+                                  maxStreak: 0,
+                                  club: undefined,
+                                  division: undefined,
+                                  matches: 0,
+                                })}
+                              />
+                            </div>
+                            {/* MVP stats highlight */}
+                            <div className={`col-span-2 flex flex-col justify-center gap-2 p-3 rounded-xl ${dt.bgSubtle} ${dt.border}`}>
+                              <div className="flex items-center gap-2">
+                                <Crown className="w-4 h-4 text-yellow-400" />
+                                <span className="text-sm font-bold text-yellow-400">{selectedMvp.gamertag}</span>
+                                <TierBadge tier={selectedMvp.tier} />
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className={`p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} text-center`}>
+                                  <p className={`text-sm font-bold ${dt.neonText}`}>{selectedMvp.totalMvp}x</p>
+                                  <p className="text-[9px] text-muted-foreground">MVP</p>
+                                </div>
+                                <div className={`p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} text-center`}>
+                                  <p className={`text-sm font-bold ${dt.neonText}`}>{selectedMvp.points}</p>
+                                  <p className="text-[9px] text-muted-foreground">Points</p>
+                                </div>
+                                <div className={`p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle} text-center`}>
+                                  <p className={`text-sm font-bold ${dt.neonText}`}>{selectedMvp.totalWins}</p>
+                                  <p className="text-[9px] text-muted-foreground">Wins</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Week Navigator */}
+                          <WeekNavigator
+                            totalWeeks={totalWeeks}
+                            completedWeeks={mvpWeeks}
+                            selectedWeek={selectedMvpWeek}
+                            onWeekChange={setSelectedMvpWeek}
+                            accent={division === 'male' ? '#06b6d4' : '#a855f7'}
+                            accentLight={division === 'male' ? '#22d3ee' : '#c084fc'}
+                            size="sm"
+                          />
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <Award className={`w-8 h-8 mx-auto mb-2 opacity-30 text-yellow-500`} />
+                      <p className="text-sm text-muted-foreground">Belum ada MVP</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">MVP akan ditampilkan setelah turnamen selesai dan ditentukan oleh admin</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </motion.div>
             <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <SectionCard title="Donation & Sawer" icon={Gift} badge="LIVE">
+              <SectionCard title="Donasi & Sawer" icon={Gift} badge="LIVE">
                 <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} mb-3`}>
                   <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
-                  <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(safeData.totalPrizePool)}</p>
-                  <Progress value={Math.min((safeData.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
+                  <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(data.totalPrizePool)}</p>
+                  <Progress value={data.totalPrizePool > 0 ? Math.min((data.totalPrizePool / (data.totalPrizePool * 2 || 1)) * 100, 100) : 0} className="mt-2 h-1.5" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold text-muted-foreground">Top Contributors</p>
-                  {safeData.topDonors.slice(0, 3).map((d, i) => (
-                    <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
-                      <span className="flex items-center gap-2">
-                        <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                          i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                          i === 1 ? 'bg-gray-400/20 text-gray-400' :
-                          `${dt.iconBg} ${dt.text}`
-                        }`}>{i + 1}</span>
-                        {d.donorName}
-                      </span>
-                      <span className={`font-semibold ${dt.neonText}`}>{formatCurrency(d.totalAmount)}</span>
+                  <p className="text-xs font-semibold text-muted-foreground">Donatur Teratas</p>
+                  {data.topDonors?.length > 0 ? (
+                    data.topDonors.slice(0, 3).map((d, i) => (
+                      <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
+                        <span className="flex items-center gap-2">
+                          <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                            i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                            i === 1 ? 'bg-gray-400/20 text-gray-400' :
+                            `${dt.iconBg} ${dt.text}`
+                          }`}>{i + 1}</span>
+                          {d.donorName}
+                        </span>
+                        <span className={`font-semibold ${dt.neonText}`}>{formatCurrency(d.totalAmount)}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                      <Gift className={`w-8 h-8 mx-auto mb-2 opacity-30 ${dt.text}`} />
+                      <p className="text-sm text-muted-foreground">Belum ada donasi</p>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">Donasi akan muncul di sini</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </SectionCard>
 
-              <SectionCard title="Season Progress" icon={TrendingUp} badge={`${safeData.seasonProgress.percentage}%`}>
+              <SectionCard title="Season Progress" icon={TrendingUp} badge={`${data.seasonProgress?.percentage}%`}>
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-muted-foreground">{safeData.season.name}</span>
-                      <span className={`font-semibold ${dt.neonText}`}>{safeData.seasonProgress.completedWeeks}/{safeData.seasonProgress.totalWeeks} Weeks</span>
+                      <span className="text-muted-foreground">{data.season?.name}</span>
+                      <span className={`font-semibold ${dt.neonText}`}>{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
                     </div>
-                    <Progress value={safeData.seasonProgress.percentage} className="h-2.5" />
-                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{safeData.seasonProgress.percentage}% Complete</p>
+                    <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
+                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Selesai</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{safeData.totalPlayers}</p>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.totalPlayers}</p>
                       <p className="text-[10px] text-muted-foreground">Players</p>
                     </div>
-                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center cursor-pointer`} onClick={() => setSelectedClub(safeData.clubs[0])}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{safeData.clubs.length}</p>
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.clubs?.length || 0}</p>
                       <p className="text-[10px] text-muted-foreground">Clubs</p>
                     </div>
                     <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
-                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(safeData.seasonDonationTotal)}</p>
-                      <p className="text-[10px] text-muted-foreground">Funded</p>
+                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
+                      <p className="text-[10px] text-muted-foreground">Terdanai</p>
                     </div>
                   </div>
                 </div>
@@ -611,8 +860,8 @@ export function Dashboard() {
                   <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
                     <Music className={`w-3.5 h-3.5 ${dt.neonText}`} />
                   </div>
-                  <h3 className="text-sm font-semibold">Featured Match</h3>
-                  <Badge className={`${dt.casinoBadge} ml-auto`}>RESULT</Badge>
+                  <h3 className="text-sm font-semibold">Match Unggulan</h3>
+                  <Badge className={`${dt.casinoBadge} ml-auto`}>HASIL</Badge>
                 </div>
                 {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
                   <DanceMatchCard
@@ -661,7 +910,7 @@ export function Dashboard() {
                     <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Award className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider">Player Leaderboard</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider">Peringkat Player</h3>
                     <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>TOP {displayedPlayers?.length || 10}</Badge>
                   </div>
                   <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -735,13 +984,13 @@ export function Dashboard() {
                     </Table>
                   </div>
                   {/* Show more / less toggle */}
-                  {safeData.topPlayers.length > 10 && (
+                  {data.topPlayers?.length > 10 && (
                     <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
                       <button
                         onClick={() => setShowAllPlayers(!showAllPlayers)}
                         className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
                       >
-                        {showAllPlayers ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({safeData.topPlayers.length})</>}
+                        {showAllPlayers ? <><ChevronUp className="w-3 h-3" /> Tampilkan Sedikit</> : <><ChevronDown className="w-3 h-3" /> Tampilkan Semua ({data.topPlayers.length})</>}
                       </button>
                     </div>
                   )}
@@ -758,69 +1007,81 @@ export function Dashboard() {
                     <div className={`w-5 h-5 rounded ${dt.iconBg} flex items-center justify-center shrink-0`}>
                       <Shield className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider">Club Standings</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{safeData.clubs.length} Clubs</Badge>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider">Klasemen Club</h3>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.clubs?.length || 0} Clubs</Badge>
                   </div>
-                  <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className={`hover:bg-transparent border-b ${dt.border} bg-muted/30`}>
-                          <TableHead className="w-10 text-center text-[10px] font-semibold">#</TableHead>
-                          <TableHead className="text-[10px] font-semibold">Club</TableHead>
-                          <TableHead className="w-10 text-center text-[10px] font-semibold">W</TableHead>
-                          <TableHead className="w-10 text-center text-[10px] font-semibold">L</TableHead>
-                          <TableHead className="w-12 text-center text-[10px] font-semibold">GD</TableHead>
-                          <TableHead className="w-14 text-right text-[10px] font-semibold">Pts</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {displayedClubs?.map((club, idx) => (
-                          <TableRow
-                            key={club.id}
-                            className={`cursor-pointer transition-colors border-b ${dt.borderSubtle} ${
-                              idx < 4 ? `${dt.bgSubtle}` : ''
-                            }`}
-                            onClick={() => setSelectedClub(club)}
+                  {data.clubs?.length > 0 ? (
+                    <>
+                      <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className={`hover:bg-transparent border-b ${dt.border} bg-muted/30`}>
+                              <TableHead className="w-10 text-center text-[10px] font-semibold">#</TableHead>
+                              <TableHead className="text-[10px] font-semibold">Club</TableHead>
+                              <TableHead className="w-10 text-center text-[10px] font-semibold">W</TableHead>
+                              <TableHead className="w-10 text-center text-[10px] font-semibold">L</TableHead>
+                              <TableHead className="w-12 text-center text-[10px] font-semibold">Selisih</TableHead>
+                              <TableHead className="w-14 text-right text-[10px] font-semibold">Pts</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {displayedClubs?.map((club, idx) => (
+                              <TableRow
+                                key={club.id}
+                                className={`cursor-pointer transition-colors border-b ${dt.borderSubtle} ${
+                                  idx < 4 ? `${dt.bgSubtle}` : ''
+                                }`}
+                                onClick={() => setSelectedClub(club)}
+                              >
+                                <TableCell className="text-center">
+                                  <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
+                                    idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                    idx === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                    idx === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                    'text-muted-foreground'
+                                  }`}>
+                                    {idx + 1}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
+                                      <Shield className={`w-3.5 h-3.5 ${dt.text}`} />
+                                    </div>
+                                    <span className="text-xs font-semibold truncate">{club.name}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center text-xs text-green-500 font-medium">{club.wins}</TableCell>
+                                <TableCell className="text-center text-xs text-red-500 font-medium">{club.losses}</TableCell>
+                                <TableCell className="text-center text-xs">
+                                  <span className={club.gameDiff > 0 ? 'text-green-500' : club.gameDiff < 0 ? 'text-red-500' : 'text-muted-foreground'}>
+                                    {club.gameDiff > 0 ? '+' : ''}{club.gameDiff}
+                                  </span>
+                                </TableCell>
+                                <TableCell className={`text-right font-bold text-xs ${idx === 0 ? dt.neonGradient : idx < 4 ? dt.neonText : ''}`}>{club.points}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      {data.clubs?.length > 6 && (
+                        <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
+                          <button
+                            onClick={() => setShowAllClubs(!showAllClubs)}
+                            className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
                           >
-                            <TableCell className="text-center">
-                              <span className={`w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-bold ${
-                                idx === 0 ? 'bg-yellow-500/20 text-yellow-500' :
-                                idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                                idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                                'text-muted-foreground'
-                              }`}>
-                                {idx + 1}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
-                                  <Shield className={`w-3.5 h-3.5 ${dt.text}`} />
-                                </div>
-                                <span className="text-xs font-semibold truncate">{club.name}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center text-xs text-green-500 font-medium">{club.wins}</TableCell>
-                            <TableCell className="text-center text-xs text-red-500 font-medium">{club.losses}</TableCell>
-                            <TableCell className="text-center text-xs">
-                              <span className={club.gameDiff > 0 ? 'text-green-500' : club.gameDiff < 0 ? 'text-red-500' : 'text-muted-foreground'}>
-                                {club.gameDiff > 0 ? '+' : ''}{club.gameDiff}
-                              </span>
-                            </TableCell>
-                            <TableCell className={`text-right font-bold text-xs ${idx === 0 ? dt.neonGradient : idx < 4 ? dt.neonText : ''}`}>{club.points}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  {safeData.clubs.length > 6 && (
-                    <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
-                      <button
-                        onClick={() => setShowAllClubs(!showAllClubs)}
-                        className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
-                      >
-                        {showAllClubs ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({safeData.clubs.length})</>}
-                      </button>
+                            {showAllClubs ? <><ChevronUp className="w-3 h-3" /> Tampilkan Sedikit</> : <><ChevronDown className="w-3 h-3" /> Tampilkan Semua ({data.clubs.length})</>}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="p-4">
+                      <div className={`p-6 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
+                        <Shield className={`w-8 h-8 mx-auto mb-2 opacity-30 ${dt.text}`} />
+                        <p className="text-sm text-muted-foreground">Belum ada club terdaftar</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-1">Club akan muncul setelah pendaftaran</p>
+                      </div>
                     </div>
                   )}
                 </Card>
@@ -844,14 +1105,14 @@ export function Dashboard() {
                       <Music className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-xs font-semibold uppercase tracking-wider">Bracket</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{t?.matches?.length || recentMatches.length} Matches</Badge>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{t?.matches?.length || recentMatches.length} Match</Badge>
                   </div>
                   {/* Bracket type sub-tabs */}
                   <div className={`flex items-center gap-1 px-4 py-2 border-b ${dt.borderSubtle}`}>
                     {[
-                      { value: 'single_elimination', label: 'Single Elim', icon: Music },
-                      { value: 'double_elimination', label: 'Double Elim', icon: Music },
-                      { value: 'group_stage', label: 'Group Stage', icon: Users },
+                      { value: 'single_elimination', label: 'Elim. Langsung', icon: Music },
+                      { value: 'double_elimination', label: 'Elim. Ganda', icon: Music },
+                      { value: 'group_stage', label: 'Fase Grup', icon: Users },
                       { value: 'round_robin', label: 'Round Robin', icon: Calendar },
                     ].map(bt => (
                       <button
@@ -899,7 +1160,7 @@ export function Dashboard() {
             {/* Completed Matches — grouped by week (Toornament match list style) */}
             {Object.keys(matchesByWeek).length > 0 && (
               <motion.div variants={item}>
-                <SectionCard title="Match Results" icon={Trophy} badge={`${safeData.recentMatches.length} Matches`}>
+                <SectionCard title="Hasil Match" icon={Trophy} badge={`${data.recentMatches?.length || 0} Match`}>
                   <div className="space-y-5">
                     {Object.entries(matchesByWeek)
                       .sort(([a], [b]) => Number(b) - Number(a))
@@ -911,7 +1172,7 @@ export function Dashboard() {
                               Week {week}
                             </div>
                             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-                            <span className="text-[9px] text-muted-foreground">{matches.length} matches</span>
+                            <span className="text-[9px] text-muted-foreground">{matches.length} match</span>
                           </div>
                           <div className="space-y-2">
                             {matches.map(m => (
@@ -935,7 +1196,7 @@ export function Dashboard() {
             {/* Upcoming Matches — grouped by week */}
             {Object.keys(upcomingByWeek).length > 0 && (
               <motion.div variants={item}>
-                <SectionCard title="Upcoming" icon={Calendar} badge="SCHEDULE">
+                <SectionCard title="Akan Datang" icon={Calendar} badge="JADWAL">
                   <div className="space-y-5">
                     {Object.entries(upcomingByWeek)
                       .sort(([a], [b]) => Number(a) - Number(b))
@@ -946,7 +1207,7 @@ export function Dashboard() {
                               Week {week}
                             </div>
                             <div className={`flex-1 h-px ${dt.borderSubtle}`} />
-                            <span className="text-[9px] text-muted-foreground">{matches.length} matches</span>
+                            <span className="text-[9px] text-muted-foreground">{matches.length} match</span>
                           </div>
                           <div className="space-y-2">
                             {matches.map(m => (
@@ -971,7 +1232,7 @@ export function Dashboard() {
               <motion.div variants={item}>
                 <div className={`p-8 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
                   <Gamepad2 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">No matches yet</p>
+                  <p className="text-sm text-muted-foreground">Belum ada match</p>
                 </div>
               </motion.div>
             )}
@@ -983,7 +1244,7 @@ export function Dashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>
               <ParticipantGrid
-                players={safeData.topPlayers}
+                players={data.topPlayers || []}
                 onPlayerClick={(player) => setSelectedPlayer(player)}
               />
             </motion.div>

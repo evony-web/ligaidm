@@ -1,14 +1,17 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const division = searchParams.get('division');
   const tier = searchParams.get('tier');
+  const registrationStatus = searchParams.get('registrationStatus');
 
   const where: Record<string, string> = {};
   if (division) where.division = division;
   if (tier) where.tier = tier;
+  if (registrationStatus) where.registrationStatus = registrationStatus;
 
   const players = await db.player.findMany({
     where,
@@ -19,6 +22,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
   const { name, gamertag, division, tier, avatar } = body;
 

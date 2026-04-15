@@ -9,21 +9,21 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
   const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
-    setup: { label: 'Setup', cls: 'bg-muted text-muted-foreground' },
-    registration: { label: '🟢 Registration Open', cls: 'bg-green-500/10 text-green-500' },
-    approval: { label: '⏳ Approval', cls: 'bg-yellow-500/10 text-yellow-500' },
-    team_generation: { label: '✅ Teams Ready', cls: 'bg-blue-500/10 text-blue-500' },
-    bracket_generation: { label: '✅ Bracket Ready', cls: 'bg-blue-500/10 text-blue-500' },
-    main_event: { label: '🔴 LIVE NOW', cls: 'bg-red-500/10 text-red-500', pulse: true },
-    scoring: { label: '📊 Scoring', cls: 'bg-yellow-500/10 text-yellow-500' },
-    completed: { label: '🏆 Completed', cls: 'bg-muted text-muted-foreground' },
-    upcoming: { label: '📅 Upcoming', cls: 'bg-blue-500/10 text-blue-500' },
+    setup: { label: 'Persiapan', cls: 'bg-muted text-muted-foreground' },
+    registration: { label: '🟢 Pendaftaran Dibuka', cls: 'bg-green-500/10 text-green-500' },
+    approval: { label: '⏳ Persetujuan', cls: 'bg-yellow-500/10 text-yellow-500' },
+    team_generation: { label: '✅ Tim Siap', cls: 'bg-blue-500/10 text-blue-500' },
+    bracket_generation: { label: '✅ Bracket Siap', cls: 'bg-blue-500/10 text-blue-500' },
+    main_event: { label: '🔴 LIVE SEKARANG', cls: 'bg-red-500/10 text-red-500', pulse: true },
+    scoring: { label: '📊 Penilaian', cls: 'bg-yellow-500/10 text-yellow-500' },
+    completed: { label: '🏆 Selesai', cls: 'bg-muted text-muted-foreground' },
+    upcoming: { label: '📅 Akan Datang', cls: 'bg-blue-500/10 text-blue-500' },
     live: { label: '🔴 LIVE', cls: 'bg-red-500/10 text-red-500', pulse: true },
-    active: { label: '🟢 Active', cls: 'bg-green-500/10 text-green-500' },
-    registered: { label: 'Registered', cls: 'bg-blue-500/10 text-blue-500' },
-    approved: { label: 'Approved', cls: 'bg-green-500/10 text-green-500' },
-    assigned: { label: 'Assigned', cls: 'bg-green-500/10 text-green-500' },
-    rejected: { label: 'Rejected', cls: 'bg-red-500/10 text-red-500' },
+    active: { label: '🟢 Aktif', cls: 'bg-green-500/10 text-green-500' },
+    registered: { label: 'Terdaftar', cls: 'bg-blue-500/10 text-blue-500' },
+    approved: { label: 'Disetujui', cls: 'bg-green-500/10 text-green-500' },
+    assigned: { label: 'Ditugaskan', cls: 'bg-green-500/10 text-green-500' },
+    rejected: { label: 'Ditolak', cls: 'bg-red-500/10 text-red-500' },
   };
 
   const c = config[status] || { label: status, cls: 'bg-muted text-muted-foreground' };

@@ -2,20 +2,22 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
-import { motion, useScroll, useTransform, useInView, useMotionValue, useSpring } from 'framer-motion';
+import { getAvatarUrl, getClubLogoUrl } from '@/lib/utils';
+import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
 import {
-  Trophy, Music, Users, Shield, Crown, Flame,
-  Gamepad2, ChevronRight, Star, Zap, Gift, TrendingUp,
-  ArrowRight, Sparkles, Target, ChevronDown, Play,
-  Medal, Clock, Wallet
+  Trophy, Music, Users, Shield, Crown, Star,
+  Gift, ArrowRight, Sparkles, Play,
+  Medal, Clock, Wallet, Menu, X, ChevronUp, Gamepad2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { TierBadge } from './tier-badge';
 import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
-import { useState, useRef, useMemo, type ReactNode } from 'react';
+import { useState, useRef, useMemo, useEffect, type ReactNode } from 'react';
 
 interface StatsData {
   hasData: boolean;
@@ -25,22 +27,31 @@ interface StatsData {
   totalPlayers: number;
   totalPrizePool: number;
   seasonDonationTotal: number;
-  clubs: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number }[];
+  clubs: { id: string; name: string; logo?: string | null; wins: number; losses: number; points: number; gameDiff: number; _count?: { members: number } }[];
   recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
   seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
-  topDonors: { donorName: string; totalAmount: number; donationCount: number }[];
+  topDonors: { donorName: string; totalAmount: number; donationCount: number; tier: string; tierColor: string; tierIcon: string }[];
   tournaments: { id: string; name: string; weekNumber: number; status: string; prizePool: number }[];
+  weeklyChampions: {
+    weekNumber: number;
+    tournamentName: string;
+    prizePool: number;
+    completedAt: string | null;
+    winnerTeam: {
+      name: string;
+      players: { id: string; gamertag: string; tier: string; points: number; totalWins: number; totalMvp: number; streak: number; matches: number }[];
+    } | null;
+    mvp: { id: string; gamertag: string; tier: string; totalMvp: number; points: number } | null;
+  }[];
+  mvpHallOfFame: {
+    id: string; gamertag: string; tier: string; totalMvp: number; points: number; totalWins: number; streak: number; weekNumber: number; tournamentName: string; division?: 'male' | 'female';
+  }[];
 }
 
 /* ========== Animation Variants ========== */
 const fadeUp = {
   hidden: { opacity: 0, y: 50 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } }
-};
-
-const fadeDown = {
-  hidden: { opacity: 0, y: -30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
 };
 
 const fadeLeft = {
@@ -61,11 +72,6 @@ const scaleIn = {
 const stagger = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.12 } }
-};
-
-const staggerFast = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
 };
 
 function formatCurrency(amount: number) {
@@ -134,12 +140,12 @@ function StatCard({ icon: Icon, value, label, delay }: {
       transition={{ delay, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       className="group relative"
     >
-      <div className="relative p-5 rounded-2xl glass border-0 card-shine card-border-glow text-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,168,83,0.15)]">
-        <div className="w-10 h-10 mx-auto mb-3 rounded-xl bg-[#d4a853]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-          <Icon className="w-5 h-5 text-[#d4a853]" />
+      <div className="relative p-3 sm:p-5 rounded-xl sm:rounded-2xl glass border-0 card-shine card-border-glow text-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,168,83,0.15)]">
+        <div className="w-7 h-7 sm:w-10 sm:h-10 mx-auto mb-1.5 sm:mb-3 rounded-lg sm:rounded-xl bg-[#d4a853]/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#d4a853]" />
         </div>
-        <p className="text-xl sm:text-2xl font-black text-gradient-fury">{value}</p>
-        <p className="text-[11px] text-muted-foreground mt-1 uppercase tracking-wider">{label}</p>
+        <p className="text-sm sm:text-2xl font-black text-gradient-fury">{value}</p>
+        <p className="text-[9px] sm:text-[11px] text-muted-foreground mt-0.5 sm:mt-1 uppercase tracking-wider">{label}</p>
       </div>
     </motion.div>
   );
@@ -149,6 +155,7 @@ export function LandingPage() {
   const { setCurrentView, setDivision } = useAppStore();
   const [selectedPlayer, setSelectedPlayer] = useState<StatsData['topPlayers'][0] & { division?: string } | null>(null);
   const [selectedClub, setSelectedClub] = useState<(StatsData['clubs'][0] & { division?: string }) | null>(null);
+
 
   /* ========== Parallax Refs ========== */
   const heroRef = useRef<HTMLElement>(null);
@@ -161,51 +168,160 @@ export function LandingPage() {
   /* ========== Section Parallax Refs ========== */
   const championsRef = useRef<HTMLElement>(null);
   const { scrollYProgress: championsScroll } = useScroll({ target: championsRef, offset: ['start end', 'end start'] });
-  const championsY = useTransform(championsScroll, [0, 1], ['5%', '-5%']);
+  const championsBgY = useTransform(championsScroll, [0, 1], ['0%', '-20%']);
 
-  const featuresRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: featuresScroll } = useScroll({ target: featuresRef, offset: ['start end', 'end start'] });
-  const featuresY = useTransform(featuresScroll, [0, 1], ['3%', '-3%']);
+  const clubsRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: clubsScroll } = useScroll({ target: clubsRef, offset: ['start end', 'end start'] });
+  const clubsY = useTransform(clubsScroll, [0, 1], ['6%', '-6%']);
+
+  const dreamRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: dreamScroll } = useScroll({ target: dreamRef, offset: ['start end', 'end start'] });
+  const dreamY = useTransform(dreamScroll, [0, 1], ['3%', '-3%']);
+
+  const sawerRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: sawerScroll } = useScroll({ target: sawerRef, offset: ['start end', 'end start'] });
+  const sawerY = useTransform(sawerScroll, [0, 1], ['6%', '-6%']);
+
+  const ctaRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: ctaScroll } = useScroll({ target: ctaRef, offset: ['start end', 'end start'] });
+  const ctaY = useTransform(ctaScroll, [0, 1], ['10%', '-10%']);
 
   /* ========== Hero Mid-depth Parallax ========== */
   const heroMidY = useTransform(heroScroll, [0, 1], ['0%', '15%']);
 
   /* ========== Data Queries ========== */
-  const { data: maleData } = useQuery<StatsData>({
+  const { data: rawMaleData } = useQuery<StatsData>({
     queryKey: ['stats', 'male'],
     queryFn: async () => { const res = await fetch('/api/stats?division=male'); return res.json(); },
   });
 
-  const { data: femaleData } = useQuery<StatsData>({
+  const { data: rawFemaleData } = useQuery<StatsData>({
     queryKey: ['stats', 'female'],
     queryFn: async () => { const res = await fetch('/api/stats?division=female'); return res.json(); },
   });
+
+  // Use real API data only — no demo/hardcoded fallbacks
+  const maleData = rawMaleData;
+  const femaleData = rawFemaleData;
+
+
 
   const enterApp = (division: 'male' | 'female') => {
     setDivision(division);
     setCurrentView('dashboard');
   };
 
-  const maleTop3 = maleData?.topPlayers?.slice(0, 3) || [];
-  const femaleTop3 = femaleData?.topPlayers?.slice(0, 3) || [];
-  const maleTopClub = maleData?.clubs?.[0];
-  const femaleTopClub = femaleData?.clubs?.[0];
-
   /* ========== Floating Particles ========== */
   const particles = useMemo(() => {
-    return Array.from({ length: 30 }, (_, i) => ({
+    return Array.from({ length: 12 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
-      size: 1.5 + Math.random() * 3,
-      delay: Math.random() * 12,
-      duration: 10 + Math.random() * 15,
-      opacity: 0.2 + Math.random() * 0.5,
-      alt: i % 3 === 0,
+      size: 1 + Math.random() * 2,
+      delay: Math.random() * 14,
+      duration: 12 + Math.random() * 16,
+      opacity: 0.15 + Math.random() * 0.3,
+      alt: i % 4 === 0,
     }));
   }, []);
 
+  /* ========== Nav scroll state ========== */
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowBackToTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background overflow-hidden landing-scroll">
+
+      {/* ========== FIXED NAVIGATION HEADER ========== */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled
+          ? 'bg-background/80 backdrop-blur-md border-b border-[#d4a853]/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
+          : 'bg-transparent'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg overflow-hidden glow-pulse shrink-0">
+              <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
+            </div>
+            <span className="text-gradient-fury text-sm font-bold tracking-tight">IDM League</span>
+          </div>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden sm:flex items-center gap-6">
+            <button onClick={() => scrollToSection('champions')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Champion</button>
+            <button onClick={() => scrollToSection('mvp')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">MVP</button>
+            <button onClick={() => scrollToSection('clubs')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Club & Peserta</button>
+            <button onClick={() => scrollToSection('sawer')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Sawer & Donasi</button>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Button
+              size="sm"
+              className="bg-[#06b6d4]/15 text-[#22d3ee] hover:bg-[#06b6d4] hover:text-white transition-all duration-300 text-xs border border-[#06b6d4]/20 rounded-md gap-1 h-8 px-3"
+              onClick={() => enterApp('male')}
+            >
+              <Music className="w-3 h-3" />
+              Male
+            </Button>
+            <Button
+              size="sm"
+              className="bg-[#a855f7]/15 text-[#c084fc] hover:bg-[#a855f7] hover:text-white transition-all duration-300 text-xs border border-[#a855f7]/20 rounded-md gap-1 h-8 px-3"
+              onClick={() => enterApp('female')}
+            >
+              <Shield className="w-3 h-3" />
+              Female
+            </Button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="sm:hidden text-muted-foreground hover:text-[#d4a853] transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="sm:hidden bg-background/95 backdrop-blur-md border-b border-[#d4a853]/10"
+            >
+              <div className="px-4 py-3 space-y-1">
+                <button onClick={() => scrollToSection('champions')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Champion</button>
+                <button onClick={() => scrollToSection('mvp')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">MVP</button>
+                <button onClick={() => scrollToSection('clubs')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Club & Peserta</button>
+                <button onClick={() => scrollToSection('sawer')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Sawer & Donasi</button>
+                <div className="pt-2 flex gap-2">
+                  <Button size="sm" className="flex-1 btn-male text-xs h-9" onClick={() => enterApp('male')}>Male Division</Button>
+                  <Button size="sm" variant="outline" className="flex-1 btn-female text-xs h-9" onClick={() => enterApp('female')}>Female Division</Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
 
       {/* ========== HERO SECTION — Cinematic Parallax ========== */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -215,7 +331,7 @@ export function LandingPage() {
           <img src="/bg-default.jpg" alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
         </motion.div>
         <motion.div className="absolute inset-0 sm:hidden" style={{ y: heroY, scale: heroScale }}>
-          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
+          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-[130%] object-cover object-top" aria-hidden="true" />
         </motion.div>
 
         {/* Layer 2: Mid-depth gold haze */}
@@ -230,7 +346,7 @@ export function LandingPage() {
         {/* Gradient Overlays — Multiple layers for depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/60" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-background/50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/10 to-transparent" />
 
         {/* Animated Grid Overlay */}
         <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{
@@ -263,28 +379,44 @@ export function LandingPage() {
         {/* Hero Content */}
         <motion.div className="relative z-10 text-center px-4 max-w-4xl mx-auto" style={{ opacity: heroOpacity, y: contentY }}>
           <motion.div initial="hidden" animate="visible" variants={stagger}>
-            {/* Logo with Ring Pulse */}
-            <motion.div variants={scaleIn} className="mb-8">
-              <div className="relative w-28 h-28 mx-auto">
-                <div className="absolute inset-0 rounded-2xl glow-champion" />
-                <div className="relative w-full h-full rounded-2xl overflow-hidden card-champion">
-                  <img src="/logo.webp" alt="IDM League" className="w-full h-full object-cover" />
-                </div>
+            {/* Decorative top accent line */}
+            <motion.div variants={scaleIn} className="mb-6">
+              <div className="flex items-center justify-center gap-3">
+                <div className="h-px w-16 sm:w-28 bg-gradient-to-r from-transparent to-[#d4a853]/60" />
+                <div className="w-2 h-2 rounded-full bg-[#d4a853]/70 shadow-[0_0_8px_rgba(212,168,83,0.4)]" />
+                <div className="h-px w-16 sm:w-28 bg-gradient-to-l from-transparent to-[#d4a853]/60" />
               </div>
             </motion.div>
 
-            {/* Title with staggered letter animation */}
+            {/* Brand Label */}
             <motion.div variants={fadeUp}>
-              <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-gradient-fury mb-3 leading-[0.9]">
-                IDM League
-              </h1>
               <motion.p
                 initial={{ opacity: 0, letterSpacing: '0.5em' }}
-                animate={{ opacity: 1, letterSpacing: '0.15em' }}
-                transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-                className="text-base sm:text-lg text-[#e8d5a3] font-light tracking-[0.15em] uppercase"
+                animate={{ opacity: 1, letterSpacing: '0.25em' }}
+                transition={{ delay: 0.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-xs sm:text-sm text-[#d4a853]/60 font-bold tracking-[0.25em] uppercase"
               >
-                Idol Meta Fan Made Edition
+                IDM League
+              </motion.p>
+            </motion.div>
+
+            {/* Main Title */}
+            <motion.div variants={fadeUp}>
+              <motion.h1
+                initial={{ opacity: 0, letterSpacing: '0.3em' }}
+                animate={{ opacity: 1, letterSpacing: '0.12em' }}
+                transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-3xl sm:text-5xl lg:text-6xl text-gradient-fury font-black tracking-[0.12em] uppercase mt-2"
+              >
+                Idol Meta
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, letterSpacing: '0.3em' }}
+                animate={{ opacity: 1, letterSpacing: '0.15em' }}
+                transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                className="text-lg sm:text-2xl lg:text-3xl text-[#e8d5a3] font-light tracking-[0.15em] uppercase mt-1"
+              >
+                Fan Made Edition
               </motion.p>
             </motion.div>
 
@@ -310,43 +442,39 @@ export function LandingPage() {
 
             {/* Tagline */}
             <motion.p variants={fadeUp} className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-10 mt-8 leading-relaxed">
-              Platform dance premium dengan sistem tournament mingguan, liga profesional,
-              matchmaking cerdas, dan komunitas yang kompetitif.
+              Tempat dancer terbaik berkompetisi. Tournament mingguan, liga profesional,
+              dan podium yang menunggu.
             </motion.p>
 
-            {/* Division Entry Buttons */}
+            {/* Hero CTA — Two Division Buttons */}
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-                <Button
-                  size="lg"
-                  className="w-full sm:w-auto btn-male px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                <button
+                  className="group relative px-8 py-4 rounded-2xl bg-gradient-to-r from-[#06b6d4] via-[#0891b2] to-[#06b6d4] text-white font-black text-sm tracking-wider overflow-hidden shadow-[0_0_30px_rgba(6,182,212,0.2)] hover:shadow-[0_0_60px_rgba(6,182,212,0.4)] transition-shadow duration-300 flex items-center gap-2"
                   onClick={() => enterApp('male')}
                 >
-                  <Music className="w-5 h-5 mr-2" />
-                  Male Division
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer" />
+                  <Music className="w-4 h-4 relative z-10" />
+                  <span className="relative z-10">MALE DIVISION</span>
+                </button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto btn-female px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                <button
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-[#a855f7] via-[#9333ea] to-[#a855f7] text-white font-black text-sm tracking-wider shadow-[0_0_30px_rgba(168,85,247,0.2)] hover:shadow-[0_0_60px_rgba(168,85,247,0.4)] transition-shadow duration-300 flex items-center gap-2"
                   onClick={() => enterApp('female')}
                 >
-                  <Shield className="w-5 h-5 mr-2" />
-                  Female Division
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
+                  <Shield className="w-4 h-4" />
+                  FEMALE DIVISION
+                </button>
               </motion.div>
             </motion.div>
 
             {/* Quick Stats — Animated Counters */}
-            <motion.div variants={fadeUp} className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto">
-              <StatCard icon={Users} value={`${maleData?.totalPlayers || 18}+`} label="Players" delay={0} />
-              <StatCard icon={Trophy} value="12" label="Clubs" delay={0.1} />
+            <motion.div variants={fadeUp} className="mt-8 sm:mt-14 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 max-w-2xl mx-auto">
+              <StatCard icon={Users} value={`${maleData?.totalPlayers || 0}`} label="Players" delay={0} />
+              <StatCard icon={Trophy} value={`${maleData?.clubs?.length || 0}`} label="Club" delay={0.1} />
               <StatCard icon={Wallet} value={formatCurrency(maleData?.totalPrizePool || 0)} label="Prize Pool" delay={0.2} />
-              <StatCard icon={Clock} value="8" label="Weeks/Season" delay={0.3} />
+              <StatCard icon={Clock} value={`${maleData?.seasonProgress?.totalWeeks || 0}`} label="Week/Season" delay={0.3} />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -363,7 +491,7 @@ export function LandingPage() {
             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
             className="flex flex-col items-center gap-2"
           >
-            <span className="text-[10px] text-[#d4a853]/50 uppercase tracking-[0.3em] font-semibold">Explore</span>
+            <span className="text-[10px] text-[#d4a853]/50 uppercase tracking-[0.3em] font-semibold">Jelajahi</span>
             <div className="w-6 h-10 rounded-full border-2 border-[#d4a853]/20 flex items-start justify-center p-1.5">
               <motion.div
                 animate={{ y: [0, 12, 0] }}
@@ -375,593 +503,1253 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ========== WAVE DIVIDER ========== */}
-      <div className="wave-divider" />
 
-      {/* ========== SCROLLING CHAMPION MARQUEE ========== */}
-      <section className="py-5 overflow-hidden border-y border-[#d4a853]/10 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
-        <div className="flex animate-marquee whitespace-nowrap">
-          {[...Array(2)].map((_, setIdx) => (
-            <div key={setIdx} className="flex shrink-0 gap-4 pr-4">
-              {maleData?.topPlayers?.slice(0, 6).map((p) => (
-                <div key={`m-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0c0a06]/30 dark:bg-[#0c0a06]/60 interactive-scale">
-                  <TierBadge tier={p.tier} />
-                  <span className="text-xs font-semibold whitespace-nowrap">{p.gamertag}</span>
-                  <span className="text-[10px] text-[#d4a853] font-bold">{p.points}pts</span>
-                </div>
-              ))}
-              {femaleData?.topPlayers?.slice(0, 6).map((p) => (
-                <div key={`f-${setIdx}-${p.id}`} className="flex items-center gap-2 px-4 py-2 rounded-full border border-[#d4a853]/10 bg-[#0c0a06]/30 dark:bg-[#0c0a06]/60 interactive-scale">
-                  <TierBadge tier={p.tier} />
-                  <span className="text-xs font-semibold whitespace-nowrap">{p.gamertag}</span>
-                  <span className="text-[10px] text-[#d4a853] font-bold">{p.points}pts</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ========== CHAMPIONS BANNER — Cinematic Cards ========== */}
-      <section ref={championsRef} className="relative py-24 overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: championsY }}>
-          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.03] dark:opacity-[0.06]" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
-        </motion.div>
-
-        {/* Ambient lights */}
-        <div className="ambient-light" style={{ top: '20%', left: '10%', animationDuration: '18s' }} />
-
-        <div className="relative z-10 max-w-6xl mx-auto px-4">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Crown} label="Hall of Champions" title="Season Champions" subtitle="Top performers across both divisions" />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-              {/* MALE CHAMPIONS */}
-              <motion.div variants={fadeLeft} className="perspective-container">
-                <Card className="perspective-card card-premium card-premium-male glow-male overflow-hidden group card-shine">
-                  <CardContent className="p-0">
-                    {/* Division Header */}
-                    <div className="relative img-zoom h-32">
-                      <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-[#0c0a06]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
-                      <div className="absolute inset-0 flex items-center justify-between px-5">
-                        <div className="flex items-center gap-2">
-                          <Music className="w-5 h-5 text-[#22d3ee]" />
-                          <h3 className="text-sm font-bold text-[#22d3ee]">MALE DIVISION</h3>
-                        </div>
-                        <Badge className="bg-[#06b6d4]/20 text-[#22d3ee] text-[10px] border border-[#06b6d4]/30">Active</Badge>
-                      </div>
-                    </div>
-
-                    {/* Top Club */}
-                    {maleTopClub && (
-                      <div className="p-5 border-b border-[#06b6d4]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...maleTopClub, division: 'male' })}>
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-[#06b6d4]/10 flex items-center justify-center glow-champion">
-                            <Trophy className="w-7 h-7 text-[#22d3ee]" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-[#22d3ee] font-semibold uppercase tracking-wider">League Champion</p>
-                            <p className="text-xl font-bold text-gradient-male">{maleTopClub.name}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                              <span className="text-green-500 font-semibold">{maleTopClub.wins}W</span>
-                              <span>-</span>
-                              <span className="text-red-500 font-semibold">{maleTopClub.losses}L</span>
-                              <span className="text-[#06b6d4]/40">|</span>
-                              <span className="text-[#22d3ee] font-bold">{maleTopClub.points} pts</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Top 3 Players Podium */}
-                    <div className="p-5">
-                      <p className="text-[10px] font-semibold text-[#67e8f9]/50 mb-4 uppercase tracking-wider">Top Players</p>
-                      <div className="flex items-end justify-center gap-4">
-                        {maleTop3[1] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...maleTop3[1], division: 'male' })}>
-                            <div className="w-16 h-16 mx-auto rounded-full bg-gray-400/10 border-2 border-gray-400/30 flex items-center justify-center text-sm font-bold text-gray-400 mb-2">
-                              {maleTop3[1].gamertag.slice(0, 2).toUpperCase()}
-                            </div>
-                            <p className="text-xs font-semibold truncate">{maleTop3[1].gamertag}</p>
-                            <TierBadge tier={maleTop3[1].tier} />
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{maleTop3[1].points} pts</p>
-                            <div className="mt-2 h-16 bg-gray-400/10 rounded-t-lg flex items-center justify-center">
-                              <span className="text-xl font-black text-gray-400">2</span>
-                            </div>
-                          </div>
-                        )}
-                        {maleTop3[0] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...maleTop3[0], division: 'male' })}>
-                            <div className="relative">
-                              <Crown className="w-6 h-6 text-[#22d3ee] mx-auto mb-1 animate-float" />
-                              <div className="w-20 h-20 mx-auto rounded-full bg-[#06b6d4]/10 border-2 border-[#06b6d4]/30 flex items-center justify-center text-lg font-bold text-[#22d3ee] glow-champion">
-                                {maleTop3[0].gamertag.slice(0, 2).toUpperCase()}
-                              </div>
-                            </div>
-                            <p className="text-sm font-bold truncate mt-2 text-gradient-male">{maleTop3[0].gamertag}</p>
-                            <TierBadge tier={maleTop3[0].tier} />
-                            <p className="text-xs text-[#22d3ee] font-bold mt-0.5">{maleTop3[0].points} pts</p>
-                            <div className="mt-2 h-24 bg-[#06b6d4]/10 rounded-t-lg flex items-center justify-center border border-[#06b6d4]/10">
-                              <span className="text-3xl font-black text-gradient-male">1</span>
-                            </div>
-                          </div>
-                        )}
-                        {maleTop3[2] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...maleTop3[2], division: 'male' })}>
-                            <div className="w-14 h-14 mx-auto rounded-full bg-amber-600/10 border-2 border-amber-600/30 flex items-center justify-center text-sm font-bold text-amber-600 mb-2">
-                              {maleTop3[2].gamertag.slice(0, 2).toUpperCase()}
-                            </div>
-                            <p className="text-xs font-semibold truncate">{maleTop3[2].gamertag}</p>
-                            <TierBadge tier={maleTop3[2].tier} />
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{maleTop3[2].points} pts</p>
-                            <div className="mt-2 h-12 bg-amber-600/10 rounded-t-lg flex items-center justify-center">
-                              <span className="text-xl font-black text-amber-600">3</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* FEMALE CHAMPIONS */}
-              <motion.div variants={fadeRight} className="perspective-container">
-                <Card className="perspective-card card-premium card-premium-female glow-female overflow-hidden group card-shine">
-                  <CardContent className="p-0">
-                    <div className="relative img-zoom h-32">
-                      <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-[#0c0a06]/30 dark:from-background dark:via-background/60 dark:to-background/30" />
-                      <div className="absolute inset-0 flex items-center justify-between px-5">
-                        <div className="flex items-center gap-2">
-                          <Shield className="w-5 h-5 text-[#c084fc]" />
-                          <h3 className="text-sm font-bold text-[#c084fc]">FEMALE DIVISION</h3>
-                        </div>
-                        <Badge className="bg-[#a855f7]/20 text-[#c084fc] text-[10px] border border-[#a855f7]/30">Active</Badge>
-                      </div>
-                    </div>
-                    {femaleTopClub && (
-                      <div className="p-5 border-b border-[#a855f7]/10 cursor-pointer interactive-scale" onClick={() => setSelectedClub({ ...femaleTopClub, division: 'female' })}>
-                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl bg-[#a855f7]/10 flex items-center justify-center glow-champion">
-                            <Trophy className="w-7 h-7 text-[#c084fc]" />
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-[#c084fc] font-semibold uppercase tracking-wider">League Champion</p>
-                            <p className="text-xl font-bold text-gradient-female">{femaleTopClub.name}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                              <span className="text-green-500 font-semibold">{femaleTopClub.wins}W</span>
-                              <span>-</span>
-                              <span className="text-red-500 font-semibold">{femaleTopClub.losses}L</span>
-                              <span className="text-[#a855f7]/40">|</span>
-                              <span className="text-[#c084fc] font-bold">{femaleTopClub.points} pts</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-5">
-                      <p className="text-[10px] font-semibold text-[#e9d5ff]/50 mb-4 uppercase tracking-wider">Top Players</p>
-                      <div className="flex items-end justify-center gap-4">
-                        {femaleTop3[1] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...femaleTop3[1], division: 'female' })}>
-                            <div className="w-16 h-16 mx-auto rounded-full bg-gray-400/10 border-2 border-gray-400/30 flex items-center justify-center text-sm font-bold text-gray-400 mb-2">
-                              {femaleTop3[1].gamertag.slice(0, 2).toUpperCase()}
-                            </div>
-                            <p className="text-xs font-semibold truncate">{femaleTop3[1].gamertag}</p>
-                            <TierBadge tier={femaleTop3[1].tier} />
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{femaleTop3[1].points} pts</p>
-                            <div className="mt-2 h-16 bg-gray-400/10 rounded-t-lg flex items-center justify-center">
-                              <span className="text-xl font-black text-gray-400">2</span>
-                            </div>
-                          </div>
-                        )}
-                        {femaleTop3[0] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...femaleTop3[0], division: 'female' })}>
-                            <div className="relative">
-                              <Crown className="w-6 h-6 text-[#c084fc] mx-auto mb-1 animate-float" />
-                              <div className="w-20 h-20 mx-auto rounded-full bg-[#a855f7]/10 border-2 border-[#a855f7]/30 flex items-center justify-center text-lg font-bold text-[#c084fc] glow-champion">
-                                {femaleTop3[0].gamertag.slice(0, 2).toUpperCase()}
-                              </div>
-                            </div>
-                            <p className="text-sm font-bold truncate mt-2 text-gradient-female">{femaleTop3[0].gamertag}</p>
-                            <TierBadge tier={femaleTop3[0].tier} />
-                            <p className="text-xs text-[#c084fc] font-bold mt-0.5">{femaleTop3[0].points} pts</p>
-                            <div className="mt-2 h-24 bg-[#a855f7]/10 rounded-t-lg flex items-center justify-center border border-[#a855f7]/10">
-                              <span className="text-3xl font-black text-gradient-female">1</span>
-                            </div>
-                          </div>
-                        )}
-                        {femaleTop3[2] && (
-                          <div className="text-center flex-1 cursor-pointer interactive-scale" onClick={() => setSelectedPlayer({ ...femaleTop3[2], division: 'female' })}>
-                            <div className="w-14 h-14 mx-auto rounded-full bg-amber-600/10 border-2 border-amber-600/30 flex items-center justify-center text-sm font-bold text-amber-600 mb-2">
-                              {femaleTop3[2].gamertag.slice(0, 2).toUpperCase()}
-                            </div>
-                            <p className="text-xs font-semibold truncate">{femaleTop3[2].gamertag}</p>
-                            <TierBadge tier={femaleTop3[2].tier} />
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{femaleTop3[2].points} pts</p>
-                            <div className="mt-2 h-12 bg-amber-600/10 rounded-t-lg flex items-center justify-center">
-                              <span className="text-xl font-black text-amber-600">3</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
+      {/* ========== SEASON CHAMPION — Smooth Reveal Parallax ========== */}
+      <section id="champions" ref={championsRef} className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Fixed background with subtle parallax - only the BG moves, NOT cards */}
+        <div className="absolute inset-0">
+          <motion.div
+            className="absolute inset-0"
+            style={{ y: championsBgY }}
+          >
+            <img src="/bg-default.jpg" alt="" className="w-full h-[120%] object-cover opacity-[0.06] dark:opacity-[0.10]" aria-hidden="true" />
           </motion.div>
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
+        </div>
+
+        {/* Subtle ambient glows */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-1/4 left-0 w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 60%)' }} />
+          <div className="absolute bottom-1/4 right-0 w-[500px] h-[500px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.06) 0%, transparent 60%)' }} />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto">
+          {/* Section Header — Fade in from below */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <SectionHeader icon={Crown} label="Aula Champion" title="Season Champion" subtitle="Juara terbaru dari setiap divisi — 1 tim, 3 pemain, 1 gelar" />
+          </motion.div>
+
+          {/* Both Divisions Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 relative">
+            {/* Vertical Gold Divider */}
+            <div className="hidden lg:block absolute top-12 bottom-12 left-1/2 w-px bg-gradient-to-b from-transparent via-[#d4a853]/30 to-transparent z-10" />
+
+            {([['male', maleData, Music], ['female', femaleData, Shield]] as const).map(([division, data, DivisionIcon], divIdx) => {
+              const isMale = division === 'male';
+              const accent = isMale ? '#06b6d4' : '#a855f7';
+              const accentLight = isMale ? '#22d3ee' : '#c084fc';
+              const accentFaint = isMale ? '#67e8f9' : '#e9d5ff';
+
+              return (
+                <motion.div
+                  key={division}
+                  initial={{ opacity: 0, x: isMale ? -50 : 50, y: 20 }}
+                  whileInView={{ opacity: 1, x: 0, y: 0 }}
+                  viewport={{ once: true, margin: '-80px' }}
+                  transition={{ duration: 0.8, delay: divIdx * 0.15, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {(!data || !data.weeklyChampions?.length) ? (
+                    <Card className="overflow-hidden border" style={{ borderColor: `${accent}20` }}>
+                      <CardContent className="p-8 text-center">
+                        <Skeleton className="h-64 w-full rounded-2xl mb-4" />
+                      </CardContent>
+                    </Card>
+                  ) : (() => {
+                    const champions = data.weeklyChampions;
+                    const selected = champions[champions.length - 1];
+                    return (
+                      <Card className="overflow-hidden border card-shine group transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(212,168,83,0.15)]" style={{ borderColor: `${accent}20` }}>
+                        {/* Neon accent line — division color */}
+                        <div className="h-0.5 bg-gradient-to-r from-transparent via-current to-transparent" style={{ color: accent }} />
+                        <CardContent className="p-0">
+                          {/* Banner Header */}
+                          <div className="relative h-48 overflow-hidden">
+                            <img
+                              src="/bg-section.jpg"
+                              alt=""
+                              className="absolute inset-0 w-full h-full object-cover opacity-15 transition-transform duration-500 group-hover:scale-110"
+                              aria-hidden="true"
+                            />
+                            {/* Division color tint */}
+                            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent}30 0%, ${accent}15 50%, transparent 100%)` }} />
+                            <div className="absolute inset-0" style={{ background: `radial-gradient(ellipse at 70% 40%, ${accent}35, transparent 60%)` }} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-transparent" />
+                            {/* Crown Glow */}
+                            <div className="absolute top-4 right-6">
+                              <motion.div animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.15, 1] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
+                                <Crown className="w-8 h-8" style={{ color: accentLight, filter: `drop-shadow(0 0 16px ${accent}80)` }} />
+                              </motion.div>
+                            </div>
+                            {/* Division + Week Badges */}
+                            <div className="absolute bottom-4 inset-x-0 px-5 flex items-end justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${accent}25` }}>
+                                  <DivisionIcon className="w-4 h-4" style={{ color: accentLight }} />
+                                </div>
+                                <div>
+                                  <h3 className="text-base font-black uppercase tracking-wider" style={{ color: accentLight }}>{division} Division</h3>
+                                  <p className="text-[9px] font-semibold text-white/40">SEASON CHAMPION</p>
+                                </div>
+                              </div>
+                              <Badge style={{ backgroundColor: `${accent}25`, color: accentLight, borderColor: `${accent}40` }} className="text-[10px] border px-2.5 py-0.5">
+                                <Crown className="w-3 h-3 mr-1" />Week {selected.weekNumber}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="p-5 space-y-4">
+                            {/* Team Info */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <Trophy className="w-5 h-5" style={{ color: accentLight }} />
+                                <span className="text-xl sm:text-2xl font-black text-white">{selected.winnerTeam?.name || 'TBD'}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {selected.prizePool > 0 && (
+                                  <span className="text-[10px] font-bold text-[#d4a853] bg-[#d4a853]/10 px-2.5 py-1 rounded-lg">💰 {selected.prizePool.toLocaleString()}</span>
+                                )}
+                                {selected.mvp && (
+                                  <span className="text-[9px] font-bold text-yellow-400 bg-yellow-500/15 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                    <Star className="w-2.5 h-2.5" />MVP {selected.mvp.gamertag}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* 3 Player Avatars */}
+                            {selected.winnerTeam && selected.winnerTeam.players.length > 0 ? (
+                              <div className="flex rounded-2xl overflow-hidden border" style={{ height: '320px', borderColor: `${accent}15` }}>
+                                {selected.winnerTeam.players.slice(0, 3).map((player, pIdx) => (
+                                  <div
+                                    key={player.id}
+                                    className="relative flex-1 cursor-pointer group/avatar overflow-hidden"
+                                    onClick={() => {
+                                      const found = data.topPlayers?.find(tp => tp.id === player.id);
+                                      if (found) setSelectedPlayer({ ...found, division });
+                                    }}
+                                  >
+                                    <img src={getAvatarUrl(player.gamertag, division as 'male' | 'female')} alt={player.gamertag} className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover/avatar:scale-110" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/20 to-transparent" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-[#0c0a06]/30 via-transparent to-transparent" />
+                                    {pIdx < 2 && <div className="absolute right-0 top-6 bottom-6 w-px z-20" style={{ backgroundColor: `${accent}20` }} />}
+                                    <div className="absolute top-3 left-3 z-10">
+                                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black backdrop-blur-sm" style={{ backgroundColor: `${accent}30`, color: accentLight }}>
+                                        {pIdx + 1}
+                                      </div>
+                                    </div>
+                                    <div className="absolute bottom-0 inset-x-0 p-3 z-10">
+                                      <p className="text-sm sm:text-base font-black text-white truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">{player.gamertag}</p>
+                                      <div className="flex items-center gap-1.5 mt-1">
+                                        <TierBadge tier={player.tier} />
+                                        {pIdx === 0 && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ color: accentLight, backgroundColor: `${accent}25` }}>CPT</span>}
+                                      </div>
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <span className="text-[10px] font-bold" style={{ color: accentFaint }}>{player.points}pts</span>
+                                        <span className="text-[10px] font-bold text-green-400">{player.totalWins}W</span>
+                                        <span className="text-[10px] font-bold text-orange-400">🔥{player.streak}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="p-6 text-center text-sm text-muted-foreground rounded-xl border border-dashed" style={{ borderColor: `${accent}15` }}>Belum ada data week ini</div>
+                            )}
+
+
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })()}
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
-      {/* ========== SECTION DIVIDER ========== */}
       <div className="section-divider max-w-4xl mx-auto" />
 
-      {/* ========== FEATURES SECTION — Creative Card Shapes ========== */}
-      <section ref={featuresRef} className="py-24 px-4 relative overflow-hidden">
-        {/* Background Mesh with parallax */}
-        <motion.div className="absolute inset-0 bg-mesh-fury opacity-50" style={{ y: featuresY }} />
+      {/* ========== MVP ARENA — Dramatic Split Hero Cards ========== */}
+      <section id="mvp" className="py-24 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-[#0c0a06]/10 to-background" />
+        <div className="ambient-light" style={{ top: '30%', left: '15%', animationDuration: '20s' }} />
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Sparkles} label="Platform Features" title="Built for Champions" subtitle="Every feature designed to elevate competitive dance" />
+            <SectionHeader icon={Medal} label="Hall of Fame" title="MVP Arena" subtitle="Pemain terbaik dari setiap divisi — Dipilih admin berdasarkan skor tertinggi" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                { icon: Music, title: 'Weekly Tournament', desc: '1 tournament per week per division. Solo registration, auto-balanced teams, 1 main event match.', color: 'from-[#d4a853] to-[#b8860b]', badge: 'Weekly', shape: 'card-tilt' },
-                { icon: Trophy, title: 'IDM League', desc: 'Pro league round robin with BO3 format. Club-based competition with playoffs and grand final.', color: 'from-[#e8d5a3] to-[#d4a853]', badge: 'Pro', shape: 'card-tilt' },
-                { icon: Zap, title: 'Smart Matchmaking', desc: 'Snake draft system with S+A+B tier balancing. Auto-swap if power imbalance detected.', color: 'from-amber-500 to-amber-600', badge: 'AI', shape: 'card-tilt' },
-                { icon: TrendingUp, title: 'Seasonal Ranking', desc: 'Win +2pts, MVP based on prize, participation +10, streak bonuses up to +30.', color: 'from-green-500 to-green-600', badge: 'Live', shape: 'card-tilt' },
-                { icon: Gift, title: 'Donation & Sawer', desc: 'Live prize pool tracker, top contributors, real-time donation notifications.', color: 'from-pink-500 to-pink-600', badge: 'New', shape: 'card-tilt' },
-                { icon: Shield, title: 'Full Admin Panel', desc: 'Approve players, assign tiers, generate teams, input scores, distribute points.', color: 'from-[#d97706] to-[#b45309]', badge: 'Admin', shape: 'card-tilt' },
-              ].map((f, i) => (
-                <motion.div
-                  key={i}
-                  variants={fadeUp}
-                  className="group"
-                >
-                  <div className={`${f.shape} card-shine card-border-glow relative bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#d4a853]/10 rounded-2xl overflow-hidden h-full transition-all duration-500 hover:border-[#d4a853]/30 hover:shadow-[0_0_40px_rgba(212,168,83,0.12)]`}>
-                    {/* Gradient Top Bar */}
-                    <div className={`h-1 bg-gradient-to-r ${f.color}`} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+              {/* Vertical Gold Divider */}
+              <div className="hidden md:block absolute top-12 bottom-12 left-1/2 w-px bg-gradient-to-b from-transparent via-[#d4a853]/30 to-transparent z-10" />
 
-                    {/* Image area with gradient overlay */}
-                    <div className="relative img-zoom h-36">
-                      <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06]/95 via-[#0c0a06]/60 to-[#0c0a06]/20 dark:from-[#0c0a06] dark:via-[#0c0a06]/60 dark:to-[#0c0a06]/30" />
-                      <Badge className="absolute top-3 right-3 bg-[#d4a853]/20 text-[#d4a853] text-[10px] border border-[#d4a853]/30 backdrop-blur-sm">{f.badge}</Badge>
-                      <div className={`absolute bottom-3 left-4 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg`}>
-                        <f.icon className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-
-                    {/* Text content */}
-                    <div className="p-5">
-                      <h3 className="text-base font-bold mb-2 group-hover:text-[#d4a853] transition-colors">{f.title}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ========== HOW IT WORKS — Animated Timeline ========== */}
-      <section className="relative py-24 px-4 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30 overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.03] dark:opacity-[0.06]" aria-hidden="true" />
-        </div>
-
-        {/* Ambient light */}
-        <div className="ambient-light" style={{ top: '40%', right: '5%', animationDuration: '22s' }} />
-
-        <div className="relative z-10 max-w-4xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Target} label="Tournament Flow" title="How It Works" />
-
-            <div className="relative">
-              {/* Animated Vertical Line */}
-              <motion.div
-                initial={{ height: 0 }}
-                whileInView={{ height: '100%' }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
-                className="absolute left-5 sm:left-7 top-0 w-0.5 bg-gradient-to-b from-[#d4a853] via-[#d4a853]/50 to-[#d4a853]/10"
-              />
-
-              <div className="space-y-8">
-                {[
-                  { step: '01', title: 'Register', desc: 'Solo registration for weekly tournament', icon: Users, color: 'bg-[#d4a853]/10 text-[#d4a853]', ring: 'border-[#d4a853]/40' },
-                  { step: '02', title: 'Get Approved', desc: 'Admin assigns your tier (S / A / B)', icon: Star, color: 'bg-[#e8d5a3]/10 text-[#e8d5a3]', ring: 'border-[#e8d5a3]/40' },
-                  { step: '03', title: 'Team Up', desc: 'Auto-balanced teams with S+A+B composition', icon: Gamepad2, color: 'bg-green-500/10 text-green-500', ring: 'border-green-500/40' },
-                  { step: '04', title: 'Compete', desc: '1 main event dance-off per week', icon: Gamepad2, color: 'bg-red-500/10 text-red-500', ring: 'border-red-500/40' },
-                  { step: '05', title: 'Win & Rank', desc: 'Earn points, climb leaderboard, become MVP', icon: Crown, color: 'bg-[#d4a853]/10 text-[#d4a853]', ring: 'border-[#d4a853]/40' },
-                ].map((s, i) => (
-                  <motion.div
-                    key={i}
-                    variants={fadeUp}
-                    className="relative flex items-start gap-5 sm:gap-6"
-                  >
-                    {/* Animated Circle */}
-                    <div className="relative z-10 shrink-0">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        whileInView={{ scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.15, type: 'spring', stiffness: 200 }}
-                        className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full bg-[#0c0a06] dark:bg-[#0c0a06] border-2 ${s.ring} flex items-center justify-center glow-champion`}
-                      >
-                        <span className="text-sm sm:text-base font-black text-[#d4a853]">{s.step}</span>
-                      </motion.div>
-                    </div>
-
-                    {/* Card with clip-corner shape */}
-                    <motion.div
-                      whileHover={{ x: 4 }}
-                      className="flex-1 bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#d4a853]/10 rounded-xl p-4 sm:p-5 transition-all duration-300 hover:border-[#d4a853]/30 hover:shadow-[0_0_25px_rgba(212,168,83,0.1)] card-shine"
+              {/* Male MVP — Left DRAMATIC HERO CARD */}
+              <motion.div variants={fadeLeft}>
+                {(() => {
+                  const mvp = maleData?.mvpHallOfFame?.[0];
+                  if (!mvp) return <div className="py-16 text-center"><Medal className="w-12 h-12 text-[#06b6d4]/15 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Belum ada MVP</p></div>;
+                  return (
+                    <div
+                      className="relative rounded-2xl overflow-hidden cursor-pointer group min-h-[440px] border border-[#06b6d4]/15 hover:border-[#06b6d4]/30 transition-all duration-300"
+                      style={{ boxShadow: '0 0 40px rgba(6,182,212,0.08)' }}
+                      onClick={() => {
+                        const found = maleData?.topPlayers?.find(p => p.gamertag === mvp.gamertag);
+                        if (found) setSelectedPlayer({ ...found, division: 'male' });
+                      }}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-lg ${s.color} flex items-center justify-center shrink-0`}>
-                          <s.icon className="w-5 h-5" />
+                      {/* Neon accent line — male */}
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#06b6d4] to-transparent z-20" />
+                      {/* Full-Bleed Avatar Background */}
+                      <img src={getAvatarUrl(mvp.gamertag, 'male')} alt={mvp.gamertag} className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
+                      {/* Multi-layer Overlays */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/50 to-[#0c0a06]/30" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#0c0a06]/70 via-transparent to-transparent" />
+                      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.15), transparent 60%)' }} />
+
+                      {/* Top Badges */}
+                      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                        <div className="flex items-center gap-2 bg-[#06b6d4]/20 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#06b6d4]/30">
+                          <Music className="w-4 h-4 text-[#22d3ee]" />
+                          <span className="text-[11px] font-bold text-[#22d3ee] uppercase tracking-wider">Male</span>
                         </div>
-                        <div>
-                          <h3 className="text-sm font-bold">{s.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                        <div className="flex items-center gap-1.5 bg-yellow-500/25 backdrop-blur-md px-3 py-1.5 rounded-lg border border-yellow-500/40">
+                          <Crown className="w-4 h-4 text-yellow-400" />
+                          <span className="text-[10px] font-black text-yellow-300 uppercase">MVP</span>
                         </div>
                       </div>
-                    </motion.div>
-                  </motion.div>
-                ))}
-              </div>
+
+                      {/* Bottom Info — DRAMATIC */}
+                      <div className="absolute bottom-0 inset-x-0 p-5 z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-3.5 h-3.5 text-[#22d3ee]" />
+                          <span className="text-[11px] font-bold text-[#22d3ee]">Week {mvp.weekNumber}</span>
+                        </div>
+                        <p className="text-3xl sm:text-4xl font-black text-white leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{mvp.gamertag}</p>
+                        <div className="flex items-center gap-2.5 mt-2">
+                          <TierBadge tier={mvp.tier} />
+                          {mvp.totalMvp > 1 && <span className="text-[11px] font-bold text-yellow-400 bg-yellow-500/20 px-2.5 py-1 rounded-lg">{mvp.totalMvp}x MVP</span>}
+                        </div>
+                        {/* Big Stats */}
+                        <div className="flex items-center gap-5 mt-4 pt-3 border-t border-white/10">
+                          <div>
+                            <p className="text-2xl font-black text-[#22d3ee]">{mvp.points}</p>
+                            <p className="text-[9px] text-[#67e8f9]/50 uppercase font-semibold">Points</p>
+                          </div>
+                          <div className="w-px h-8 bg-white/10" />
+                          <div>
+                            <p className="text-2xl font-black text-green-400">{mvp.totalWins}</p>
+                            <p className="text-[9px] text-green-400/50 uppercase font-semibold">Wins</p>
+                          </div>
+                          {mvp.streak > 0 && (
+                            <>
+                              <div className="w-px h-8 bg-white/10" />
+                              <div>
+                                <p className="text-2xl font-black text-orange-400">🔥{mvp.streak}</p>
+                                <p className="text-[9px] text-orange-400/50 uppercase font-semibold">Streak</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </motion.div>
+
+              {/* Female MVP — Right DRAMATIC HERO CARD */}
+              <motion.div variants={fadeRight}>
+                {(() => {
+                  const mvp = femaleData?.mvpHallOfFame?.[0];
+                  if (!mvp) return <div className="py-16 text-center"><Medal className="w-12 h-12 text-[#a855f7]/15 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Belum ada MVP</p></div>;
+                  return (
+                    <div
+                      className="relative rounded-2xl overflow-hidden cursor-pointer group min-h-[440px] border border-[#a855f7]/15 hover:border-[#a855f7]/30 transition-all duration-300"
+                      style={{ boxShadow: '0 0 40px rgba(168,85,247,0.08)' }}
+                      onClick={() => {
+                        const found = femaleData?.topPlayers?.find(p => p.gamertag === mvp.gamertag);
+                        if (found) setSelectedPlayer({ ...found, division: 'female' });
+                      }}
+                    >
+                      {/* Neon accent line — female */}
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#a855f7] to-transparent z-20" />
+                      {/* Full-Bleed Avatar Background */}
+                      <img src={getAvatarUrl(mvp.gamertag, 'female')} alt={mvp.gamertag} className="absolute inset-0 w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700" />
+                      {/* Multi-layer Overlays */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/50 to-[#0c0a06]/30" />
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#0c0a06]/70 via-transparent to-transparent" />
+                      <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 80% 80%, rgba(168,85,247,0.15), transparent 60%)' }} />
+
+                      {/* Top Badges */}
+                      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+                        <div className="flex items-center gap-2 bg-[#a855f7]/20 backdrop-blur-md px-3 py-1.5 rounded-lg border border-[#a855f7]/30">
+                          <Shield className="w-4 h-4 text-[#c084fc]" />
+                          <span className="text-[11px] font-bold text-[#c084fc] uppercase tracking-wider">Female</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-yellow-500/25 backdrop-blur-md px-3 py-1.5 rounded-lg border border-yellow-500/40">
+                          <Crown className="w-4 h-4 text-yellow-400" />
+                          <span className="text-[10px] font-black text-yellow-300 uppercase">MVP</span>
+                        </div>
+                      </div>
+
+                      {/* Bottom Info — DRAMATIC */}
+                      <div className="absolute bottom-0 inset-x-0 p-5 z-10">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Clock className="w-3.5 h-3.5 text-[#c084fc]" />
+                          <span className="text-[11px] font-bold text-[#c084fc]">Week {mvp.weekNumber}</span>
+                        </div>
+                        <p className="text-3xl sm:text-4xl font-black text-white leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{mvp.gamertag}</p>
+                        <div className="flex items-center gap-2.5 mt-2">
+                          <TierBadge tier={mvp.tier} />
+                          {mvp.totalMvp > 1 && <span className="text-[11px] font-bold text-yellow-400 bg-yellow-500/20 px-2.5 py-1 rounded-lg">{mvp.totalMvp}x MVP</span>}
+                        </div>
+                        {/* Big Stats */}
+                        <div className="flex items-center gap-5 mt-4 pt-3 border-t border-white/10">
+                          <div>
+                            <p className="text-2xl font-black text-[#c084fc]">{mvp.points}</p>
+                            <p className="text-[9px] text-[#e9d5ff]/50 uppercase font-semibold">Points</p>
+                          </div>
+                          <div className="w-px h-8 bg-white/10" />
+                          <div>
+                            <p className="text-2xl font-black text-green-400">{mvp.totalWins}</p>
+                            <p className="text-[9px] text-green-400/50 uppercase font-semibold">Wins</p>
+                          </div>
+                          {mvp.streak > 0 && (
+                            <>
+                              <div className="w-px h-8 bg-white/10" />
+                              <div>
+                                <p className="text-2xl font-black text-orange-400">🔥{mvp.streak}</p>
+                                <p className="text-[9px] text-orange-400/50 uppercase font-semibold">Streak</p>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </motion.div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ========== SECTION DIVIDER ========== */}
       <div className="section-divider max-w-4xl mx-auto" />
 
-      {/* ========== TOP LEADERBOARD — Glass Cards ========== */}
-      <section className="py-24 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-mesh-fury opacity-30" />
-        <div className="ambient-light" style={{ top: '30%', left: '5%', animationDuration: '25s' }} />
+      {/* ========== CLUB PESERTA — Premium Parallax Showcase ========== */}
+      <section id="clubs" ref={clubsRef} className="relative py-24 px-4 overflow-hidden">
+        {/* Parallax Background Layer */}
+        <motion.div className="absolute inset-0" style={{ y: clubsY }}>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(212,168,83,0.04) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(212,168,83,0.03) 0%, transparent 50%)' }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
+        </motion.div>
+        {/* Floating ambient orbs */}
+        <div className="ambient-light" style={{ top: '15%', left: '5%', animationDuration: '22s' }} />
+        <div className="ambient-light" style={{ bottom: '20%', right: '8%', animationDuration: '18s', animationDelay: '-8s' }} />
 
-        <div className="relative z-10 max-w-5xl mx-auto">
+        <div className="relative z-10 max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Flame} label="Rankings" title="Leaderboard" subtitle="Current season standings" />
+            <SectionHeader icon={Users} label="Kompetisi" title="Club & Peserta" subtitle="Club-club terbaik yang bertarung di arena IDM League" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Male Leaderboard */}
-              <motion.div variants={fadeLeft}>
-                <Card className="bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#06b6d4]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#06b6d4]/10 to-transparent border-b border-[#06b6d4]/10">
-                      <Music className="w-4 h-4 text-[#22d3ee]" />
-                      <span className="text-xs font-bold text-[#22d3ee] uppercase tracking-wider">Male Division</span>
-                    </div>
-                    <div className="p-3 space-y-1">
-                      {maleData?.topPlayers?.slice(0, 5).map((p, idx) => (
-                        <motion.div
-                          key={p.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: idx * 0.08 }}
-                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#06b6d4]/5 hover:shadow-[0_0_15px_rgba(6,182,212,0.08)]"
-                          onClick={() => setSelectedPlayer({ ...p, division: 'male' })}
+            {(() => {
+              // Merge clubs from both divisions into one unified ranking
+              const allClubs: (StatsData['clubs'][0] & { division?: string })[] = [];
+              if (maleData?.clubs?.length) {
+                maleData.clubs.forEach(c => allClubs.push({ ...c, division: 'male' }));
+              }
+              if (femaleData?.clubs?.length) {
+                femaleData.clubs.forEach(c => allClubs.push({ ...c, division: 'female' }));
+              }
+              const sortedClubs = allClubs.sort((a, b) => b.points - a.points);
+
+              // Top players per division — sorted alphabetically (list, not leaderboard)
+              const malePlayers = [...(maleData?.topPlayers || [])].sort((a, b) => a.gamertag.localeCompare(b.gamertag));
+              const femalePlayers = [...(femaleData?.topPlayers || [])].sort((a, b) => a.gamertag.localeCompare(b.gamertag));
+
+              return (
+                <Tabs defaultValue="clubs" className="w-full">
+                  {/* Tab Navigation — Toornament underline style */}
+                  <div className="border-b border-[#d4a853]/10 mb-8">
+                    <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
+                      {[
+                        { value: 'clubs', label: 'Club', icon: Users },
+                        { value: 'male', label: 'Player Male', icon: Music },
+                        { value: 'female', label: 'Player Female', icon: Shield },
+                      ].map(tab => (
+                        <TabsTrigger
+                          key={tab.value}
+                          value={tab.value}
+                          className="relative px-4 sm:px-6 py-2.5 text-xs font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-[#d4a853] data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#d4a853] text-muted-foreground hover:text-[#d4a853]/70 transition-colors"
                         >
-                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            idx === 0 ? 'bg-[#06b6d4]/20 text-[#22d3ee] glow-champion' :
-                            idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                            idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {idx === 0 ? '👑' : idx + 1}
-                          </span>
-                          <div className="w-8 h-8 rounded-full bg-[#06b6d4]/10 flex items-center justify-center text-[10px] font-bold text-[#22d3ee] shrink-0">
-                            {p.gamertag.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium truncate">{p.gamertag}</span>
-                              <TierBadge tier={p.tier} />
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-[#22d3ee]">{p.points}</span>
-                            <span className="text-[10px] text-muted-foreground ml-1">pts</span>
-                          </div>
-                        </motion.div>
+                          <tab.icon className="w-3.5 h-3.5 mr-1.5 inline" />
+                          {tab.label}
+                        </TabsTrigger>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-
-              {/* Female Leaderboard */}
-              <motion.div variants={fadeRight}>
-                <Card className="bg-[#0c0a06]/5 dark:bg-[#0c0a06]/60 border border-[#a855f7]/10 rounded-2xl overflow-hidden backdrop-blur-sm card-shine">
-                  <CardContent className="p-0">
-                    <div className="flex items-center gap-2 px-5 py-3.5 bg-gradient-to-r from-[#a855f7]/10 to-transparent border-b border-[#a855f7]/10">
-                      <Shield className="w-4 h-4 text-[#c084fc]" />
-                      <span className="text-xs font-bold text-[#c084fc] uppercase tracking-wider">Female Division</span>
-                    </div>
-                    <div className="p-3 space-y-1">
-                      {femaleData?.topPlayers?.slice(0, 5).map((p, idx) => (
-                        <motion.div
-                          key={p.id}
-                          initial={{ opacity: 0, x: 20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ delay: idx * 0.08 }}
-                          className="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-300 cursor-pointer interactive-scale hover:bg-[#a855f7]/5 hover:shadow-[0_0_15px_rgba(168,85,247,0.08)]"
-                          onClick={() => setSelectedPlayer({ ...p, division: 'female' })}
-                        >
-                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                            idx === 0 ? 'bg-[#a855f7]/20 text-[#c084fc] glow-champion' :
-                            idx === 1 ? 'bg-gray-400/20 text-gray-400' :
-                            idx === 2 ? 'bg-amber-600/20 text-amber-600' :
-                            'bg-muted text-muted-foreground'
-                          }`}>
-                            {idx === 0 ? '👑' : idx + 1}
-                          </span>
-                          <div className="w-8 h-8 rounded-full bg-[#a855f7]/10 flex items-center justify-center text-[10px] font-bold text-[#c084fc] shrink-0">
-                            {p.gamertag.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium truncate">{p.gamertag}</span>
-                              <TierBadge tier={p.tier} />
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm font-bold text-[#c084fc]">{p.points}</span>
-                            <span className="text-[10px] text-muted-foreground ml-1">pts</span>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ========== COMMUNITY STATS — Animated Counter Section ========== */}
-      <section className="py-20 px-4 relative overflow-hidden bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
-        <div className="absolute inset-0 bg-mesh-fury opacity-40" />
-        <div className="ambient-light" style={{ top: '20%', right: '10%', animationDuration: '20s' }} />
-
-        <div className="relative z-10 max-w-5xl mx-auto">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
-            variants={stagger}
-          >
-            <SectionHeader icon={Flame} label="Community" title="By The Numbers" subtitle="Growing dance community" />
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-              {[
-                { icon: Users, value: `${(maleData?.totalPlayers || 18) + (femaleData?.totalPlayers || 12)}+`, label: 'Total Players', color: 'from-[#d4a853] to-[#b8860b]' },
-                { icon: Trophy, value: `${(maleData?.clubs?.length || 6) + (femaleData?.clubs?.length || 6)}`, label: 'Active Clubs', color: 'from-amber-500 to-amber-600' },
-                { icon: Wallet, value: formatCurrency((maleData?.totalPrizePool || 0) + (femaleData?.totalPrizePool || 0)), label: 'Total Prize Pool', color: 'from-green-500 to-green-600' },
-                { icon: Medal, value: `${maleData?.seasonProgress?.completedWeeks || 0}/${maleData?.seasonProgress?.totalWeeks || 8}`, label: 'Season Progress', color: 'from-pink-500 to-pink-600' },
-              ].map((stat, i) => (
-                <motion.div
-                  key={i}
-                  variants={scaleIn}
-                  className="group"
-                >
-                  <div className="relative p-6 rounded-2xl glass card-shine card-border-glow text-center transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,168,83,0.15)]">
-                    <div className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg`}>
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <p className="text-2xl sm:text-3xl font-black text-gradient-fury leading-tight">{stat.value}</p>
-                    <p className="text-[11px] text-muted-foreground mt-2 uppercase tracking-wider">{stat.label}</p>
+                    </TabsList>
                   </div>
-                </motion.div>
-              ))}
-            </div>
+
+                  {/* ═══════════════ CLUB TAB ═══════════════ */}
+                  <TabsContent value="clubs" className="mt-0">
+                    {sortedClubs.length === 0 ? null : (
+                      <>
+                        {/* Mobile: Horizontal list layout */}
+                        <div className="flex sm:hidden flex-col gap-2 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                          {sortedClubs.map((club, idx) => {
+                            const rank = idx + 1;
+                            const isTop3 = rank <= 3;
+                            const rankBadgeColor = rank === 1 ? 'text-[#d4a853] bg-[#d4a853]/15 border-[#d4a853]/30' : rank === 2 ? 'text-slate-300 bg-slate-400/10 border-slate-400/20' : rank === 3 ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' : 'text-muted-foreground/50 bg-white/5 border-white/10';
+                            return (
+                              <motion.div
+                                key={club.id}
+                                initial={{ opacity: 0, x: -15 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.03, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                whileTap={{ scale: 0.98 }}
+                                className="cursor-pointer"
+                                onClick={() => setSelectedClub(club)}
+                              >
+                                <div className={`relative flex items-center gap-3 rounded-xl bg-white/[0.03] backdrop-blur-sm border px-3.5 py-3 transition-all duration-200 overflow-hidden ${isTop3 ? 'border-[#d4a853]/15 hover:bg-white/[0.06]' : 'border-white/[0.06] hover:bg-white/[0.06]'}`}>
+                                  {rank === 1 && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#d4a853] to-transparent" />}
+                                  <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black border ${rankBadgeColor}`}>
+                                    {rank === 1 ? '👑' : rank}
+                                  </div>
+                                  <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                                    <img src={getClubLogoUrl(club.name, club.logo)} alt={club.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black text-white truncate">{club.name}</p>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      <span className="text-[10px] font-black text-[#d4a853]">{club.points} pts</span>
+                                      <span className="text-[10px] font-bold">
+                                        <span className="text-green-400">{club.wins}W</span>
+                                        <span className="text-muted-foreground/30 mx-0.5">·</span>
+                                        <span className="text-red-400">{club.losses}L</span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0 text-right">
+                                    <div className="flex items-center gap-1 justify-end">
+                                      <Users className="w-3 h-3 text-[#d4a853]/70" />
+                                      <p className="text-xs font-black text-[#d4a853]">{club._count?.members ?? 3}</p>
+                                    </div>
+                                    <p className="text-[9px] text-muted-foreground/40 uppercase">Anggota</p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop: Grid card layout */}
+                        <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {sortedClubs.map((club, idx) => {
+                            const rank = idx + 1;
+                            const isTop3 = rank <= 3;
+                            const rankBadgeColor = rank === 1 ? 'text-[#d4a853] bg-[#d4a853]/15 border-[#d4a853]/30' : rank === 2 ? 'text-slate-300 bg-slate-400/10 border-slate-400/20' : rank === 3 ? 'text-orange-400 bg-orange-500/10 border-orange-500/20' : 'text-muted-foreground/50 bg-white/5 border-white/10';
+
+                            return (
+                              <motion.div
+                                key={club.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                whileHover={{ y: -4, scale: 1.03 }}
+                                className="cursor-pointer group/club"
+                                onClick={() => setSelectedClub(club)}
+                              >
+                                <div className={`relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border p-4 text-center transition-all duration-300 overflow-hidden ${
+                                  isTop3 ? 'border-[#d4a853]/15 hover:bg-white/[0.06] hover:shadow-[0_8px_24px_rgba(212,168,83,0.08)]' : 'border-white/[0.06] hover:bg-white/[0.06] hover:shadow-[0_8px_24px_rgba(0,0,0,0.3)]'
+                                }`}>
+                                  {rank === 1 && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#d4a853] to-transparent" />}
+                                  {rank === 2 && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-slate-400 to-transparent" />}
+                                  {rank === 3 && <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-orange-400 to-transparent" />}
+                                  <div className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-black mb-2.5 border ${rankBadgeColor}`}>
+                                    {rank <= 3 ? (rank === 1 ? '👑' : rank) : rank}
+                                  </div>
+                                  <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden border border-white/10 bg-white/5 mb-2.5 group-hover/club:scale-105 transition-transform duration-300">
+                                    <img src={getClubLogoUrl(club.name, club.logo)} alt={club.name} className="w-full h-full object-cover" />
+                                  </div>
+                                  <p className="text-sm font-black text-white truncate group-hover/club:text-[#d4a853] transition-colors duration-200">{club.name}</p>
+                                  <div className="mt-2.5 space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[8px] text-muted-foreground/40 uppercase">Pts</span>
+                                      <span className="text-xs font-black text-[#d4a853]">{club.points}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[8px] text-muted-foreground/40 uppercase">W/L</span>
+                                      <span className="text-[10px] font-bold">
+                                        <span className="text-green-400">{club.wins}</span>
+                                        <span className="text-muted-foreground/30">/</span>
+                                        <span className="text-red-400">{club.losses}</span>
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[8px] text-muted-foreground/40 uppercase">Anggota</span>
+                                      <span className="text-xs font-black text-[#d4a853] flex items-center gap-1">
+                                        <Users className="w-3 h-3" />
+                                        {club._count?.members ?? 3}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
+
+                  {/* ═══════════════ PLAYER MALE TAB ═══════════════ */}
+                  <TabsContent value="male" className="mt-0">
+                    {malePlayers.length === 0 ? (
+                      <div className="py-16 text-center">
+                        <Music className="w-12 h-12 text-[#06b6d4]/15 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">Belum ada player male</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Mobile: List layout */}
+                        <div className="flex sm:hidden flex-col gap-2 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                          {malePlayers.map((player, idx) => {
+                            const losses = player.matches - player.totalWins;
+                            return (
+                              <motion.div
+                                key={player.id}
+                                initial={{ opacity: 0, x: -15 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.03, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                whileTap={{ scale: 0.98 }}
+                                className="cursor-pointer"
+                                onClick={() => setSelectedPlayer({ ...player, division: 'male' })}
+                              >
+                                <div className="relative flex items-center gap-3 rounded-xl bg-white/[0.03] backdrop-blur-sm border border-[#06b6d4]/10 px-3.5 py-3 transition-all duration-200 overflow-hidden hover:bg-white/[0.06]">
+                                  <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-[#06b6d4]/20 bg-white/5">
+                                    <img src={getAvatarUrl(player.gamertag, 'male')} alt={player.gamertag} className="w-full h-full object-cover object-top" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black text-white truncate">{player.gamertag}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <TierBadge tier={player.tier} />
+                                      <span className="text-[10px] font-black text-[#22d3ee]">{player.points} pts</span>
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0 text-right space-y-0.5">
+                                    <p className="text-[10px] font-bold text-green-400">{player.totalWins}W</p>
+                                    <p className="text-[10px] font-bold text-red-400">{losses}L</p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop: Grid card layout — full width avatar */}
+                        <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {malePlayers.map((player, idx) => {
+                            const losses = player.matches - player.totalWins;
+                            return (
+                              <motion.div
+                                key={player.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                whileHover={{ y: -4, scale: 1.03 }}
+                                className="cursor-pointer group/player"
+                                onClick={() => setSelectedPlayer({ ...player, division: 'male' })}
+                              >
+                                <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-[#06b6d4]/10 text-center transition-all duration-300 overflow-hidden hover:shadow-[0_8px_24px_rgba(6,182,212,0.08)]">
+                                  {/* Neon accent line — male */}
+                                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#06b6d4] to-transparent z-20" />
+                                  {/* Full Width Avatar */}
+                                  <div className="relative h-36 overflow-hidden group-hover/player:scale-105 transition-transform duration-500">
+                                    <img src={getAvatarUrl(player.gamertag, 'male')} alt={player.gamertag} className="w-full h-full object-cover object-top" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/30 to-transparent" />
+                                  </div>
+                                  {/* Name + Info */}
+                                  <div className="relative px-3 pb-3 pt-1.5">
+                                    <p className="text-sm font-black text-white truncate group-hover/player:text-[#22d3ee] transition-colors duration-200">{player.gamertag}</p>
+                                    {/* Tier + Stats — one row */}
+                                    <div className="mt-1.5 flex items-center justify-center gap-2">
+                                      <TierBadge tier={player.tier} />
+                                      <div className="w-px h-4 bg-white/10" />
+                                      <span className="text-[10px] font-black text-[#22d3ee]">{player.points}pts</span>
+                                      <span className="text-[10px] font-bold text-green-400">{player.totalWins}W</span>
+                                      <span className="text-[10px] font-bold text-red-400">{losses}L</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
+
+                  {/* ═══════════════ PLAYER FEMALE TAB ═══════════════ */}
+                  <TabsContent value="female" className="mt-0">
+                    {femalePlayers.length === 0 ? (
+                      <div className="py-16 text-center">
+                        <Shield className="w-12 h-12 text-[#a855f7]/15 mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">Belum ada player female</p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Mobile: List layout */}
+                        <div className="flex sm:hidden flex-col gap-2 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+                          {femalePlayers.map((player, idx) => {
+                            const losses = player.matches - player.totalWins;
+                            return (
+                              <motion.div
+                                key={player.id}
+                                initial={{ opacity: 0, x: -15 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.03, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                                whileTap={{ scale: 0.98 }}
+                                className="cursor-pointer"
+                                onClick={() => setSelectedPlayer({ ...player, division: 'female' })}
+                              >
+                                <div className="relative flex items-center gap-3 rounded-xl bg-white/[0.03] backdrop-blur-sm border border-[#a855f7]/10 px-3.5 py-3 transition-all duration-200 overflow-hidden hover:bg-white/[0.06]">
+                                  <div className="shrink-0 w-14 h-14 rounded-xl overflow-hidden border border-[#a855f7]/20 bg-white/5">
+                                    <img src={getAvatarUrl(player.gamertag, 'female')} alt={player.gamertag} className="w-full h-full object-cover object-top" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-black text-white truncate">{player.gamertag}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <TierBadge tier={player.tier} />
+                                      <span className="text-[10px] font-black text-[#c084fc]">{player.points} pts</span>
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0 text-right space-y-0.5">
+                                    <p className="text-[10px] font-bold text-green-400">{player.totalWins}W</p>
+                                    <p className="text-[10px] font-bold text-red-400">{losses}L</p>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Desktop: Grid card layout — full width avatar */}
+                        <div className="hidden sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                          {femalePlayers.map((player, idx) => {
+                            const losses = player.matches - player.totalWins;
+                            return (
+                              <motion.div
+                                key={player.id}
+                                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: idx * 0.04, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                whileHover={{ y: -4, scale: 1.03 }}
+                                className="cursor-pointer group/player"
+                                onClick={() => setSelectedPlayer({ ...player, division: 'female' })}
+                              >
+                                <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-[#a855f7]/10 text-center transition-all duration-300 overflow-hidden hover:shadow-[0_8px_24px_rgba(168,85,247,0.08)]">
+                                  {/* Neon accent line — female */}
+                                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#a855f7] to-transparent z-20" />
+                                  {/* Full Width Avatar */}
+                                  <div className="relative h-36 overflow-hidden group-hover/player:scale-105 transition-transform duration-500">
+                                    <img src={getAvatarUrl(player.gamertag, 'female')} alt={player.gamertag} className="w-full h-full object-cover object-top" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/30 to-transparent" />
+                                  </div>
+                                  {/* Name + Info */}
+                                  <div className="relative px-3 pb-3 pt-1.5">
+                                    <p className="text-sm font-black text-white truncate group-hover/player:text-[#c084fc] transition-colors duration-200">{player.gamertag}</p>
+                                    {/* Tier + Stats — one row */}
+                                    <div className="mt-1.5 flex items-center justify-center gap-2">
+                                      <TierBadge tier={player.tier} />
+                                      <div className="w-px h-4 bg-white/10" />
+                                      <span className="text-[10px] font-black text-[#c084fc]">{player.points}pts</span>
+                                      <span className="text-[10px] font-bold text-green-400">{player.totalWins}W</span>
+                                      <span className="text-[10px] font-bold text-red-400">{losses}L</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              );
+            })()}
           </motion.div>
         </div>
       </section>
 
-      {/* ========== CTA SECTION — Dramatic Reveal ========== */}
-      <section className="py-28 px-4 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-[0.04] dark:opacity-[0.08]" aria-hidden="true" />
-        </div>
+      <div className="section-divider max-w-4xl mx-auto" />
 
-        {/* Dramatic radial glow */}
-        <div className="absolute inset-0 bg-gradient-radial from-[#d4a853]/8 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#d4a853]/5 via-transparent to-[#e8d5a3]/5" />
-
-        {/* Ambient lights */}
-        <div className="ambient-light" style={{ top: '10%', left: '15%', animationDuration: '16s' }} />
-        <div className="ambient-light" style={{ bottom: '10%', right: '15%', animationDuration: '20s', animationDelay: '-8s' }} />
+      {/* ========== SEASON GOAL TRACKER — "The Dream" ========== */}
+      <section id="dream" ref={dreamRef} className="relative py-24 px-4 overflow-hidden">
+        {/* Background — subtle parallax, no scale on content */}
+        <motion.div className="absolute inset-0" style={{ y: dreamY }}>
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-15" aria-hidden="true" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(212,168,83,0.08) 0%, transparent 50%), radial-gradient(ellipse at 20% 70%, rgba(6,182,212,0.03) 0%, transparent 40%), radial-gradient(ellipse at 80% 70%, rgba(168,85,247,0.03) 0%, transparent 40%)' }} />
+        </motion.div>
+        {/* Ambient orbs */}
+        <div className="ambient-light" style={{ top: '20%', right: '15%', animationDuration: '20s' }} />
 
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-50px' }}
           variants={stagger}
-          className="relative z-10 max-w-2xl mx-auto text-center"
+          className="relative z-10 max-w-3xl mx-auto text-center"
+        >
+          <motion.div variants={fadeUp}>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-[#d4a853]/50" />
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a853]/20 bg-[#d4a853]/5">
+                <Crown className="w-4 h-4 text-[#d4a853]" />
+                <span className="text-[11px] font-bold text-[#d4a853] uppercase tracking-[0.25em]">Season Goal</span>
+              </div>
+              <div className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-[#d4a853]/50" />
+            </div>
+          </motion.div>
+          <motion.h2 variants={fadeUp} className="text-5xl sm:text-7xl font-black text-gradient-champion leading-none">
+            The Dream
+          </motion.h2>
+          <motion.p variants={fadeUp} className="text-sm text-muted-foreground mt-4 max-w-md mx-auto leading-relaxed">
+            Setiap dancer punya mimpi — podium tertinggi. Season ini, siapa yang akan mengukir nama di IDM League?
+          </motion.p>
+
+          {/* Glass Stat Cards — 3 columns */}
+          <motion.div variants={fadeUp} className="mt-10 grid grid-cols-3 gap-3 sm:gap-4">
+            {[
+              { icon: Clock, value: `${maleData?.seasonProgress?.completedWeeks || 0}/${maleData?.seasonProgress?.totalWeeks || 11}`, label: 'Minggu', accent: 'border-[#d4a853]/15' },
+              { icon: Users, value: `${(maleData?.clubs?.length || 0) + (femaleData?.clubs?.length || 0)}`, label: 'Club', accent: 'border-white/[0.08]' },
+              { icon: Trophy, value: formatCurrency((maleData?.totalPrizePool || 0) + (femaleData?.totalPrizePool || 0)), label: 'Prize Pool', accent: 'border-[#d4a853]/15' },
+            ].map((s, i) => (
+              <div key={s.label} className={`rounded-2xl bg-white/[0.03] backdrop-blur-sm border ${s.accent} p-4 sm:p-5 transition-all duration-300 hover:bg-white/[0.06]`}>
+                <s.icon className="w-4 h-4 text-[#d4a853] mx-auto mb-2" />
+                <p className="text-lg sm:text-2xl font-black text-white truncate">{s.value}</p>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground/50 uppercase tracking-wider mt-1">{s.label}</p>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* Season Progress Bar */}
+          <motion.div variants={fadeUp} className="mt-8">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground/50 mb-2 max-w-md mx-auto">
+              <span>Season Progress</span>
+              <span className="font-bold text-[#d4a853]">{maleData?.seasonProgress?.percentage || 0}%</span>
+            </div>
+            <div className="relative h-3 bg-white/5 rounded-full overflow-hidden mx-auto max-w-md">
+              <motion.div
+                initial={{ width: 0 }}
+                whileInView={{ width: `${maleData?.seasonProgress?.percentage || 0}%` }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#d4a853] via-[#e8d5a3] to-[#d4a853] shadow-[0_0_20px_rgba(212,168,83,0.3)]"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer" />
+            </div>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="mt-8">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('sawer')} className="px-7 py-3 rounded-2xl bg-gradient-to-r from-[#d4a853] to-[#e8d5a3] text-[#0c0a06] font-black text-sm tracking-wider shadow-[0_0_30px_rgba(212,168,83,0.2)] hover:shadow-[0_0_60px_rgba(212,168,83,0.4)] transition-shadow">
+              <Gift className="w-4 h-4 inline mr-2" />Dukung Liga
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      <div className="section-divider max-w-4xl mx-auto" />
+
+      {/* ========== DONATION & SAWER — Parallax Donation Cards ========== */}
+      <section id="sawer" ref={sawerRef} className="relative py-20 px-4 overflow-hidden">
+        <motion.div className="absolute inset-0" style={{ y: sawerY }}>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(168,85,247,0.03) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.03) 0%, transparent 50%)' }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
+        </motion.div>
+
+        <div className="relative z-10 max-w-5xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
+            {/* Section Header — Custom, not using SectionHeader component for unique style */}
+            <motion.div variants={fadeUp} className="text-center mb-12">
+              <span className="text-[10px] font-bold text-[#d4a853]/40 uppercase tracking-[0.4em]">Support The League</span>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gradient-champion mt-3">Sawer & Donasi</h2>
+              <p className="text-sm text-muted-foreground mt-3 max-w-lg mx-auto leading-relaxed">Dukung komunitas dance — sawer untuk hadiah mingguan, donasi untuk masa depan liga</p>
+            </motion.div>
+
+            {(() => {
+              const maleSawer = maleData?.seasonDonationTotal || 0;
+              const femaleSawer = femaleData?.seasonDonationTotal || 0;
+              const totalSawer = maleSawer + femaleSawer;
+              const totalPrizePool = (maleData?.totalPrizePool || 0) + (femaleData?.totalPrizePool || 0);
+              const sawerGoal = Math.max(maleSawer, femaleSawer, totalSawer, 1) * 2; // Dynamic goal: 2x current max, min 1 to avoid /0
+              const donasiGoal = sawerGoal * 5; // Dynamic: 5x sawerGoal
+              const maleSawerPercent = Math.min(100, Math.round((maleSawer / (sawerGoal / 2)) * 100));
+              const femaleSawerPercent = Math.min(100, Math.round((femaleSawer / (sawerGoal / 2)) * 100));
+              const sawerPercent = Math.min(100, Math.round((totalSawer / sawerGoal) * 100));
+              const donasiPercent = Math.min(100, Math.round((totalSawer * 0.3 / donasiGoal) * 100));
+              const allDonors = [...(maleData?.topDonors || []), ...(femaleData?.topDonors || [])].sort((a, b) => b.totalAmount - a.totalAmount);
+              const maleDonors = [...(maleData?.topDonors || [])].sort((a, b) => b.totalAmount - a.totalAmount);
+              const femaleDonors = [...(femaleData?.topDonors || [])].sort((a, b) => b.totalAmount - a.totalAmount);
+
+              /* ---- Reusable Donors List ---- */
+              const DonorsList = ({ donors, accent }: { donors: typeof allDonors; accent: string }) => {
+                if (donors.length === 0) return null;
+                return (
+                  <div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-sm">👥</span>
+                      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: accent }}>Top Contributors</h3>
+                      <div className="flex-1 h-px bg-white/5" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {donors.slice(0, 6).map((donor, idx) => {
+                        const rankColors = [
+                          { bg: 'bg-[#d4a853]/20', text: 'text-[#d4a853]', border: 'border-[#d4a853]/30' },
+                          { bg: 'bg-slate-400/15', text: 'text-slate-300', border: 'border-slate-400/20' },
+                          { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-400/20' },
+                        ];
+                        const rank = idx < 3 ? rankColors[idx] : { bg: 'bg-white/5', text: 'text-white/60', border: 'border-white/10' };
+                        return (
+                          <motion.div
+                            key={`${donor.donorName}-${idx}`}
+                            initial={{ opacity: 0, x: idx % 2 === 0 ? -10 : 10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: idx * 0.05, duration: 0.4 }}
+                            className={`flex items-center justify-between p-3 rounded-xl bg-white/[0.03] backdrop-blur-sm border ${rank.border} transition-all hover:bg-white/[0.06]`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black ${rank.text} ${rank.bg}`}>
+                                {idx + 1}
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-white">{donor.donorName}</p>
+                                <span className="text-[9px]" style={{ color: donor.tierColor }}>{donor.tierIcon} {donor.tier}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-black" style={{ color: accent }}>{formatCurrency(donor.totalAmount)}</p>
+                              <p className="text-[9px] text-muted-foreground">{donor.donationCount}x sawer</p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              };
+
+              /* ---- Reusable Sawer Card ---- */
+              const SawerCard = ({ division }: { division: 'male' | 'female' | 'all' }) => {
+                const isMale = division === 'male';
+                const isFemale = division === 'female';
+                const isAll = division === 'all';
+                const accent = isMale ? '#06b6d4' : isFemale ? '#a855f7' : '#d4a853';
+                const accentLight = isMale ? '#22d3ee' : isFemale ? '#c084fc' : '#e8d5a3';
+                const amount = isMale ? maleSawer : isFemale ? femaleSawer : totalSawer;
+                const goal = isAll ? sawerGoal : sawerGoal / 2;
+                const percent = isMale ? maleSawerPercent : isFemale ? femaleSawerPercent : sawerPercent;
+                const divisionLabel = isMale ? 'Male Division' : isFemale ? 'Female Division' : '';
+                const DivisionIcon = isMale ? Music : isFemale ? Shield : Gift;
+                const donors = isMale ? maleDonors : isFemale ? femaleDonors : allDonors;
+
+                return (
+                  <div className="space-y-6">
+                    <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border p-6 transition-all duration-300 hover:bg-white/[0.06] hover:shadow-[0_8px_30px_rgba(212,168,83,0.08)]" style={{ borderColor: `${accent}15` }}>
+                      {/* Top accent line */}
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent" style={{ color: accent }} />
+                      {/* Header */}
+                      <div className="flex items-center gap-3 mb-5">
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${accent}20` }}>
+                          <DivisionIcon className="w-5 h-5" style={{ color: accentLight }} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-black text-white">Weekly Prize Pool {divisionLabel && <span style={{ color: accentLight }} className="text-sm">{divisionLabel}</span>}</h3>
+                          <p className="text-[10px] text-muted-foreground">Sawer untuk menambah hadiah mingguan</p>
+                        </div>
+                      </div>
+
+                      {/* Amount + Goal */}
+                      <div className="flex items-baseline justify-between mb-3">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl sm:text-3xl font-black" style={{ color: accent }}>{formatCurrency(amount)}</span>
+                          <span className="text-sm text-muted-foreground/60">/ {formatCurrency(goal)}</span>
+                        </div>
+                        <span className="text-sm font-black" style={{ color: accent }}>{percent}%</span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="relative h-3 bg-white/5 rounded-full overflow-hidden mb-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${percent}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                          className="absolute inset-y-0 left-0 rounded-full shadow-[0_0_12px_rgba(212,168,83,0.4)]"
+                          style={{ background: `linear-gradient(to right, ${accent}, ${accentLight}, ${accent})` }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer" />
+                      </div>
+
+                      {/* Footer text */}
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground/50 mb-5">
+                        <span>🔥 {formatCurrency(amount)} collected</span>
+                        <span>Goal: {formatCurrency(goal)}</span>
+                      </div>
+
+                      {/* Preset Donation Buttons */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { amount: 10000, label: 'Rp 10K' },
+                          { amount: 25000, label: 'Rp 25K' },
+                          { amount: 50000, label: 'Rp 50K' },
+                          { amount: 100000, label: 'Rp 100K' },
+                        ].map((btn) => (
+                          <motion.button
+                            key={btn.amount}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="px-2 py-2.5 rounded-xl border text-xs font-bold transition-all duration-200"
+                            style={{ borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accentLight }}
+                          >
+                            💰 {btn.label}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Division-specific Top Contributors */}
+                    <DonorsList donors={donors} accent={accent} />
+
+                    {/* Division Total Badge */}
+                    <div className="text-center pt-1">
+                      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border" style={{ borderColor: `${accent}15` }}>
+                        <Gift className="w-3.5 h-3.5" style={{ color: accent }} />
+                        <span className="text-xs font-bold" style={{ color: accent }}>Total Sawer {divisionLabel || 'Semua'}: {formatCurrency(amount)}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              };
+
+              /* ---- Donasi Card (Global) ---- */
+              const DonasiCard = () => (
+                <div className="space-y-6">
+                  <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-[#22d3ee]/15 p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-[#22d3ee]/25 hover:shadow-[0_8px_30px_rgba(6,182,212,0.08)]">
+                    {/* Top accent line */}
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#22d3ee] to-transparent" />
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-10 h-10 rounded-xl bg-[#22d3ee]/20 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-[#22d3ee]" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-black text-white">Season 2 League</h3>
+                        <p className="text-[10px] text-muted-foreground">Donasi untuk mendanai liga season berikutnya — bersifat global</p>
+                      </div>
+                    </div>
+
+                    {/* Amount + Goal */}
+                    <div className="flex items-baseline justify-between mb-3">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl sm:text-3xl font-black text-[#22d3ee]">{formatCurrency(Math.round(totalSawer * 0.3))}</span>
+                        <span className="text-sm text-muted-foreground/60">/ {formatCurrency(donasiGoal)}</span>
+                      </div>
+                      <span className="text-sm font-black text-[#22d3ee]">{donasiPercent}%</span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="relative h-3 bg-white/5 rounded-full overflow-hidden mb-2">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${donasiPercent}%` }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#06b6d4] via-[#22d3ee] to-[#06b6d4] shadow-[0_0_12px_rgba(6,182,212,0.4)]"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer" />
+                    </div>
+
+                    {/* Footer text */}
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground/50 mb-5">
+                      <span>✨ {formatCurrency(Math.round(totalSawer * 0.3))} collected</span>
+                      <span>Goal: {formatCurrency(donasiGoal)}</span>
+                    </div>
+
+                    {/* Preset Donation Buttons */}
+                    <div className="grid grid-cols-4 gap-2">
+                      {[
+                        { amount: 25000, label: 'Rp 25K' },
+                        { amount: 50000, label: 'Rp 50K' },
+                        { amount: 100000, label: 'Rp 100K' },
+                        { amount: 250000, label: 'Rp 250K' },
+                      ].map((btn) => (
+                        <motion.button
+                          key={btn.amount}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200"
+                        >
+                          ✨ {btn.label}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Global info badge */}
+                  <div className="text-center pt-1">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-[#22d3ee]/15">
+                      <Sparkles className="w-3.5 h-3.5 text-[#22d3ee]" />
+                      <span className="text-xs font-bold text-[#22d3ee]">Donasi bersifat global — tidak terikat divisi</span>
+                    </div>
+                  </div>
+                </div>
+              );
+
+              return (
+                <Tabs defaultValue="all" className="w-full">
+                  {/* Tab Navigation — Underline style */}
+                  <div className="border-b border-[#d4a853]/10 mb-8">
+                    <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
+                      {[
+                        { value: 'all', label: 'Semua', icon: Sparkles },
+                        { value: 'sawer-male', label: 'Sawer Male', icon: Music },
+                        { value: 'sawer-female', label: 'Sawer Female', icon: Shield },
+                        { value: 'donasi', label: 'Donasi', icon: Wallet },
+                      ].map(tab => (
+                        <TabsTrigger
+                          key={tab.value}
+                          value={tab.value}
+                          className="relative px-3 sm:px-5 py-2.5 text-[11px] sm:text-xs font-medium rounded-none border-b-2 border-transparent data-[state=active]:border-[#d4a853] data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:text-[#d4a853] text-muted-foreground hover:text-[#d4a853]/70 transition-colors"
+                        >
+                          <tab.icon className="w-3.5 h-3.5 mr-1.5 inline" />
+                          {tab.label}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </div>
+
+                  {/* ═══════════════ SEMUA TAB ═══════════════ */}
+                  <TabsContent value="all" className="mt-0">
+                    <div className="space-y-8">
+                      {/* Two Donation Cards — compact, no donors embedded */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {/* SAWER — Combined Weekly Prize Pool */}
+                        <motion.div variants={fadeLeft}>
+                          <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-[#d4a853]/15 p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-[#d4a853]/25 hover:shadow-[0_8px_30px_rgba(212,168,83,0.08)]">
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#d4a853] to-transparent" />
+                            <div className="flex items-center gap-3 mb-5">
+                              <div className="w-10 h-10 rounded-xl bg-[#d4a853]/20 flex items-center justify-center">
+                                <Gift className="w-5 h-5 text-[#e8d5a3]" />
+                              </div>
+                              <div>
+                                <h3 className="text-base font-black text-white">Weekly Prize Pool</h3>
+                                <p className="text-[10px] text-muted-foreground">Sawer untuk menambah hadiah mingguan</p>
+                              </div>
+                            </div>
+                            <div className="flex items-baseline justify-between mb-3">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl sm:text-3xl font-black text-[#d4a853]">{formatCurrency(totalSawer)}</span>
+                                <span className="text-sm text-muted-foreground/60">/ {formatCurrency(sawerGoal)}</span>
+                              </div>
+                              <span className="text-sm font-black text-[#d4a853]">{sawerPercent}%</span>
+                            </div>
+                            <div className="relative h-3 bg-white/5 rounded-full overflow-hidden mb-2">
+                              <motion.div initial={{ width: 0 }} whileInView={{ width: `${sawerPercent}%` }} viewport={{ once: true }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#d4a853] via-[#e8d5a3] to-[#d4a853] shadow-[0_0_12px_rgba(212,168,83,0.4)]" />
+                              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer" />
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground/50 mb-5">
+                              <span>🔥 {formatCurrency(totalSawer)} collected</span>
+                              <span>Goal: {formatCurrency(sawerGoal)}</span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { amount: 10000, label: 'Rp 10K' },
+                                { amount: 25000, label: 'Rp 25K' },
+                                { amount: 50000, label: 'Rp 50K' },
+                                { amount: 100000, label: 'Rp 100K' },
+                              ].map((btn) => (
+                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-2 py-2.5 rounded-xl border border-[#d4a853]/20 bg-[#d4a853]/5 text-[#d4a853] text-xs font-bold hover:bg-[#d4a853]/15 hover:border-[#d4a853]/40 transition-all duration-200">
+                                  💰 {btn.label}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* DONASI — Season 2 League */}
+                        <motion.div variants={fadeRight}>
+                          <div className="relative rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-[#22d3ee]/15 p-6 transition-all duration-300 hover:bg-white/[0.06] hover:border-[#22d3ee]/25 hover:shadow-[0_8px_30px_rgba(6,182,212,0.08)]">
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#22d3ee] to-transparent" />
+                            <div className="flex items-center gap-3 mb-5">
+                              <div className="w-10 h-10 rounded-xl bg-[#22d3ee]/20 flex items-center justify-center">
+                                <Sparkles className="w-5 h-5 text-[#22d3ee]" />
+                              </div>
+                              <div>
+                                <h3 className="text-base font-black text-white">Season 2 League</h3>
+                                <p className="text-[10px] text-muted-foreground">Donasi untuk mendanai liga season berikutnya</p>
+                              </div>
+                            </div>
+                            <div className="flex items-baseline justify-between mb-3">
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl sm:text-3xl font-black text-[#22d3ee]">{formatCurrency(Math.round(totalSawer * 0.3))}</span>
+                                <span className="text-sm text-muted-foreground/60">/ {formatCurrency(donasiGoal)}</span>
+                              </div>
+                              <span className="text-sm font-black text-[#22d3ee]">{donasiPercent}%</span>
+                            </div>
+                            <div className="relative h-3 bg-white/5 rounded-full overflow-hidden mb-2">
+                              <motion.div initial={{ width: 0 }} whileInView={{ width: `${donasiPercent}%` }} viewport={{ once: true }} transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }} className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-[#06b6d4] via-[#22d3ee] to-[#06b6d4] shadow-[0_0_12px_rgba(6,182,212,0.4)]" />
+                              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 animate-shimmer" />
+                            </div>
+                            <div className="flex items-center justify-between text-[10px] text-muted-foreground/50 mb-5">
+                              <span>✨ {formatCurrency(Math.round(totalSawer * 0.3))} collected</span>
+                              <span>Goal: {formatCurrency(donasiGoal)}</span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { amount: 25000, label: 'Rp 25K' },
+                                { amount: 50000, label: 'Rp 50K' },
+                                { amount: 100000, label: 'Rp 100K' },
+                                { amount: 250000, label: 'Rp 250K' },
+                              ].map((btn) => (
+                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200">
+                                  ✨ {btn.label}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+
+                      {/* Combined Top Contributors */}
+                      <DonorsList donors={allDonors} accent="#d4a853" />
+
+                      {/* Total Support Badge */}
+                      <motion.div variants={fadeUp} className="text-center pt-2">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] backdrop-blur-sm border border-[#d4a853]/15">
+                          <Gift className="w-3.5 h-3.5 text-[#d4a853]" />
+                          <span className="text-xs font-bold text-[#d4a853]">Total Dukungan: {formatCurrency(totalSawer + totalPrizePool)}</span>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </TabsContent>
+
+                  {/* ═══════════════ SAWER MALE TAB ═══════════════ */}
+                  <TabsContent value="sawer-male" className="mt-0">
+                    <SawerCard division="male" />
+                  </TabsContent>
+
+                  {/* ═══════════════ SAWER FEMALE TAB ═══════════════ */}
+                  <TabsContent value="sawer-female" className="mt-0">
+                    <SawerCard division="female" />
+                  </TabsContent>
+
+                  {/* ═══════════════ DONASI TAB ═══════════════ */}
+                  <TabsContent value="donasi" className="mt-0">
+                    <DonasiCard />
+                  </TabsContent>
+                </Tabs>
+              );
+            })()}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ========== CTA — Glass Reveal ========== */}
+      <section ref={ctaRef} className="relative py-20 px-4 overflow-hidden">
+        <motion.div className="absolute inset-0" style={{ y: ctaY }}>
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-15" aria-hidden="true" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.06) 0%, transparent 50%)' }} />
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-50px' }}
+          variants={stagger}
+          className="relative z-10 max-w-lg mx-auto text-center"
         >
           <motion.div variants={scaleIn}>
             <motion.div
               animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-              className="inline-block mb-6"
+              className="inline-block mb-4"
             >
-              <Sparkles className="w-12 h-12 text-[#d4a853]" />
+              <Sparkles className="w-10 h-10 text-[#d4a853]" />
             </motion.div>
           </motion.div>
-          <motion.h2 variants={fadeUp} className="text-4xl lg:text-6xl font-black text-gradient-champion mb-5">
-            Ready to Compete?
+          <motion.h2 variants={fadeUp} className="text-3xl sm:text-5xl font-black text-gradient-champion mb-3">
+            Punya Skill? Buktikan.
           </motion.h2>
-          <motion.p variants={fadeUp} className="text-sm text-muted-foreground mb-12 max-w-md mx-auto leading-relaxed">
-            Join the stage. Register for weekly tournaments, climb the leaderboard, and become the next IDM League champion.
+          <motion.p variants={fadeUp} className="text-xs text-muted-foreground mb-8">
+            Daftar sekarang dan tunjukkan siapa dancer terbaik.
           </motion.p>
-          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
               <Button
                 size="lg"
-                className="w-full sm:w-auto btn-male px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                className="w-full sm:w-auto btn-male px-8 py-6 text-sm font-bold rounded-2xl transition-all"
                 onClick={() => enterApp('male')}
               >
-                Enter Male Division
-                <ArrowRight className="w-4 h-4 ml-2" />
+                Male Division <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full sm:w-auto btn-female px-10 py-7 text-base font-bold rounded-2xl transition-all"
+                className="w-full sm:w-auto btn-female px-8 py-6 text-sm font-bold rounded-2xl transition-all"
                 onClick={() => enterApp('female')}
               >
-                Enter Female Division
-                <ArrowRight className="w-4 h-4 ml-2" />
+                Female Division <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </motion.div>
           </motion.div>
         </motion.div>
       </section>
 
-      {/* ========== FOOTER ========== */}
-      <footer className="py-12 px-4 border-t border-[#d4a853]/10 text-center bg-[#0c0a06]/5 dark:bg-[#0c0a06]/30">
-        <div className="max-w-4xl mx-auto">
+      {/* ========== FOOTER — Compact ========== */}
+      <footer className="py-8 px-4 border-t border-[#d4a853]/10 bg-[#0c0a06]/30">
+        <div className="max-w-5xl mx-auto">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col sm:flex-row items-center justify-between gap-4"
           >
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <img src="/logo1.webp" alt="IDM" className="w-8 h-8 rounded-lg object-cover" />
-              <span className="text-lg text-gradient-fury font-bold">IDM League</span>
+            {/* Brand */}
+            <div className="flex items-center gap-2">
+              <img src="/logo1.webp" alt="IDM" className="w-6 h-6 rounded-lg object-cover" />
+              <span className="text-sm text-gradient-fury font-bold">IDM League</span>
+              <span className="text-[9px] text-muted-foreground/40 ml-1">Fan Made Edition</span>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">Idol Meta Fan Made Edition — Dance Tournament Platform</p>
-            <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground flex-wrap">
-              <span>Weekly Tournaments</span>
-              <span className="text-[#d4a853]/30">|</span>
-              <span>Pro League</span>
-              <span className="text-[#d4a853]/30">|</span>
-              <span>Smart Matchmaking</span>
-              <span className="text-[#d4a853]/30">|</span>
-              <span>Donation System</span>
+
+            {/* Social */}
+            <div className="flex items-center gap-2">
+              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Discord">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+              </a>
+              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Instagram">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+              </a>
+              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="YouTube">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              </a>
             </div>
-            <div className="section-divider max-w-xs mx-auto" />
-            <p className="text-[10px] text-muted-foreground/50">&copy; 2025 IDM League. All rights reserved.</p>
+
+            {/* Copyright */}
+            <p className="text-[9px] text-muted-foreground/40">&copy; 2025 IDM League — Fan Made Edition</p>
           </motion.div>
         </div>
       </footer>
@@ -986,6 +1774,22 @@ export function LandingPage() {
           rank={(selectedClub.division === 'male' ? maleData : femaleData)?.clubs?.findIndex(c => c.id === selectedClub.id) + 1}
         />
       )}
+
+      {/* ========== BACK TO TOP BUTTON ========== */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full glass-strong border border-border/30 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+            aria-label="Kembali ke atas"
+          >
+            <ChevronUp className="w-5 h-5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

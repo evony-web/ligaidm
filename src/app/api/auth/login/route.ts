@@ -1,36 +1,48 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { verifyPassword, createSessionToken, COOKIE_NAME } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { authenticateAdmin, createSessionToken } from '@/lib/auth';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { username, password } = await request.json();
+    const body = await request.json();
+    const { username, password } = body;
+
     if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password required' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'Username dan password harus diisi' },
+        { status: 400 }
+      );
     }
-    const admin = await db.admin.findUnique({ where: { username } });
+
+    const admin = await authenticateAdmin(username, password);
     if (!admin) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Username atau password salah' },
+        { status: 401 }
+      );
     }
-    const valid = await verifyPassword(password, admin.passwordHash);
-    if (!valid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-    }
-    const token = createSessionToken(admin.username, admin.role);
+
+    const token = createSessionToken(admin.id, admin.role);
+
     const response = NextResponse.json({
       success: true,
-      user: { username: admin.username, role: admin.role, displayName: admin.displayName },
+      admin: { id: admin.id, username: admin.username, role: admin.role },
     });
-    response.cookies.set(COOKIE_NAME, token, {
+
+    // Set httpOnly cookie
+    response.cookies.set('idm-admin-session', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 7 * 24 * 60 * 60, // 7 days
       path: '/',
     });
+
     return response;
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan server' },
+      { status: 500 }
+    );
   }
 }

@@ -191,7 +191,7 @@ function ParticipantTableRow({ player, rank, onClick }: {
       onClick={onClick}
       className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-all duration-200 border-b ${
         dt.borderSubtle
-      } ${isChampion ? `${dt.bgSubtle} border-l-2 border-l-yellow-500` : isTop3 ? `${dt.bgSubtle} border-l-2 border-l-current` : `hover:${dt.bgSubtle}`}`}
+      } ${isChampion ? `${dt.bgSubtle} border-l-2 border-l-yellow-500` : isTop3 ? `${dt.bgSubtle} border-l-2 border-l-current` : `${dt.hoverBgSubtle}`}`}
       style={!isChampion && isTop3 ? { borderLeftColor: 'var(--idm-male, var(--idm-female))' } as React.CSSProperties : undefined}
     >
       {/* Rank — esports poster style large number */}
@@ -306,8 +306,8 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
             <Users className="w-4 h-4 text-white" />
           </div>
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider">Participant Roster</h3>
-            <p className="text-[9px] text-muted-foreground">{division === 'male' ? '🕺 Male Division' : '💃 Female Division'}</p>
+            <h3 className="text-xs font-bold uppercase tracking-wider">Daftar Peserta</h3>
+            <p className="text-[9px] text-muted-foreground">{division === 'male' ? '🕺 Divisi Male' : '💃 Divisi Female'}</p>
           </div>
           <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{filteredPlayers.length} Players</Badge>
         </div>
@@ -319,7 +319,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           <Search className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
           <input
             type="text"
-            placeholder="Search player or club..."
+            placeholder="Cari player atau club..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
@@ -354,14 +354,14 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           <button
             onClick={() => setViewMode('list')}
             className={`p-1.5 rounded-md transition-all ${viewMode === 'list' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
-            title="List view"
+            title="Tampilan daftar"
           >
             <List className={`w-3.5 h-3.5 ${viewMode === 'list' ? dt.text : ''}`} />
           </button>
           <button
             onClick={() => setViewMode('grid')}
             className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? `${dt.bg} shadow-sm` : 'text-muted-foreground hover:text-foreground'}`}
-            title="Grid view"
+            title="Tampilan grid"
           >
             <Grid3X3 className={`w-3.5 h-3.5 ${viewMode === 'grid' ? dt.text : ''}`} />
           </button>
@@ -383,7 +383,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           ) : (
             <div className="py-8 text-center">
               <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No players found</p>
+              <p className="text-sm text-muted-foreground">Tidak ada player ditemukan</p>
             </div>
           )}
         </div>
@@ -405,7 +405,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
           {filteredPlayers.length === 0 && (
             <div className="py-8 text-center">
               <Users className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No players found</p>
+              <p className="text-sm text-muted-foreground">Tidak ada player ditemukan</p>
             </div>
           )}
         </div>
@@ -418,7 +418,7 @@ export function ParticipantGrid({ players, onPlayerClick }: ParticipantGridProps
             onClick={() => setShowAll(!showAll)}
             className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
           >
-            {showAll ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({filteredPlayers.length})</>}
+            {showAll ? <><ChevronUp className="w-3 h-3" /> Sembunyikan</> : <><ChevronDown className="w-3 h-3" /> Tampilkan Semua ({filteredPlayers.length})</>}
           </button>
         </div>
       )}

@@ -100,8 +100,8 @@ function PredictionBar({ team1Votes, team2Votes, userVote, onVote, team1Name, te
     <div className={`rounded-xl ${dt.bgSubtle} ${dt.border} border p-4`}>
       <div className="flex items-center gap-2 mb-3">
         <ThumbsUp className={`w-4 h-4 ${dt.neonText}`} />
-        <span className="text-xs font-semibold uppercase tracking-wider">Match Prediction</span>
-        <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{totalVotes} votes</Badge>
+        <span className="text-xs font-semibold uppercase tracking-wider">Prediksi Match</span>
+        <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{totalVotes > 0 ? `${totalVotes} suara` : 'Belum ada suara'}</Badge>
       </div>
 
       {/* Vote Buttons */}
@@ -111,7 +111,7 @@ function PredictionBar({ team1Votes, team2Votes, userVote, onVote, team1Name, te
           className={`relative rounded-xl p-3 text-center transition-all duration-300 border-2 overflow-hidden ${
             userVote === 'team1'
               ? `border-current ${dt.neonText} ${dt.bgSubtle}`
-              : `${dt.borderSubtle} border-transparent hover:${dt.border}`
+              : `${dt.borderSubtle} border-transparent ${dt.hoverBorder}`
           }`}
         >
           {userVote === 'team1' && (
@@ -131,7 +131,9 @@ function PredictionBar({ team1Votes, team2Votes, userVote, onVote, team1Name, te
             {team1Name.slice(0, 2).toUpperCase()}
           </div>
           <p className="text-[11px] font-semibold truncate">{team1Name}</p>
-          <p className={`text-lg font-black mt-1 ${userVote === 'team1' ? dt.neonGradient : ''}`}>{team1Percent}%</p>
+          <p className={`text-lg font-black mt-1 ${userVote === 'team1' ? dt.neonGradient : ''}`}>
+            {totalVotes > 0 ? `${team1Percent}%` : '-'}
+          </p>
         </button>
 
         <button
@@ -139,7 +141,7 @@ function PredictionBar({ team1Votes, team2Votes, userVote, onVote, team1Name, te
           className={`relative rounded-xl p-3 text-center transition-all duration-300 border-2 overflow-hidden ${
             userVote === 'team2'
               ? `border-current ${dt.neonText} ${dt.bgSubtle}`
-              : `${dt.borderSubtle} border-transparent hover:${dt.border}`
+              : `${dt.borderSubtle} border-transparent ${dt.hoverBorder}`
           }`}
         >
           {userVote === 'team2' && (
@@ -159,26 +161,32 @@ function PredictionBar({ team1Votes, team2Votes, userVote, onVote, team1Name, te
             {team2Name.slice(0, 2).toUpperCase()}
           </div>
           <p className="text-[11px] font-semibold truncate">{team2Name}</p>
-          <p className={`text-lg font-black mt-1 ${userVote === 'team2' ? dt.neonGradient : ''}`}>{team2Percent}%</p>
+          <p className={`text-lg font-black mt-1 ${userVote === 'team2' ? dt.neonGradient : ''}`}>
+            {totalVotes > 0 ? `${team2Percent}%` : '-'}
+          </p>
         </button>
       </div>
 
       {/* Visual Bar */}
-      <div className={`h-2 rounded-full ${dt.bgSubtle} overflow-hidden flex`}>
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${team1Percent}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className={`h-full rounded-l-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`}
-        />
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${team2Percent}%` }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className={`h-full rounded-r-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male-light to-idm-male' : 'from-idm-female-light to-idm-female'}`}
-          style={{ opacity: 0.5 }}
-        />
-      </div>
+      {totalVotes > 0 ? (
+        <div className={`h-2 rounded-full ${dt.bgSubtle} overflow-hidden flex`}>
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${team1Percent}%` }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className={`h-full rounded-l-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`}
+          />
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${team2Percent}%` }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className={`h-full rounded-r-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male-light to-idm-male' : 'from-idm-female-light to-idm-female'}`}
+            style={{ opacity: 0.5 }}
+          />
+        </div>
+      ) : (
+        <p className="text-[10px] text-muted-foreground text-center italic">Vote untuk melihat bar prediksi — jadilah yang pertama memprediksi!</p>
+      )}
     </div>
   );
 }
@@ -305,12 +313,12 @@ export function MatchDayCenter() {
 
     // Match scheduled — shown for upcoming matches
     if (match.status === 'scheduled' || match.status === 'upcoming') {
-      events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'TBD', type: 'match_scheduled', team: 'neutral', description: 'Match scheduled — awaiting session start' });
+      events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'TBD', type: 'match_scheduled', team: 'neutral', description: 'Match dijadwalkan — menunggu sesi dimulai' });
       return events;
     }
 
     // Session opened by admin
-    events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Start', type: 'session_open', team: 'neutral', description: 'Session opened by organizer' });
+    events.push({ time: t.scheduledAt ? new Date(t.scheduledAt).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Start', type: 'session_open', team: 'neutral', description: 'Sesi dibuka oleh organizer' });
 
     // Round results — derived from the admin-input scores (not auto-detected)
     const s1 = match.score1 ?? 0;
@@ -327,26 +335,26 @@ export function MatchDayCenter() {
       for (let i = 0; i < maxRounds; i++) {
         if (i < t1Rounds) {
           roundNum++;
-          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team1', description: `Round ${roundNum}: ${match.team1.name} wins the dance-off` });
+          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team1', description: `Ronde ${roundNum}: ${match.team1.name} memenangkan dance-off` });
         }
         if (i < t2Rounds) {
           roundNum++;
-          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team2', description: `Round ${roundNum}: ${match.team2.name} wins the dance-off` });
+          events.push({ time: `R${roundNum}`, type: 'round_result', team: 'team2', description: `Ronde ${roundNum}: ${match.team2.name} memenangkan dance-off` });
         }
       }
 
       // Final score submitted by admin
-      events.push({ time: 'Final', type: 'score_input', team: s1 > s2 ? 'team1' : 'team2', description: `Final score submitted: ${s1} - ${s2}` });
+      events.push({ time: 'Final', type: 'score_input', team: s1 > s2 ? 'team1' : 'team2', description: `Skor akhir disubmit: ${s1} - ${s2}` });
     }
 
     // MVP — selected by admin/organizer
     if (match.mvpPlayer) {
-      events.push({ time: 'Final', type: 'mvp_selected', team: 'neutral', description: 'MVP selected by organizer', player: match.mvpPlayer.gamertag });
+      events.push({ time: 'Final', type: 'mvp_selected', team: 'neutral', description: 'MVP dipilih oleh organizer', player: match.mvpPlayer.gamertag });
     }
 
     // Match end
     if (match.status === 'completed') {
-      events.push({ time: 'Final', type: 'match_end', team: 'neutral', description: 'Match completed — results finalized' });
+      events.push({ time: 'Final', type: 'match_end', team: 'neutral', description: 'Match selesai — hasil difinalisasi' });
     }
 
     return events;
@@ -356,7 +364,7 @@ export function MatchDayCenter() {
   const handleVote = useCallback((matchId: string, team: 'team1' | 'team2') => {
     setPredictions(prev => {
       const newMap = new Map(prev);
-      const current = newMap.get(matchId) || { matchId, team1Votes: Math.floor(Math.random() * 40) + 30, team2Votes: Math.floor(Math.random() * 40) + 20, userVote: null as any };
+      const current = newMap.get(matchId) || { matchId, team1Votes: 0, team2Votes: 0, userVote: null as any };
       if (current.userVote === team) return prev; // Already voted for this team
 
       // If switching vote, remove from previous
@@ -375,7 +383,7 @@ export function MatchDayCenter() {
     });
   }, []);
 
-  // Initialize predictions with random data
+  // Initialize predictions — all start from 0, votes come from real user input only
   useEffect(() => {
     if (!data?.activeTournament?.matches) return;
     const newMap = new Map(predictions);
@@ -384,8 +392,8 @@ export function MatchDayCenter() {
       if (!newMap.has(m.id)) {
         newMap.set(m.id, {
           matchId: m.id,
-          team1Votes: Math.floor(Math.random() * 50) + 30,
-          team2Votes: Math.floor(Math.random() * 50) + 20,
+          team1Votes: 0,
+          team2Votes: 0,
           userVote: null,
         });
         changed = true;
@@ -485,7 +493,7 @@ export function MatchDayCenter() {
           <div className="relative">
             {/* Background Image */}
             <div className="absolute inset-0">
-              <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover" aria-hidden="true" />
+              <img src="/bg-default.jpg" alt="" className="w-full h-full object-cover object-[center_30%]" aria-hidden="true" />
               <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/95" />
             </div>
 
@@ -498,15 +506,15 @@ export function MatchDayCenter() {
                     Week {t?.weekNumber || 5}
                   </Badge>
                   <Badge className={`${dt.casinoBadge} text-[10px]`}>
-                    {t?.name || 'IDM Tournament'}
+                    {t?.name || 'Turnamen IDM'}
                   </Badge>
                 </div>
                 {(selectedMatch?.status === 'live' || selectedMatch?.status === 'main_event') ? (
                   <LivePulse />
                 ) : selectedMatch?.status === 'completed' ? (
-                  <Badge className="bg-green-500/10 text-green-500 text-[10px] font-black border-0">COMPLETED</Badge>
+                  <Badge className="bg-green-500/10 text-green-500 text-[10px] font-black border-0">SELESAI</Badge>
                 ) : (
-                  <Badge className={`${dt.casinoBadge} text-[10px]`}>UPCOMING</Badge>
+                  <Badge className={`${dt.casinoBadge} text-[10px]`}>MENDATANG</Badge>
                 )}
               </div>
 
@@ -599,7 +607,7 @@ export function MatchDayCenter() {
                         >
                           <span className={`text-xl lg:text-3xl font-black ${dt.neonGradient}`}>VS</span>
                         </motion.div>
-                        <span className="text-[10px] text-muted-foreground mt-2 font-semibold">Coming Up</span>
+                        <span className="text-[10px] text-muted-foreground mt-2 font-semibold">Segera Dimulai</span>
                       </div>
                     )}
 
@@ -679,10 +687,10 @@ export function MatchDayCenter() {
         <div className={`border-b ${dt.border}`}>
           <TabsList className="bg-transparent h-auto p-0 gap-0 rounded-none">
             {[
-              { value: 'prediction', label: 'Prediction', icon: ThumbsUp },
-              { value: 'h2h', label: 'Head to Head', icon: Users },
-              { value: 'timeline', label: 'Timeline', icon: Activity },
-              { value: 'results', label: 'Results', icon: Trophy },
+              { value: 'prediction', label: 'Prediksi', icon: ThumbsUp },
+              { value: 'h2h', label: 'H2H', icon: Users },
+              { value: 'timeline', label: 'Lini Masa', icon: Activity },
+              { value: 'results', label: 'Hasil', icon: Trophy },
             ].map(tab => (
               <TabsTrigger
                 key={tab.value}
@@ -715,7 +723,7 @@ export function MatchDayCenter() {
 
             {/* All Match Predictions */}
             <motion.div variants={item}>
-              <SectionCard title="All Match Predictions" icon={BarChart3} badge={`${tournamentMatches.length} matches`}>
+              <SectionCard title="Semua Prediksi Match" icon={BarChart3} badge={`${tournamentMatches.length} match`}>
                 <div className="space-y-3">
                   {tournamentMatches.map((m) => {
                     const pState = predictions.get(m.id);
@@ -742,7 +750,7 @@ export function MatchDayCenter() {
                           </div>
                           <div className="flex items-center justify-between mt-1">
                             <span className={`text-[9px] font-bold ${pState.userVote === 'team1' ? dt.neonText : 'text-muted-foreground'}`}>{t1Pct}%</span>
-                            <span className="text-[9px] text-muted-foreground">{total} votes</span>
+                            <span className="text-[9px] text-muted-foreground">{total} suara</span>
                             <span className={`text-[9px] font-bold ${pState.userVote === 'team2' ? dt.neonText : 'text-muted-foreground'}`}>{100 - t1Pct}%</span>
                           </div>
                         </div>
@@ -752,7 +760,7 @@ export function MatchDayCenter() {
                             className={`px-2 py-0.5 rounded text-[8px] font-bold transition-all ${
                               pState.userVote === 'team1'
                                 ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white`
-                                : `${dt.bgSubtle} ${dt.text} hover:${dt.bg}`
+                                : `${dt.bgSubtle} ${dt.text} ${dt.hoverBg}`
                             }`}
                           >
                             {m.team1.name.slice(0, 2)}
@@ -762,7 +770,7 @@ export function MatchDayCenter() {
                             className={`px-2 py-0.5 rounded text-[8px] font-bold transition-all ${
                               pState.userVote === 'team2'
                                 ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'} text-white`
-                                : `${dt.bgSubtle} ${dt.text} hover:${dt.bg}`
+                                : `${dt.bgSubtle} ${dt.text} ${dt.hoverBg}`
                             }`}
                           >
                             {m.team2.name.slice(0, 2)}
@@ -777,19 +785,19 @@ export function MatchDayCenter() {
 
             {/* Community Insight */}
             <motion.div variants={item}>
-              <SectionCard title="Community Insight" icon={Eye} badge="Trending">
+              <SectionCard title="Insight Komunitas" icon={Eye} badge="Trending">
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} border text-center`}>
                     <p className={`text-2xl font-black ${dt.neonGradient}`}>
                       {predState ? Math.max(predState.team1Votes, predState.team2Votes) : 0}
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Most Votes</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Suara Terbanyak</p>
                   </div>
                   <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} border text-center`}>
                     <p className={`text-2xl font-black ${dt.neonGradient}`}>
                       {predState ? Math.round((Math.max(predState.team1Votes, predState.team2Votes) / (predState.team1Votes + predState.team2Votes)) * 100) : 0}%
                     </p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Consensus</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">Konsensus</p>
                   </div>
                 </div>
               </SectionCard>
@@ -803,7 +811,7 @@ export function MatchDayCenter() {
             {selectedMatch && team1Stats && team2Stats && (
               <>
                 <motion.div variants={item}>
-                  <SectionCard title="Head to Head Comparison" icon={Users} badge="Stats">
+                  <SectionCard title="Statistik H2H" icon={Users} badge="Statistik">
                     {/* Team Headers */}
                     <div className="flex items-center gap-3 mb-4">
                       <div className="flex-1 text-center">
@@ -833,23 +841,23 @@ export function MatchDayCenter() {
 
                     {/* Stats Rows — all from organizer-input data, no fake stats */}
                     <div className="space-y-1.5">
-                      <H2HStatRow label="Wins" team1Val={team1Stats.wins} team2Val={team2Stats.wins} />
-                      <H2HStatRow label="Losses" team1Val={team1Stats.losses} team2Val={team2Stats.losses} highlight="lower" />
+                      <H2HStatRow label="Win" team1Val={team1Stats.wins} team2Val={team2Stats.wins} />
+                      <H2HStatRow label="Lose" team1Val={team1Stats.losses} team2Val={team2Stats.losses} highlight="lower" />
                       <H2HStatRow label="Win Rate" team1Val={`${team1Stats.winRate}%`} team2Val={`${team2Stats.winRate}%`} />
-                      <H2HStatRow label="Rounds Won" team1Val={team1Stats.totalRoundsWon} team2Val={team2Stats.totalRoundsWon} />
-                      <H2HStatRow label="Round Diff" team1Val={team1Stats.roundDiff > 0 ? `+${team1Stats.roundDiff}` : team1Stats.roundDiff} team2Val={team2Stats.roundDiff > 0 ? `+${team2Stats.roundDiff}` : team2Stats.roundDiff} />
-                      <H2HStatRow label="Points" team1Val={team1Stats.points} team2Val={team2Stats.points} />
-                      <H2HStatRow label="MVP Awards" team1Val={team1Stats.mvpCount} team2Val={team2Stats.mvpCount} />
+                      <H2HStatRow label="Ronde Dimenangkan" team1Val={team1Stats.totalRoundsWon} team2Val={team2Stats.totalRoundsWon} />
+                      <H2HStatRow label="Selisih Ronde" team1Val={team1Stats.roundDiff > 0 ? `+${team1Stats.roundDiff}` : team1Stats.roundDiff} team2Val={team2Stats.roundDiff > 0 ? `+${team2Stats.roundDiff}` : team2Stats.roundDiff} />
+                      <H2HStatRow label="Poin" team1Val={team1Stats.points} team2Val={team2Stats.points} />
+                      <H2HStatRow label="Penghargaan MVP" team1Val={team1Stats.mvpCount} team2Val={team2Stats.mvpCount} />
                     </div>
                     {!team1Stats.hasData && !team2Stats.hasData && (
-                      <p className="text-[10px] text-muted-foreground text-center mt-3 italic">No match data yet — stats will appear after organizer submits results</p>
+                      <p className="text-[10px] text-muted-foreground text-center mt-3 italic">Belum ada data match — statistik akan muncul setelah organizer submit hasil</p>
                     )}
                   </SectionCard>
                 </motion.div>
 
                 {/* Win Probability — calculated from actual stats, not hardcoded */}
                 <motion.div variants={item}>
-                  <SectionCard title="Win Probability" icon={TrendingUp} badge="Based on Stats">
+                  <SectionCard title="Peluang Menang" icon={TrendingUp} badge="Berdasarkan Statistik">
                     <div className={`p-4 rounded-xl ${dt.bgSubtle} ${dt.border} border`}>
                       {team1Stats.hasData || team2Stats.hasData ? (() => {
                         // Calculate probability from actual win rates and round differentials
@@ -881,7 +889,7 @@ export function MatchDayCenter() {
                             </div>
                             <div className="flex items-center justify-between mt-1.5">
                               <span className={`text-sm font-black ${t1Prob >= t2Prob ? dt.neonText : 'text-muted-foreground'}`}>{t1Prob}%</span>
-                              <span className="text-[9px] text-muted-foreground">Based on win rate & round diff</span>
+                              <span className="text-[9px] text-muted-foreground">Berdasarkan win rate & selisih ronde</span>
                               <span className={`text-sm font-black ${t2Prob > t1Prob ? dt.neonText : 'text-muted-foreground'}`}>{t2Prob}%</span>
                             </div>
                           </>
@@ -889,7 +897,7 @@ export function MatchDayCenter() {
                       })() : (
                         <div className="text-center py-4">
                           <TrendingUp className={`w-6 h-6 mx-auto ${dt.text} mb-2`} />
-                          <p className="text-[10px] text-muted-foreground italic">Probability will be calculated after match results are submitted</p>
+                          <p className="text-[10px] text-muted-foreground italic">Probabilitas akan dihitung setelah hasil match disubmit</p>
                         </div>
                       )}
                     </div>
@@ -904,7 +912,7 @@ export function MatchDayCenter() {
         <TabsContent value="timeline" className="mt-4 space-y-4">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>
-              <SectionCard title="Match Timeline" icon={Activity} badge={selectedMatch ? `${matchEvents.length} events` : '0 events'}>
+              <SectionCard title="Lini Masa Match" icon={Activity} badge={selectedMatch ? `${matchEvents.length} event` : '0 event'}>
                 {matchEvents.length > 0 ? (
                   <div className="space-y-0">
                     {matchEvents.map((event, idx) => (
@@ -914,7 +922,7 @@ export function MatchDayCenter() {
                 ) : (
                   <div className="text-center py-8">
                     <Timer className={`w-8 h-8 mx-auto ${dt.text} mb-2`} />
-                    <p className="text-xs text-muted-foreground">Timeline will appear when the match starts</p>
+                    <p className="text-xs text-muted-foreground">Lini Masa akan muncul saat match dimulai</p>
                   </div>
                 )}
               </SectionCard>
@@ -922,7 +930,7 @@ export function MatchDayCenter() {
 
             {/* Key Moments — derived from actual match data, not hardcoded */}
             <motion.div variants={item}>
-              <SectionCard title="Key Moments" icon={Star} badge="Highlights">
+              <SectionCard title="Momen Kunci" icon={Star} badge="Sorotan">
                 {selectedMatch ? (() => {
                   // Build key moments from actual match data
                   const moments: { time: string; title: string; desc: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [];
@@ -931,8 +939,8 @@ export function MatchDayCenter() {
                   if (selectedMatch.status !== 'scheduled' && selectedMatch.status !== 'upcoming') {
                     moments.push({
                       time: 'Start',
-                      title: 'Session Opened',
-                      desc: 'Organizer starts the match session',
+                      title: 'Sesi Dibuka',
+                      desc: 'Organizer memulai sesi match',
                       icon: Activity,
                       color: 'text-green-400',
                     });
@@ -946,24 +954,24 @@ export function MatchDayCenter() {
                     if (s1 > s2) {
                       moments.push({
                         time: 'Final',
-                        title: `${selectedMatch.team1.name} Dominates`,
-                        desc: `Wins ${s1}-${s2} with a +${s1 - s2} round differential`,
+                        title: `${selectedMatch.team1.name} Dominasi`,
+                        desc: `Win ${s1}-${s2} dengan selisih ronde +${s1 - s2}`,
                         icon: Star,
                         color: 'text-emerald-400',
                       });
                     } else if (s2 > s1) {
                       moments.push({
                         time: 'Final',
-                        title: `${selectedMatch.team2.name} Dominates`,
-                        desc: `Wins ${s2}-${s1} with a +${s2 - s1} round differential`,
+                        title: `${selectedMatch.team2.name} Dominasi`,
+                        desc: `Win ${s2}-${s1} dengan selisih ronde +${s2 - s1}`,
                         icon: Star,
                         color: 'text-emerald-400',
                       });
                     } else {
                       moments.push({
                         time: 'Final',
-                        title: 'Evenly Matched',
-                        desc: `Draw at ${s1}-${s2} — both teams equal`,
+                        title: 'Seimbang',
+                        desc: `Seri ${s1}-${s2} — kedua tim seimbang`,
                         icon: Star,
                         color: 'text-emerald-400',
                       });
@@ -973,8 +981,8 @@ export function MatchDayCenter() {
                     if (Math.abs(s1 - s2) === 1) {
                       moments.push({
                         time: 'Final',
-                        title: 'Close Match',
-                        desc: 'Decided by just 1 round difference',
+                        title: 'Match Ketat',
+                        desc: 'Ditentukan dengan selisih 1 ronde saja',
                         icon: Flame,
                         color: 'text-amber-400',
                       });
@@ -985,8 +993,8 @@ export function MatchDayCenter() {
                   if (selectedMatch.mvpPlayer) {
                     moments.push({
                       time: 'Final',
-                      title: 'MVP Awarded',
-                      desc: `${selectedMatch.mvpPlayer.gamertag} selected as MVP`,
+                      title: 'MVP Diberikan',
+                      desc: `${selectedMatch.mvpPlayer.gamertag} dipilih sebagai MVP`,
                       icon: Crown,
                       color: 'text-[#d4a853]',
                     });
@@ -996,8 +1004,8 @@ export function MatchDayCenter() {
                   if (selectedMatch.status === 'completed') {
                     moments.push({
                       time: 'Final',
-                      title: 'Match Finalized',
-                      desc: 'Results confirmed by organizer',
+                      title: 'Match Difinalisasi',
+                      desc: 'Hasil dikonfirmasi oleh organizer',
                       icon: Trophy,
                       color: 'text-[#d4a853]',
                     });
@@ -1007,8 +1015,8 @@ export function MatchDayCenter() {
                   if (moments.length === 0) {
                     moments.push({
                       time: 'TBD',
-                      title: 'Match Scheduled',
-                      desc: 'Key moments will appear after session starts',
+                      title: 'Match Dijadwalkan',
+                      desc: 'Momen kunci akan muncul setelah session dimulai',
                       icon: Clock,
                       color: 'text-muted-foreground',
                     });
@@ -1020,7 +1028,7 @@ export function MatchDayCenter() {
                         <motion.div
                           key={idx}
                           whileHover={{ scale: 1.02 }}
-                          className={`flex items-start gap-3 p-3 rounded-xl ${dt.bgSubtle} ${dt.borderSubtle} border cursor-pointer transition-all hover:${dt.border}`}
+                          className={`flex items-start gap-3 p-3 rounded-xl ${dt.bgSubtle} ${dt.borderSubtle} border cursor-pointer transition-all ${dt.hoverBorder}`}
                         >
                           <div className={`w-8 h-8 rounded-lg ${dt.bgSubtle} flex items-center justify-center shrink-0`}>
                             <moment.icon className={`w-4 h-4 ${moment.color}`} />
@@ -1039,7 +1047,7 @@ export function MatchDayCenter() {
                 })() : (
                   <div className="text-center py-8">
                     <Star className={`w-8 h-8 mx-auto ${dt.text} mb-2`} />
-                    <p className="text-xs text-muted-foreground">Select a match to see key moments</p>
+                    <p className="text-xs text-muted-foreground">Pilih match untuk melihat momen kunci</p>
                   </div>
                 )}
               </SectionCard>
@@ -1052,7 +1060,7 @@ export function MatchDayCenter() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             {/* All Tournament Results */}
             <motion.div variants={item}>
-              <SectionCard title="Tournament Results" icon={Trophy} badge={`${tournamentMatches.length} matches`}>
+              <SectionCard title="Hasil Turnamen" icon={Trophy} badge={`${tournamentMatches.length} match`}>
                 <div className="space-y-2">
                   {tournamentMatches.map((m) => {
                     const hasScore = m.score1 !== null && m.score2 !== null;
@@ -1064,7 +1072,7 @@ export function MatchDayCenter() {
                       <motion.div
                         key={m.id}
                         whileHover={{ x: 2 }}
-                        className={`flex items-stretch rounded-lg overflow-hidden ${dt.bgSubtle} ${dt.borderSubtle} border transition-all hover:${dt.border} cursor-pointer`}
+                        className={`flex items-stretch rounded-lg overflow-hidden ${dt.bgSubtle} ${dt.borderSubtle} border transition-all ${dt.hoverBorder} cursor-pointer`}
                         onClick={() => {
                           const idx = tournamentMatches.findIndex(tm => tm.id === m.id);
                           if (idx >= 0) setSelectedMatchIdx(idx);
@@ -1117,7 +1125,7 @@ export function MatchDayCenter() {
 
             {/* Recent League Results */}
             <motion.div variants={item}>
-              <SectionCard title="League Results" icon={Radio} badge="Recent">
+              <SectionCard title="Hasil League" icon={Radio} badge="Terbaru">
                 <div className="space-y-2">
                   {data.recentMatches?.slice(0, 6).map(m => {
                     const winner1 = m.score1 > m.score2;

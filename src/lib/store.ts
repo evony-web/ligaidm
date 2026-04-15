@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type AppView = "landing" | "dashboard" | "tournament" | "league" | "admin" | "matchday";
+export type AppView = "landing" | "dashboard" | "tournament" | "league" | "admin" | "matchday" | "register";
 export type Division = "male" | "female";
 export type NotifType = "donation" | "match" | "mvp" | "streak" | "victory";
 
@@ -8,6 +8,17 @@ interface Notification {
   id: string;
   type: NotifType;
   message: string;
+}
+
+interface AdminUser {
+  id: string;
+  username: string;
+  role: string;
+}
+
+interface AdminAuthState {
+  isAuthenticated: boolean;
+  admin: AdminUser | null;
 }
 
 interface AppState {
@@ -39,9 +50,9 @@ interface AppState {
   removeNotification: (id: string) => void;
 
   // Admin auth
-  isAdminAuthenticated: boolean;
-  adminUser: { username: string; role: string; displayName?: string } | null;
-  setAdminAuth: (authenticated: boolean, user?: { username: string; role: string; displayName?: string } | null) => void;
+  adminAuth: AdminAuthState;
+  setAdminAuth: (auth: AdminAuthState) => void;
+  clearAdminAuth: () => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -73,7 +84,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
   removeNotification: (id) => set((s) => ({ notifications: s.notifications.filter(n => n.id !== id) })),
 
-  isAdminAuthenticated: false,
-  adminUser: null,
-  setAdminAuth: (authenticated, user) => set({ isAdminAuthenticated: authenticated, adminUser: user || null }),
+  adminAuth: { isAuthenticated: false, admin: null },
+  setAdminAuth: (auth) => set({ adminAuth: auth }),
+  clearAdminAuth: () => set({ adminAuth: { isAuthenticated: false, admin: null } }),
 }));

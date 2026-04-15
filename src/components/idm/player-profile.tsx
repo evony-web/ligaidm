@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { useAppStore } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
+import { getAvatarUrl } from '@/lib/utils';
 
 interface PlayerProfileProps {
   player: {
@@ -29,6 +30,80 @@ interface PlayerProfileProps {
   };
   onClose: () => void;
   rank?: number;
+}
+
+/* ─── Deterministic hash from string for procedural generation ─── */
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+/* ─── Procedural Player Banner — uses AI-generated division background ─── */
+function PlayerBanner({ gamertag, division, tier, rank }: {
+  gamertag: string; division: string; tier: string; rank?: number
+}) {
+  const hash = hashString(gamertag);
+  const isMale = division === 'male';
+  const primaryColor = isMale ? '#22d3ee' : '#c084fc';
+  const secondaryColor = isMale ? '#06b6d4' : '#a855f7';
+  const bgImage = isMale ? '/bg-male.jpg' : '/bg-female.jpg';
+
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Layer 1: AI-generated division background image */}
+      <img src={bgImage} alt="" className="absolute inset-0 w-full h-full object-cover" aria-hidden="true" />
+
+      {/* Layer 2: Dark overlay for text readability */}
+      <div className="absolute inset-0 bg-gradient-to-br from-background/70 via-background/50 to-background/80" />
+
+      {/* Layer 3: Division color tint */}
+      <div className="absolute inset-0" style={{
+        background: `radial-gradient(ellipse at 70% 30%, ${primaryColor}15 0%, transparent 60%),
+                     radial-gradient(ellipse at 20% 80%, ${secondaryColor}10 0%, transparent 50%)`,
+      }} />
+
+      {/* Layer 4: SVG procedural overlay for depth */}
+      <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+        {/* Large watermark gamertag */}
+        <text x="90%" y="60%" textAnchor="end" dominantBaseline="middle"
+          fill={primaryColor} fontSize="80" fontWeight="900" opacity="0.06"
+          fontFamily="system-ui" letterSpacing="-2">
+          {gamertag.toUpperCase()}
+        </text>
+
+        {/* Tier watermark */}
+        <text x="10%" y="85%" textAnchor="start" dominantBaseline="middle"
+          fill={secondaryColor} fontSize="32" fontWeight="700" opacity="0.04"
+          fontFamily="system-ui">
+          {tier} TIER
+        </text>
+
+        {/* Corner brackets */}
+        <line x1="0" y1="0" x2="35%" y2="0" stroke={primaryColor} strokeWidth="2.5" opacity="0.25" />
+        <line x1="0" y1="0" x2="0" y2="35%" stroke={primaryColor} strokeWidth="2.5" opacity="0.25" />
+        <line x1="100%" y1="100%" x2="65%" y2="100%" stroke={primaryColor} strokeWidth="2.5" opacity="0.25" />
+        <line x1="100%" y1="100%" x2="100%" y2="65%" stroke={primaryColor} strokeWidth="2.5" opacity="0.25" />
+      </svg>
+
+      {/* Layer 5: Large rank number watermark */}
+      <div className="absolute -right-2 -bottom-6 select-none pointer-events-none">
+        <span className={`text-[140px] font-black leading-none ${
+          isMale ? 'text-idm-male/[0.04]' : 'text-idm-female/[0.04]'
+        }`}>
+          {rank || '#'}
+        </span>
+      </div>
+
+      {/* Layer 6: Vignette/depth overlays */}
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/15 via-transparent to-background/15" />
+    </div>
+  );
 }
 
 /* ─── Stat Block — Dance Tournament HUD style ─── */
@@ -63,37 +138,6 @@ function StatBlock({ icon: Icon, label, value, sub, color, highlight, size = 'no
   );
 }
 
-/* ─── Match History Row — Dance Tournament style ─── */
-function MatchHistoryRow({ match }: { match: { week: number; result: string; score: string; mvp: boolean; opponent: string; highScore: string } }) {
-  const dt = useDivisionTheme();
-  const isWin = match.result === 'WIN';
-  return (
-    <div className={`flex items-center gap-3 p-2.5 rounded-lg transition-all hover:scale-[1.01] ${
-      isWin ? 'bg-green-500/5 border border-green-500/10' : 'bg-red-500/5 border border-red-500/10'
-    }`}>
-      {/* Result badge */}
-      <div className={`w-10 h-8 rounded-md flex items-center justify-center text-[9px] font-black ${
-        isWin ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-      }`}>
-        {match.result}
-      </div>
-      {/* Opponent info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-semibold truncate">vs {match.opponent}</p>
-        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-          <span>Wk {match.week}</span>
-          <span className="text-border">•</span>
-          <span>Score {match.highScore}</span>
-        </div>
-      </div>
-      {/* Score */}
-      <span className="text-sm font-black tabular-nums">{match.score}</span>
-      {/* MVP indicator */}
-      {match.mvp && <Crown className="w-3.5 h-3.5 text-yellow-500 shrink-0" />}
-    </div>
-  );
-}
-
 export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
   const dt = useDivisionTheme();
   const division = useAppStore(s => s.division);
@@ -102,28 +146,22 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
   const losses = player.matches - player.totalWins;
   const isChampion = rank === 1;
   const isTop3 = rank !== undefined && rank <= 3;
+  const isSTier = player.tier === 'S';
 
   const tierConfig: Record<string, { label: string; color: string; desc: string }> = {
-    S: { label: 'S Tier', color: 'text-red-500', desc: 'Elite Dancer — Top performer with exceptional rhythm' },
-    A: { label: 'A Tier', color: 'text-yellow-500', desc: 'Advanced Dancer — Strong performer with proven records' },
-    B: { label: 'B Tier', color: 'text-green-500', desc: 'Rising Dancer — Developing performer with potential' },
+    S: { label: 'S Tier', color: 'text-red-500', desc: 'Penari Elite — Performer teratas dengan ritme luar biasa' },
+    A: { label: 'A Tier', color: 'text-yellow-500', desc: 'Penari Mahir — Performer tangguh dengan rekam jejak terbukti' },
+    B: { label: 'B Tier', color: 'text-green-500', desc: 'Penari Meningkat — Performer berkembang dengan potensi' },
   };
   const tier = tierConfig[player.tier] || tierConfig.B;
 
-  const rankLabel = rank === 1 ? 'CHAMPION' : rank === 2 ? 'RUNNER-UP' : rank === 3 ? '3RD PLACE' : rank ? `#${rank}` : '';
+  const rankLabel = rank === 1 ? 'JUARA' : rank === 2 ? 'JUARA 2' : rank === 3 ? 'PERINGKAT 3' : rank ? `#${rank}` : '';
 
-  // Generate match history for demo
-  const recentMatches = [
-    { week: 5, result: 'WIN', score: '2-0', mvp: true, opponent: 'Team Phoenix', highScore: '985K' },
-    { week: 4, result: 'WIN', score: '2-1', mvp: false, opponent: 'Shadow Groove', highScore: '872K' },
-    { week: 3, result: 'LOSS', score: '1-2', mvp: false, opponent: 'Dragon Rhythm', highScore: '756K' },
-    { week: 2, result: 'WIN', score: '2-0', mvp: true, opponent: 'Storm Dancers', highScore: '1.1M' },
-    { week: 1, result: 'WIN', score: '2-1', mvp: false, opponent: 'Nova Crew', highScore: '923K' },
-  ];
-
-  // Performance chart data (demo — would be derived from actual match results in production)
-  const performanceData = [65, 72, 68, 80, 85, 78, 90, 88, 92, 95];
-  const maxPerf = Math.max(...performanceData);
+  // No demo data — all data comes from actual organizer-input results only.
+  // The game is not integrated with this server, so we cannot show
+  // in-game performance metrics or per-match score trends.
+  const hasMatchHistory = player.matches > 0;
+  const avatarSrc = getAvatarUrl(player.gamertag, division);
 
   return (
     <AnimatePresence>
@@ -142,36 +180,42 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
           className="bg-background w-full sm:max-w-lg sm:rounded-2xl overflow-hidden max-h-[92vh] overflow-y-auto custom-scrollbar"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* ═══ HERO BANNER — Dance Tournament Profile Style ═══ */}
-          <div className={`relative h-44 overflow-hidden`}>
-            {/* Background gradient — division themed */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${
-              division === 'male'
-                ? 'from-idm-male/30 via-idm-male/10 to-transparent'
-                : 'from-idm-female/30 via-idm-female/10 to-transparent'
-            }`} />
-            {/* Background pattern overlay */}
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute inset-0" style={{
-                backgroundImage: `
-                  radial-gradient(circle at 20% 50%, ${dt.color}15 0%, transparent 50%),
-                  radial-gradient(circle at 80% 20%, ${dt.color}10 0%, transparent 50%),
-                  radial-gradient(circle at 60% 80%, ${dt.color}08 0%, transparent 50%)
-                `,
-              }} />
-            </div>
-            {/* Geometric lines — esports style */}
-            <svg className="absolute inset-0 w-full h-full opacity-10" preserveAspectRatio="none">
-              <line x1="0" y1="100%" x2="40%" y2="0" stroke={dt.color} strokeWidth="1" />
-              <line x1="100%" y1="100%" x2="60%" y2="0" stroke={dt.color} strokeWidth="1" />
-              <line x1="50%" y1="100%" x2="50%" y2="0" stroke={dt.color} strokeWidth="0.5" />
+          {/* ═══ HERO BANNER — Full Avatar Card Style ═══ */}
+          <div className="relative h-72 overflow-hidden">
+            {/* Full AI-generated avatar as background */}
+            <img src={avatarSrc} alt={player.gamertag} className="absolute inset-0 w-full h-full object-cover object-top" />
+
+            {/* Dark overlay gradient for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-background/20" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-transparent to-transparent" />
+
+            {/* Division color tint overlay */}
+            <div className="absolute inset-0" style={{
+              background: division === 'male'
+                ? 'radial-gradient(ellipse at 50% 30%, rgba(34,211,238,0.1) 0%, transparent 60%)'
+                : 'radial-gradient(ellipse at 50% 30%, rgba(192,132,252,0.1) 0%, transparent 60%)'
+            }} />
+
+            {/* SVG procedural overlay for depth */}
+            <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="xMidYMid slice">
+              <text x="90%" y="50%" textAnchor="end" dominantBaseline="middle"
+                fill={division === 'male' ? '#22d3ee' : '#c084fc'} fontSize="70" fontWeight="900" opacity="0.04"
+                fontFamily="system-ui" letterSpacing="-2">
+                {player.gamertag.toUpperCase()}
+              </text>
+              {/* Corner brackets */}
+              <line x1="0" y1="0" x2="25%" y2="0" stroke={division === 'male' ? '#22d3ee' : '#c084fc'} strokeWidth="2" opacity="0.2" />
+              <line x1="0" y1="0" x2="0" y2="25%" stroke={division === 'male' ? '#22d3ee' : '#c084fc'} strokeWidth="2" opacity="0.2" />
+              <line x1="100%" y1="100%" x2="75%" y2="100%" stroke={division === 'male' ? '#22d3ee' : '#c084fc'} strokeWidth="2" opacity="0.2" />
+              <line x1="100%" y1="100%" x2="100%" y2="75%" stroke={division === 'male' ? '#22d3ee' : '#c084fc'} strokeWidth="2" opacity="0.2" />
             </svg>
-            {/* Large background number */}
-            <div className="absolute -right-4 -bottom-4 select-none">
-              <span className={`text-[120px] font-black leading-none ${division === 'male' ? 'text-idm-male/5' : 'text-idm-female/5'}`}>
-                {rank || '#'}
-              </span>
-            </div>
+
+            {/* Tier-colored top accent line */}
+            <div className={`absolute top-0 inset-x-0 h-1 ${
+              player.tier === 'S' ? 'bg-gradient-to-r from-transparent via-red-500 to-transparent' :
+              player.tier === 'A' ? 'bg-gradient-to-r from-transparent via-yellow-500 to-transparent' :
+              'bg-gradient-to-r from-transparent via-green-500 to-transparent'
+            }`} />
 
             {/* Close button */}
             <button
@@ -197,89 +241,90 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             {/* Division badge */}
             <div className="absolute top-3 left-3 z-10" style={{ marginTop: isTop3 ? '28px' : 0 }}>
               <Badge className={`${dt.casinoBadge} text-[9px] backdrop-blur-sm`}>
-                {division === 'male' ? '🕺 Male Division' : '💃 Female Division'}
+                {division === 'male' ? '🕺 Divisi Male' : '💃 Divisi Female'}
               </Badge>
             </div>
 
-            {/* Avatar — centered, overlapping banner */}
-            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-              {/* Glow ring */}
-              {isChampion && (
-                <div className="absolute -inset-2 rounded-full border-2 border-yellow-500/40 animate-pulse" />
+            {/* Bottom info overlay — name, tier, club */}
+            <div className="absolute bottom-0 inset-x-0 z-10 p-4">
+              {/* S-tier animated glow ring around name */}
+              {isSTier && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(ellipse at 50% 80%, rgba(239, 68, 68, 0.08) 0%, transparent 50%)',
+                  }}
+                  animate={{
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                />
               )}
-              <div className={`w-20 h-20 rounded-full border-4 border-background flex items-center justify-center text-xl font-black shadow-2xl ${
-                player.tier === 'S' ? 'bg-red-500/15 text-red-500' :
-                player.tier === 'A' ? 'bg-yellow-500/15 text-yellow-500' :
-                'bg-green-500/15 text-green-500'
-              }`}>
-                {player.gamertag.slice(0, 2).toUpperCase()}
-              </div>
-              {/* Tier badge on avatar */}
-              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 z-20">
-                <TierBadge tier={player.tier} />
+
+              <div className="relative z-10">
+                <h2 className="text-2xl font-black text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.8)]">{player.gamertag}</h2>
+                <p className="text-xs text-white/60 mt-0.5">{player.name}</p>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <TierBadge tier={player.tier} />
+                  <span className={`text-xs font-semibold drop-shadow-sm ${tier.color}`}>{tier.label}</span>
+                  {player.streak > 1 && (
+                    <Badge className="bg-orange-500/20 text-orange-400 text-[10px] border-0 backdrop-blur-sm">
+                      🔥 {player.streak} Streak
+                    </Badge>
+                  )}
+                </div>
+                {player.club && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <Shield className={`w-3.5 h-3.5 ${dt.text}`} />
+                    <span className={`text-xs ${dt.text} font-medium drop-shadow-sm`}>{player.club}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* ═══ CONTENT ═══ */}
-          <div className="px-4 pt-16 pb-6">
-            {/* Name, Tier, Club */}
-            <div className="text-center mb-5">
-              <h2 className={`text-xl font-black ${dt.gradientText}`}>{player.gamertag}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{player.name}</p>
-              <div className="flex items-center justify-center gap-2 mt-2">
-                <span className={`text-xs font-semibold ${tier.color}`}>{tier.label}</span>
-                {player.streak > 1 && (
-                  <Badge className="bg-orange-500/10 text-orange-500 text-[10px] border-0">
-                    🔥 {player.streak} Streak
-                  </Badge>
-                )}
-              </div>
-              {player.club && (
-                <div className="flex items-center justify-center gap-1.5 mt-2">
-                  <Shield className={`w-3.5 h-3.5 ${dt.text}`} />
-                  <span className={`text-xs ${dt.text} font-medium`}>{player.club}</span>
-                </div>
-              )}
-              <p className="text-[10px] text-muted-foreground mt-2 max-w-xs mx-auto">{tier.desc}</p>
-            </div>
+          <div className="px-4 pt-4 pb-6">
+            {/* Tier description */}
+            <p className="text-[10px] text-muted-foreground text-center max-w-xs mx-auto mb-4">{tier.desc}</p>
 
             {/* ═══ Main Stats Grid — Dance Tournament HUD Style ═══ */}
             <div className="grid grid-cols-4 gap-2 mb-4">
-              <StatBlock icon={Trophy} label="Points" value={player.points} color={dt.text} highlight size="large" />
+              <StatBlock icon={Trophy} label="Poin" value={player.points} color={dt.text} highlight size="large" />
               <StatBlock icon={Target} label="Win Rate" value={`${winRate}%`} sub={`${player.totalWins}W/${losses}L`} color="text-green-500" />
-              <StatBlock icon={Crown} label="MVP" value={player.totalMvp} sub={`${mvpRate}% rate`} color="text-yellow-500" />
-              <StatBlock icon={Activity} label="Matches" value={player.matches} color="text-blue-400" />
+              <StatBlock icon={Crown} label="MVP" value={player.totalMvp} sub={`${mvpRate}% rasio`} color="text-yellow-500" />
+              <StatBlock icon={Activity} label="Match" value={player.matches} color="text-blue-400" />
             </div>
 
-            {/* ═══ Performance Graph — Dance Tournament Bar Chart ═══ */}
-            <div className={`p-3.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle} mb-4`}>
-              <div className="flex items-center gap-2 mb-3">
-                <BarChart3 className={`w-4 h-4 ${dt.text}`} />
-                <span className="text-xs font-semibold">Performance Trend</span>
-                <Badge className={`${dt.casinoBadge} text-[8px] ml-auto`}>LAST 10</Badge>
-              </div>
-              <div className="flex items-end gap-1 h-14">
-                {performanceData.map((val, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${(val / maxPerf) * 100}%` }}
-                      transition={{ duration: 0.4, delay: i * 0.05 }}
-                      className={`w-full rounded-t-sm ${
-                        i === performanceData.length - 1
-                          ? `bg-gradient-to-t ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`
-                          : i >= performanceData.length - 3 ? `${dt.bg}` : 'bg-muted-foreground/15'
-                      }`}
-                    />
+            {/* ═══ Performance Overview — based on actual record only ═══ */}
+            {hasMatchHistory ? (
+              <div className={`p-3.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle} mb-4`}>
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className={`w-4 h-4 ${dt.text}`} />
+                  <span className="text-xs font-semibold">Ringkasan Performa</span>
+                  <Badge className={`${dt.casinoBadge} text-[8px] ml-auto`}>{player.matches} MATCH</Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="p-2 rounded-lg bg-green-500/5 border border-green-500/10">
+                    <p className="text-lg font-bold text-green-500">{player.totalWins}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">Wins</p>
                   </div>
-                ))}
+                  <div className="p-2 rounded-lg bg-red-500/5 border border-red-500/10">
+                    <p className="text-lg font-bold text-red-500">{losses}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">Losses</p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
+                    <p className="text-lg font-bold text-yellow-500">{player.totalMvp}</p>
+                    <p className="text-[9px] text-muted-foreground uppercase">MVP</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-[8px] text-muted-foreground">10 matches ago</span>
-                <span className="text-[8px] text-muted-foreground">Now</span>
+            ) : (
+              <div className={`p-3.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle} mb-4 text-center`}>
+                <BarChart3 className={`w-5 h-5 ${dt.text} mx-auto mb-1.5 opacity-40`} />
+                <p className="text-xs text-muted-foreground">Belum ada data match — statistik performa akan muncul setelah match tercatat</p>
               </div>
-            </div>
+            )}
 
             {/* ═══ Win Rate Progress Bar ═══ */}
             <div className="mb-4">
@@ -306,14 +351,14 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               <div className="flex items-center justify-between p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
                 <div className="flex items-center gap-2">
                   <Flame className="w-4 h-4 text-orange-500" />
-                  <span className="text-xs font-medium">Current Streak</span>
+                  <span className="text-xs font-medium">Streak Saat Ini</span>
                 </div>
                 <span className="text-lg font-black text-orange-500">{player.streak}</span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
                 <div className="flex items-center gap-2">
                   <Zap className="w-4 h-4 text-yellow-500" />
-                  <span className="text-xs font-medium">Max Streak</span>
+                  <span className="text-xs font-medium">Streak Tertinggi</span>
                 </div>
                 <span className="text-lg font-black text-yellow-500">{player.maxStreak}</span>
               </div>
@@ -323,17 +368,17 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
             <div className="mb-4">
               <div className="flex items-center gap-2 mb-2">
                 <Award className={`w-4 h-4 ${dt.text}`} />
-                <h3 className="text-sm font-semibold">Achievements</h3>
+                <h3 className="text-sm font-semibold">Prestasi</h3>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {player.totalWins >= 1 && (
                   <Badge className="bg-green-500/10 text-green-500 text-[10px] border-0">
-                    <Star className="w-3 h-3 mr-1" /> First Win
+                    <Star className="w-3 h-3 mr-1" /> Win Pertama
                   </Badge>
                 )}
                 {player.totalWins >= 5 && (
                   <Badge className="bg-blue-500/10 text-blue-400 text-[10px] border-0">
-                    <Trophy className="w-3 h-3 mr-1" /> 5 Wins
+                    <Trophy className="w-3 h-3 mr-1" /> 5 Win
                   </Badge>
                 )}
                 {player.totalMvp >= 1 && (
@@ -343,17 +388,17 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
                 )}
                 {player.maxStreak >= 3 && (
                   <Badge className="bg-orange-500/10 text-orange-500 text-[10px] border-0">
-                    <Flame className="w-3 h-3 mr-1" /> On Fire
+                    <Flame className="w-3 h-3 mr-1" /> Membara
                   </Badge>
                 )}
                 {player.tier === 'S' && (
                   <Badge className="bg-red-500/10 text-red-500 text-[10px] border-0">
-                    <Star className="w-3 h-3 mr-1" /> Elite
+                    <Star className="w-3 h-3 mr-1" /> Elit
                   </Badge>
                 )}
                 {rank === 1 && (
                   <Badge className="bg-yellow-500/10 text-yellow-500 text-[10px] border-0">
-                    <Crown className="w-3 h-3 mr-1" /> Champion
+                    <Crown className="w-3 h-3 mr-1" /> Juara
                   </Badge>
                 )}
                 {player.matches >= 5 && (
@@ -364,32 +409,57 @@ export function PlayerProfile({ player, onClose, rank }: PlayerProfileProps) {
               </div>
             </div>
 
-            {/* ═══ Recent Matches — Dance Tournament Match History ═══ */}
-            <div className="mb-4">
-              <div className="flex items-center gap-2 mb-2.5">
-                <Calendar className={`w-4 h-4 ${dt.text}`} />
-                <h3 className="text-sm font-semibold">Match History</h3>
-                <Badge className={`${dt.casinoBadge} text-[8px] ml-auto`}>RECENT</Badge>
+            {/* ═══ Recent Matches — only from organizer-input data ═══ */}
+            {hasMatchHistory ? (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Calendar className={`w-4 h-4 ${dt.text}`} />
+                  <h3 className="text-sm font-semibold">Rekor Match</h3>
+                  <Badge className={`${dt.casinoBadge} text-[8px] ml-auto`}>{player.matches} DIMAINKAN</Badge>
+                </div>
+                <div className={`p-3 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle}`}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-green-500">{player.totalWins}</p>
+                      <p className="text-[9px] text-muted-foreground uppercase">Wins</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-2xl font-black text-red-500">{losses}</p>
+                      <p className="text-[9px] text-muted-foreground uppercase">Losses</p>
+                    </div>
+                  </div>
+                  {player.totalMvp > 0 && (
+                    <div className="mt-2 pt-2 border-t border-border/30 text-center">
+                      <p className="text-xs text-yellow-500 font-semibold">{player.totalMvp}x Penghargaan MVP</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                {recentMatches.map((m, i) => (
-                  <MatchHistoryRow key={i} match={m} />
-                ))}
+            ) : (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Calendar className={`w-4 h-4 ${dt.text}`} />
+                  <h3 className="text-sm font-semibold">Rekor Match</h3>
+                </div>
+                <div className={`p-4 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle} text-center`}>
+                  <Calendar className={`w-5 h-5 ${dt.text} mx-auto mb-1.5 opacity-40`} />
+                  <p className="text-xs text-muted-foreground">Belum ada match tercatat</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* ═══ Points Breakdown ═══ */}
             <div className={`p-3.5 rounded-xl ${dt.bgSubtle} border ${dt.borderSubtle}`}>
               <div className="flex items-center gap-2 mb-2.5">
                 <TrendingUp className={`w-4 h-4 ${dt.text}`} />
-                <span className="text-xs font-semibold">Points Breakdown</span>
+                <span className="text-xs font-semibold">Rincian Poin</span>
               </div>
               <div className="space-y-2 text-xs">
                 {[
-                  { label: `Win Bonus (${player.totalWins} wins)`, value: `+${player.totalWins * 3}`, color: dt.text },
-                  { label: `MVP Bonus (${player.totalMvp}x)`, value: `+${player.totalMvp * 5}`, color: 'text-yellow-500' },
-                  { label: `Participation (${player.matches} matches)`, value: `+${player.matches * 2}`, color: 'text-green-500' },
-                  { label: `Streak Bonus (${player.streak}x)`, value: `+${Math.min(player.streak * 5, 30)}`, color: 'text-orange-500' },
+                  { label: `Bonus Win (${player.totalWins} win)`, value: `+${player.totalWins * 3}`, color: dt.text },
+                  { label: `Bonus MVP (${player.totalMvp}x)`, value: `+${player.totalMvp * 5}`, color: 'text-yellow-500' },
+                  { label: `Partisipasi (${player.matches} match)`, value: `+${player.matches * 2}`, color: 'text-green-500' },
+                  { label: `Bonus Streak (${player.streak}x)`, value: `+${Math.min(player.streak * 5, 30)}`, color: 'text-orange-500' },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center">
                     <span className="text-muted-foreground">{item.label}</span>

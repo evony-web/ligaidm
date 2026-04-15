@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
   Shield, Users, Music, Trophy, Gift, Plus, Check,
-  Play, Zap, Crown, Settings, UserPlus, X, Save
+  Play, Zap, Crown, Settings, UserPlus, X, Save, Loader2, Clock, MapPin, Phone
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { TierBadge } from './tier-badge';
 import { StatusBadge } from './status-badge';
 import { useState } from 'react';
@@ -26,6 +27,17 @@ const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
+
+const statusLabelMap: Record<string, string> = {
+  setup: 'Persiapan',
+  registration: 'Registrasi',
+  approval: 'Persetujuan',
+  team_generation: 'Buat Tim',
+  bracket_generation: 'Buat Bracket',
+  main_event: 'Acara Utama',
+  scoring: 'Skor',
+  completed: 'Selesai',
+};
 
 export function AdminPanel() {
   const { division } = useAppStore();
@@ -85,7 +97,7 @@ export function AdminPanel() {
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); toast.success('Tournament created!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); toast.success('Tournament berhasil dibuat!'); },
   });
 
   const updateTier = useMutation({
@@ -96,7 +108,7 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Tier updated!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Tier diperbarui!'); },
   });
 
   const createPlayer = useMutation({
@@ -108,7 +120,7 @@ export function AdminPanel() {
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Player created!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Player berhasil ditambahkan!'); },
     onError: (e: Error) => { toast.error(e.message); },
   });
 
@@ -120,7 +132,7 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Status updated!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Status diperbarui!'); },
   });
 
   const approvePlayer = useMutation({
@@ -131,7 +143,7 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player approved!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player disetujui!'); },
   });
 
   const registerPlayer = useMutation({
@@ -143,7 +155,7 @@ export function AdminPanel() {
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player registered!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player terdaftar!'); },
     onError: (e: Error) => { toast.error(e.message); },
   });
 
@@ -153,7 +165,7 @@ export function AdminPanel() {
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Teams generated!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Tim berhasil di-generate!'); },
     onError: (e: Error) => { toast.error(e.message); },
   });
 
@@ -163,7 +175,7 @@ export function AdminPanel() {
       if (!res.ok) throw new Error('Failed');
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Bracket generated!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Bracket berhasil di-generate!'); },
   });
 
   const addDonation = useMutation({
@@ -174,7 +186,35 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-donations', division] }); toast.success('Donation added!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-donations', division] }); toast.success('Donasi berhasil ditambahkan!'); },
+  });
+
+  // Pending registrations (all divisions)
+  const { data: pendingRegistrations } = useQuery({
+    queryKey: ['admin-pending-registrations'],
+    queryFn: async () => { const res = await fetch('/api/players?registrationStatus=pending'); return res.json(); },
+  });
+
+  const approveRegistration = useMutation({
+    mutationFn: async ({ playerId, tier }: { playerId: string; tier: string }) => {
+      const res = await fetch(`/api/players/${playerId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationStatus: 'approved', tier }),
+      });
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-pending-registrations'] }); qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Pendaftaran disetujui!'); },
+  });
+
+  const rejectRegistration = useMutation({
+    mutationFn: async (playerId: string) => {
+      const res = await fetch(`/api/players/${playerId}`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationStatus: 'rejected', isActive: false }),
+      });
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-pending-registrations'] }); qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Pendaftaran ditolak.'); },
   });
 
   const createClub = useMutation({
@@ -185,7 +225,7 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-clubs', division] }); toast.success('Club created!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-clubs', division] }); toast.success('Club berhasil dibuat!'); },
   });
 
   const scoreLeagueMatch = useMutation({
@@ -196,7 +236,7 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stats', division] }); toast.success('Match scored!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stats', division] }); toast.success('Skor match berhasil!'); },
   });
 
   const scorePlayoffMatch = useMutation({
@@ -207,14 +247,20 @@ export function AdminPanel() {
       });
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stats', division] }); toast.success('Playoff scored!'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['stats', division] }); toast.success('Skor playoff berhasil!'); },
   });
 
-  const [newTournament, setNewTournament] = useState({ name: '', weekNumber: '', prizePool: '' });
+  const [newTournament, setNewTournament] = useState({ name: '', weekNumber: '', prizePool: '', bpm: '' });
   const [newDonation, setNewDonation] = useState({ donorName: '', amount: '', message: '' });
   const [newClub, setNewClub] = useState('');
   const [newPlayer, setNewPlayer] = useState({ name: '', gamertag: '', tier: 'B' });
   const [searchPlayer, setSearchPlayer] = useState('');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({ open: false, title: '', description: '', onConfirm: () => {} });
 
   const filteredPlayers = players?.filter((p: { gamertag: string; name: string }) =>
     p.gamertag.toLowerCase().includes(searchPlayer.toLowerCase()) ||
@@ -236,15 +282,20 @@ export function AdminPanel() {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <Shield className={`w-5 h-5 ${dt.neonText}`} />
-          <h2 className="text-lg font-bold text-gradient-fury">Admin Panel</h2>
+          <h2 className="text-lg font-bold text-gradient-fury">Panel Admin</h2>
           <Badge className="bg-red-500/10 text-red-500 text-[10px] border-0">ADMIN</Badge>
         </div>
         <Button variant="outline" size="sm" className="text-xs"
-          onClick={async () => {
-            await fetch('/api/seed', { method: 'POST' });
-            qc.invalidateQueries();
-            toast.success('Database re-seeded!');
-          }}>
+          onClick={() => setConfirmDialog({
+            open: true,
+            title: 'Re-seed Database?',
+            description: 'Semua data saat ini akan dihapus dan diganti dengan data awal. Tindakan ini tidak dapat dibatalkan.',
+            onConfirm: async () => {
+              await fetch('/api/seed', { method: 'POST' });
+              qc.invalidateQueries();
+              toast.success('Database berhasil di-reseed!');
+            }
+          })}>
           🔄 Re-seed Data
         </Button>
       </div>
@@ -253,23 +304,82 @@ export function AdminPanel() {
         <TabsList className="w-full grid grid-cols-5 bg-muted/50 h-auto">
           <TabsTrigger value="players" className="text-xs py-2"><Users className="w-3 h-3 mr-1" />Players</TabsTrigger>
           <TabsTrigger value="tournaments" className="text-xs py-2"><Music className="w-3 h-3 mr-1" />Tourney</TabsTrigger>
-          <TabsTrigger value="matches" className="text-xs py-2"><Trophy className="w-3 h-3 mr-1" />Matches</TabsTrigger>
-          <TabsTrigger value="clubs" className="text-xs py-2"><Settings className="w-3 h-3 mr-1" />Clubs</TabsTrigger>
-          <TabsTrigger value="donations" className="text-xs py-2"><Gift className="w-3 h-3 mr-1" />Donate</TabsTrigger>
+          <TabsTrigger value="matches" className="text-xs py-2"><Trophy className="w-3 h-3 mr-1" />Match</TabsTrigger>
+          <TabsTrigger value="clubs" className="text-xs py-2"><Settings className="w-3 h-3 mr-1" />Club</TabsTrigger>
+          <TabsTrigger value="donations" className="text-xs py-2"><Gift className="w-3 h-3 mr-1" />Donasi</TabsTrigger>
         </TabsList>
 
         {/* ====== PLAYERS TAB ====== */}
         <TabsContent value="players">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
+            {/* Pending Registrations */}
+            {pendingRegistrations?.length > 0 && (
+              <Card className="border-yellow-500/20 bg-yellow-500/5">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-yellow-500">
+                    <Clock className="w-4 h-4" /> Pendaftaran Menunggu Persetujuan ({pendingRegistrations.length})
+                  </h3>
+                  <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
+                    {pendingRegistrations.map((p: { id: string; name: string; gamertag: string; division: string; city: string; phone: string | null; joki: string | null; createdAt: string }) => (
+                      <motion.div key={p.id} variants={item}
+                        className="p-3 rounded-xl bg-card border border-yellow-500/10"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="text-sm font-semibold">{p.name}</p>
+                              <Badge className={`text-[9px] border-0 ${p.division === 'male' ? 'bg-idm-male/10 text-idm-male' : 'bg-idm-female/10 text-idm-female'}`}>
+                                {p.division === 'male' ? '🕺 Male' : '💃 Female'}
+                              </Badge>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
+                              <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{p.city || '-'}</span>
+                              {p.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{p.phone}</span>}
+                              {p.joki && <span className="flex items-center gap-1">🎮 Joki: {p.joki}</span>}
+                              <span>Gamertag: <span className="font-medium text-foreground">{p.gamertag}</span></span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <Select onValueChange={(tier) => setConfirmDialog({
+                              open: true,
+                              title: 'Setujui Pendaftaran?',
+                              description: `Setujui "${p.name}" sebagai tier ${tier} di division ${p.division}.`,
+                              onConfirm: () => approveRegistration.mutate({ playerId: p.id, tier })
+                            })}>
+                              <SelectTrigger className="w-20 h-7 text-[10px]"><SelectValue placeholder="Setujui" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="S">Sebagai S</SelectItem>
+                                <SelectItem value="A">Sebagai A</SelectItem>
+                                <SelectItem value="B">Sebagai B</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
+                              onClick={() => setConfirmDialog({
+                                open: true,
+                                title: 'Tolak Pendaftaran?',
+                                description: `Tolak pendaftaran "${p.name}". Player akan ditandai sebagai rejected.`,
+                                onConfirm: () => rejectRegistration.mutate(p.id)
+                              })}>
+                              <X className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Add new player */}
             <Card className={dt.casinoCard}>
               <div className={dt.casinoBar} />
               <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <UserPlus className={`w-4 h-4 ${dt.neonText}`} /> Add New Player
+                  <UserPlus className={`w-4 h-4 ${dt.neonText}`} /> Add Player
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <Input placeholder="Name" value={newPlayer.name} onChange={(e) => setNewPlayer(p => ({ ...p, name: e.target.value }))} />
+                  <Input placeholder="Nama" value={newPlayer.name} onChange={(e) => setNewPlayer(p => ({ ...p, name: e.target.value }))} />
                   <Input placeholder="Gamertag" value={newPlayer.gamertag} onChange={(e) => setNewPlayer(p => ({ ...p, gamertag: e.target.value }))} />
                   <Select value={newPlayer.tier} onValueChange={(t) => setNewPlayer(p => ({ ...p, tier: t }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -279,16 +389,16 @@ export function AdminPanel() {
                       <SelectItem value="B">B Tier</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button size="sm" disabled={!newPlayer.name || !newPlayer.gamertag}
+                  <Button size="sm" disabled={!newPlayer.name || !newPlayer.gamertag || createPlayer.isPending}
                     onClick={() => { createPlayer.mutate(newPlayer); setNewPlayer({ name: '', gamertag: '', tier: 'B' }); }}>
-                    <Plus className="w-3 h-3 mr-1" /> Add
+                    {createPlayer.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Add
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             {/* Search */}
-            <Input placeholder="🔍 Search players..." value={searchPlayer} onChange={(e) => setSearchPlayer(e.target.value)} className="glass" />
+            <Input placeholder="🔍 Cari players..." value={searchPlayer} onChange={(e) => setSearchPlayer(e.target.value)} className="glass" />
 
             {/* Player list */}
             <div className="space-y-1.5 max-h-96 overflow-y-auto custom-scrollbar">
@@ -338,13 +448,14 @@ export function AdminPanel() {
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Tournament
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <Input placeholder="Name" value={newTournament.name} onChange={(e) => setNewTournament(p => ({ ...p, name: e.target.value }))} />
+                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                  <Input placeholder="Nama" value={newTournament.name} onChange={(e) => setNewTournament(p => ({ ...p, name: e.target.value }))} />
                   <Input placeholder="Week #" type="number" value={newTournament.weekNumber} onChange={(e) => setNewTournament(p => ({ ...p, weekNumber: e.target.value }))} />
                   <Input placeholder="Prize (IDR)" type="number" value={newTournament.prizePool} onChange={(e) => setNewTournament(p => ({ ...p, prizePool: e.target.value }))} />
-                  <Button size="sm" disabled={!newTournament.name || !newTournament.weekNumber}
-                    onClick={() => createTournament.mutate({ name: newTournament.name, weekNumber: parseInt(newTournament.weekNumber), prizePool: parseInt(newTournament.prizePool) || 0 })}>
-                    Create
+                  <Input placeholder="BPM (contoh 128)" type="number" value={newTournament.bpm} onChange={(e) => setNewTournament(p => ({ ...p, bpm: e.target.value }))} />
+                  <Button size="sm" disabled={!newTournament.name || !newTournament.weekNumber || createTournament.isPending}
+                    onClick={() => createTournament.mutate({ name: newTournament.name, weekNumber: parseInt(newTournament.weekNumber), prizePool: parseInt(newTournament.prizePool) || 0, bpm: parseInt(newTournament.bpm) || 128 })}>
+                    {createTournament.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Create
                   </Button>
                 </div>
               </CardContent>
@@ -369,19 +480,24 @@ export function AdminPanel() {
                         </div>
                         <div className="flex gap-1.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
                           {nextStatusMap[t.status] && t.status !== 'completed' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7"
-                              onClick={() => advanceStatus.mutate({ tournamentId: t.id, status: nextStatusMap[t.status] })}>
-                              <Play className="w-3 h-3 mr-1" /> {nextStatusMap[t.status].replace(/_/g, ' ')}
+                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={advanceStatus.isPending}
+                              onClick={() => setConfirmDialog({
+                                open: true,
+                                title: `Ubah Status ke ${statusLabelMap[nextStatusMap[t.status]]}?`,
+                                description: `Tournament "${t.name}" akan diubah ke status "${statusLabelMap[nextStatusMap[t.status]]}".`,
+                                onConfirm: () => advanceStatus.mutate({ tournamentId: t.id, status: nextStatusMap[t.status] })
+                              })}>
+                              {advanceStatus.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />} {statusLabelMap[nextStatusMap[t.status]] || nextStatusMap[t.status].replace(/_/g, ' ')}
                             </Button>
                           )}
                           {t.status === 'approval' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7" onClick={() => generateTeams.mutate(t.id)}>
-                              <Users className="w-3 h-3 mr-1" /> Gen Teams
+                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={generateTeams.isPending} onClick={() => generateTeams.mutate(t.id)}>
+                              {generateTeams.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Users className="w-3 h-3 mr-1" />} Buat Tim
                             </Button>
                           )}
                           {t.status === 'team_generation' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7" onClick={() => generateBracket.mutate(t.id)}>
-                              <Music className="w-3 h-3 mr-1" /> Gen Bracket
+                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={generateBracket.isPending} onClick={() => generateBracket.mutate(t.id)}>
+                              {generateBracket.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Music className="w-3 h-3 mr-1" />} Buat Bracket
                             </Button>
                           )}
                         </div>
@@ -398,14 +514,14 @@ export function AdminPanel() {
                 <div className={dt.casinoBar} />
                 <CardContent className="p-4 relative z-10">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">{selectedTournament.name} — Management</h3>
+                    <h3 className="text-sm font-semibold">{selectedTournament.name} — Manajemen</h3>
                     <StatusBadge status={selectedTournament.status} />
                   </div>
 
                   {/* Pending Approvals */}
                   {pendingApprovals.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-yellow-500 mb-2">⏳ Pending Approval ({pendingApprovals.length})</p>
+                      <p className="text-xs font-semibold text-yellow-500 mb-2">⏳ Menunggu Persetujuan ({pendingApprovals.length})</p>
                       <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
                         {pendingApprovals.map((p: { id: string; playerId: string; player: { id: string; gamertag: string; tier: string; points: number } }) => (
                           <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
@@ -416,11 +532,11 @@ export function AdminPanel() {
                             </div>
                             <div className="flex items-center gap-1.5">
                               <Select onValueChange={(tier) => approvePlayer.mutate({ tournamentId: selectedTournament.id, playerId: p.playerId, tier })}>
-                                <SelectTrigger className="w-20 h-6 text-[10px]"><SelectValue placeholder="Approve" /></SelectTrigger>
+                                <SelectTrigger className="w-20 h-6 text-[10px]"><SelectValue placeholder="Setujui" /></SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="S">As S</SelectItem>
-                                  <SelectItem value="A">As A</SelectItem>
-                                  <SelectItem value="B">As B</SelectItem>
+                                  <SelectItem value="S">Sebagai S</SelectItem>
+                                  <SelectItem value="A">Sebagai A</SelectItem>
+                                  <SelectItem value="B">Sebagai B</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
@@ -433,7 +549,7 @@ export function AdminPanel() {
                   {/* Register Players */}
                   {(selectedTournament.status === 'registration' || selectedTournament.status === 'setup') && (
                     <div className="mb-4">
-                      <p className="text-xs font-semibold text-blue-500 mb-2">📋 Register Players</p>
+                      <p className="text-xs font-semibold text-blue-500 mb-2">📋 Daftar Players</p>
                       <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                         {players?.filter((p: { id: string }) => !selectedTournament.participations?.some((pp: { playerId: string }) => pp.playerId === p.id)).slice(0, 6).map((p: { id: string; gamertag: string; tier: string }) => (
                           <div key={p.id} className="flex items-center justify-between p-1.5 rounded hover:bg-muted/50">
@@ -443,7 +559,7 @@ export function AdminPanel() {
                             </div>
                             <Button size="sm" variant="ghost" className={`h-6 text-[10px] ${dt.neonText}`}
                               onClick={() => registerPlayer.mutate({ tournamentId: selectedTournament.id, playerId: p.id })}>
-                              <UserPlus className="w-3 h-3 mr-1" /> Register
+                              <UserPlus className="w-3 h-3 mr-1" /> Daftar
                             </Button>
                           </div>
                         ))}
@@ -454,7 +570,7 @@ export function AdminPanel() {
                   {/* Teams & Match info */}
                   {selectedTournament.teams?.length > 0 && (
                     <div>
-                      <p className="text-xs font-semibold text-green-500 mb-2">✅ Teams ({selectedTournament.teams.length})</p>
+                      <p className="text-xs font-semibold text-green-500 mb-2">✅ Tim ({selectedTournament.teams.length})</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {selectedTournament.teams.map((t: { id: string; name: string; power: number; isWinner: boolean; teamPlayers: { player: { gamertag: string; tier: string; points: number } }[] }) => (
                           <div key={t.id} className={`p-2 rounded-lg text-xs ${t.isWinner ? 'bg-yellow-500/5 border border-yellow-500/10' : 'bg-muted/50'}`}>
@@ -488,7 +604,7 @@ export function AdminPanel() {
               <div className={dt.casinoBar} />
               <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Trophy className={`w-4 h-4 ${dt.neonText}`} /> League Match Scoring
+                  <Trophy className={`w-4 h-4 ${dt.neonText}`} /> Skor League Match
                 </h3>
                 <div className="space-y-2 max-h-72 overflow-y-auto custom-scrollbar">
                   {stats?.leagueMatches?.filter((m: { status: string }) => m.status === 'upcoming').map((m: { id: string; week: number; club1: { name: string }; club2: { name: string }; format: string }) => (
@@ -498,27 +614,47 @@ export function AdminPanel() {
                         <Badge className={`${dt.casinoBadge} mt-0.5`}>{m.format}</Badge>
                       </div>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="outline" className="h-6 text-[9px]"
-                          onClick={() => scoreLeagueMatch.mutate({ matchId: m.id, score1: 2, score2: 0 })}>
+                        <Button size="sm" variant="outline" className="h-6 text-[9px]" disabled={scoreLeagueMatch.isPending || scorePlayoffMatch.isPending}
+                          onClick={() => setConfirmDialog({
+                            open: true,
+                            title: 'Konfirmasi Skor',
+                            description: `Set skor Week ${m.week}: ${m.club1.name} 2-0 ${m.club2.name}`,
+                            onConfirm: () => scoreLeagueMatch.mutate({ matchId: m.id, score1: 2, score2: 0 })
+                          })}>
                           2-0 {m.club1.name.slice(0, 3)}
                         </Button>
-                        <Button size="sm" variant="outline" className="h-6 text-[9px]"
-                          onClick={() => scoreLeagueMatch.mutate({ matchId: m.id, score1: 2, score2: 1 })}>
+                        <Button size="sm" variant="outline" className="h-6 text-[9px]" disabled={scoreLeagueMatch.isPending || scorePlayoffMatch.isPending}
+                          onClick={() => setConfirmDialog({
+                            open: true,
+                            title: 'Konfirmasi Skor',
+                            description: `Set skor Week ${m.week}: ${m.club1.name} 2-1 ${m.club2.name}`,
+                            onConfirm: () => scoreLeagueMatch.mutate({ matchId: m.id, score1: 2, score2: 1 })
+                          })}>
                           2-1
                         </Button>
-                        <Button size="sm" variant="outline" className="h-6 text-[9px]"
-                          onClick={() => scoreLeagueMatch.mutate({ matchId: m.id, score1: 0, score2: 2 })}>
+                        <Button size="sm" variant="outline" className="h-6 text-[9px]" disabled={scoreLeagueMatch.isPending || scorePlayoffMatch.isPending}
+                          onClick={() => setConfirmDialog({
+                            open: true,
+                            title: 'Konfirmasi Skor',
+                            description: `Set skor Week ${m.week}: ${m.club1.name} 0-2 ${m.club2.name}`,
+                            onConfirm: () => scoreLeagueMatch.mutate({ matchId: m.id, score1: 0, score2: 2 })
+                          })}>
                           0-2 {m.club2.name.slice(0, 3)}
                         </Button>
-                        <Button size="sm" variant="outline" className="h-6 text-[9px]"
-                          onClick={() => scoreLeagueMatch.mutate({ matchId: m.id, score1: 1, score2: 2 })}>
+                        <Button size="sm" variant="outline" className="h-6 text-[9px]" disabled={scoreLeagueMatch.isPending || scorePlayoffMatch.isPending}
+                          onClick={() => setConfirmDialog({
+                            open: true,
+                            title: 'Konfirmasi Skor',
+                            description: `Set skor Week ${m.week}: ${m.club1.name} 1-2 ${m.club2.name}`,
+                            onConfirm: () => scoreLeagueMatch.mutate({ matchId: m.id, score1: 1, score2: 2 })
+                          })}>
                           1-2
                         </Button>
                       </div>
                     </div>
                   ))}
                   {stats?.leagueMatches?.filter((m: { status: string }) => m.status === 'upcoming').length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-4">No upcoming league matches</p>
+                    <p className="text-xs text-muted-foreground text-center py-4">Tidak ada league match mendatang</p>
                   )}
                 </div>
               </CardContent>
@@ -529,7 +665,7 @@ export function AdminPanel() {
               <div className={dt.casinoBar} />
               <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Crown className="w-4 h-4 text-yellow-500" /> Playoff Match Scoring
+                  <Crown className="w-4 h-4 text-yellow-500" /> Skor Playoff Match
                 </h3>
                 <div className="space-y-2">
                   {stats?.playoffMatches?.map((m: { id: string; round: string; club1: { name: string }; club2: { name: string }; status: string; format: string; score1: number | null; score2: number | null }) => (
@@ -548,8 +684,13 @@ export function AdminPanel() {
                           {[`3-0 ${m.club1.name.slice(0,3)}`, `3-1`, `3-2`, `0-3 ${m.club2.name.slice(0,3)}`, `1-3`, `2-3`].map((label, i) => {
                             const scores = [[3,0],[3,1],[3,2],[0,3],[1,3],[2,3]][i];
                             return (
-                              <Button key={i} size="sm" variant="outline" className="h-6 text-[9px]"
-                                onClick={() => scorePlayoffMatch.mutate({ matchId: m.id, score1: scores[0], score2: scores[1] })}>
+                              <Button key={i} size="sm" variant="outline" className="h-6 text-[9px]" disabled={scoreLeagueMatch.isPending || scorePlayoffMatch.isPending}
+                                onClick={() => setConfirmDialog({
+                                  open: true,
+                                  title: 'Konfirmasi Skor Playoff',
+                                  description: `Set skor ${m.round.replace(/_/g, ' ')}: ${m.club1.name} ${scores[0]}-${scores[1]} ${m.club2.name}`,
+                                  onConfirm: () => scorePlayoffMatch.mutate({ matchId: m.id, score1: scores[0], score2: scores[1] })
+                                })}>
                                 {label}
                               </Button>
                             );
@@ -576,8 +717,8 @@ export function AdminPanel() {
                   <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Club
                 </h3>
                 <div className="flex gap-2">
-                  <Input placeholder="Club name" value={newClub} onChange={(e) => setNewClub(e.target.value)} />
-                  <Button size="sm" onClick={() => { createClub.mutate(newClub); setNewClub(''); }} disabled={!newClub}>Create</Button>
+                  <Input placeholder="Nama Club" value={newClub} onChange={(e) => setNewClub(e.target.value)} />
+                  <Button size="sm" onClick={() => { createClub.mutate(newClub); setNewClub(''); }} disabled={!newClub || createClub.isPending}>{createClub.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Create</Button>
                 </div>
               </CardContent>
             </Card>
@@ -597,7 +738,7 @@ export function AdminPanel() {
                           <span>GD: {c.gameDiff > 0 ? '+' : ''}{c.gameDiff}</span>
                         </div>
                       </div>
-                      <Badge className={dt.casinoBadge}>{c._count?.members || 0} members</Badge>
+                      <Badge className={dt.casinoBadge}>{c._count?.members || 0} anggota</Badge>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -613,15 +754,15 @@ export function AdminPanel() {
               <div className={dt.casinoBar} />
               <CardContent className="p-4 relative z-10">
                 <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Add Donation
+                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Add Donasi
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                  <Input placeholder="Donor name" value={newDonation.donorName} onChange={(e) => setNewDonation(p => ({ ...p, donorName: e.target.value }))} />
-                  <Input placeholder="Amount (IDR)" type="number" value={newDonation.amount} onChange={(e) => setNewDonation(p => ({ ...p, amount: e.target.value }))} />
-                  <Input placeholder="Message" value={newDonation.message} onChange={(e) => setNewDonation(p => ({ ...p, message: e.target.value }))} />
-                  <Button size="sm" disabled={!newDonation.donorName || !newDonation.amount}
+                  <Input placeholder="Nama Donatur" value={newDonation.donorName} onChange={(e) => setNewDonation(p => ({ ...p, donorName: e.target.value }))} />
+                  <Input placeholder="Jumlah (IDR)" type="number" value={newDonation.amount} onChange={(e) => setNewDonation(p => ({ ...p, amount: e.target.value }))} />
+                  <Input placeholder="Pesan" value={newDonation.message} onChange={(e) => setNewDonation(p => ({ ...p, message: e.target.value }))} />
+                  <Button size="sm" disabled={!newDonation.donorName || !newDonation.amount || addDonation.isPending}
                     onClick={() => { addDonation.mutate({ donorName: newDonation.donorName, amount: parseInt(newDonation.amount) || 0, message: newDonation.message }); setNewDonation({ donorName: '', amount: '', message: '' }); }}>
-                    Add
+                    {addDonation.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Add
                   </Button>
                 </div>
               </CardContent>
@@ -646,6 +787,19 @@ export function AdminPanel() {
           </motion.div>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{confirmDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>{confirmDialog.description}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDialog.onConfirm}>Lanjutkan</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }

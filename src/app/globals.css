@@ -190,8 +190,8 @@
 
 .glass-strong {
   background: var(--card);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border);
 }
 
@@ -1597,6 +1597,25 @@ html {
   border-radius: 50% 50% 0 0 / 100% 100% 0 0;
 }
 
+.wave-divider::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  left: -10%;
+  width: 120%;
+  height: 40px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d4a853,
+    rgba(212, 168, 83, 0.4),
+    #d4a853,
+    transparent
+  );
+  opacity: 0.5;
+}
+
 /* ============================================
    25. ENHANCED SCROLLBAR FOR LANDING
    ============================================ */
@@ -1611,6 +1630,10 @@ html {
 .landing-scroll::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--idm-gold), var(--idm-amber));
   border-radius: 2px;
+}
+
+.landing-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #d4a853, var(--idm-amber));
 }
 
 /* ============================================
@@ -1768,6 +1791,14 @@ html {
 .division-bar-female {
   background: linear-gradient(90deg, rgba(168, 85, 247, 0.15), transparent);
 }
+
+/* Division hover utility classes — replaces broken Tailwind dynamic hover */
+.hover-border-male:hover { border-color: rgba(34, 211, 238, 0.35); }
+.hover-border-female:hover { border-color: rgba(192, 132, 252, 0.35); }
+.hover-bg-subtle-male:hover { background-color: rgba(34, 211, 238, 0.05); }
+.hover-bg-subtle-female:hover { background-color: rgba(192, 132, 252, 0.05); }
+.hover-bg-male:hover { background-color: rgba(34, 211, 238, 0.1); }
+.hover-bg-female:hover { background-color: rgba(192, 132, 252, 0.1); }
 
 /* ============================================
    28. DIVISION CARD VARIANTS — Neon borders/glows per division
@@ -2359,14 +2390,14 @@ html {
 @keyframes neon-pulse-male-keyframes {
   0%, 100% {
     box-shadow:
-      0 0 10px rgba(34, 211, 238, 0.3),
-      0 0 20px rgba(34, 211, 238, 0.1);
+      0 0 5px rgba(34, 211, 238, 0.15),
+      0 0 10px rgba(34, 211, 238, 0.05);
   }
   50% {
     box-shadow:
-      0 0 20px rgba(34, 211, 238, 0.5),
-      0 0 40px rgba(34, 211, 238, 0.2),
-      0 0 60px rgba(34, 211, 238, 0.05);
+      0 0 10px rgba(34, 211, 238, 0.25),
+      0 0 20px rgba(34, 211, 238, 0.1),
+      0 0 30px rgba(34, 211, 238, 0.03);
   }
 }
 
@@ -2378,14 +2409,14 @@ html {
 @keyframes neon-pulse-female-keyframes {
   0%, 100% {
     box-shadow:
-      0 0 10px rgba(192, 132, 252, 0.3),
-      0 0 20px rgba(192, 132, 252, 0.1);
+      0 0 5px rgba(192, 132, 252, 0.15),
+      0 0 10px rgba(192, 132, 252, 0.05);
   }
   50% {
     box-shadow:
-      0 0 20px rgba(192, 132, 252, 0.5),
-      0 0 40px rgba(192, 132, 252, 0.2),
-      0 0 60px rgba(192, 132, 252, 0.05);
+      0 0 10px rgba(192, 132, 252, 0.25),
+      0 0 20px rgba(192, 132, 252, 0.1),
+      0 0 30px rgba(192, 132, 252, 0.03);
   }
 }
 
@@ -2720,15 +2751,15 @@ html {
 
 /* Neon pulse for LIVE elements — Male */
 @keyframes neon-pulse-male {
-  0%, 100% { box-shadow: 0 0 8px rgba(34, 211, 238, 0.3), 0 0 16px rgba(34, 211, 238, 0.1); }
-  50% { box-shadow: 0 0 16px rgba(34, 211, 238, 0.5), 0 0 32px rgba(34, 211, 238, 0.2), 0 0 48px rgba(34, 211, 238, 0.05); }
+  0%, 100% { box-shadow: 0 0 4px rgba(34, 211, 238, 0.15), 0 0 8px rgba(34, 211, 238, 0.05); }
+  50% { box-shadow: 0 0 8px rgba(34, 211, 238, 0.25), 0 0 16px rgba(34, 211, 238, 0.1), 0 0 24px rgba(34, 211, 238, 0.03); }
 }
 .neon-pulse-male { animation: neon-pulse-male 2s ease-in-out infinite; }
 
 /* Neon pulse for LIVE elements — Female */
 @keyframes neon-pulse-female {
-  0%, 100% { box-shadow: 0 0 8px rgba(192, 132, 252, 0.3), 0 0 16px rgba(192, 132, 252, 0.1); }
-  50% { box-shadow: 0 0 16px rgba(192, 132, 252, 0.5), 0 0 32px rgba(192, 132, 252, 0.2), 0 0 48px rgba(192, 132, 252, 0.05); }
+  0%, 100% { box-shadow: 0 0 4px rgba(192, 132, 252, 0.15), 0 0 8px rgba(192, 132, 252, 0.05); }
+  50% { box-shadow: 0 0 8px rgba(192, 132, 252, 0.25), 0 0 16px rgba(192, 132, 252, 0.1), 0 0 24px rgba(192, 132, 252, 0.03); }
 }
 .neon-pulse-female { animation: neon-pulse-female 2s ease-in-out infinite; }
 
@@ -2894,4 +2925,23 @@ html {
 }
 .casino-shimmer:hover::after {
   animation: casino-shimmer 0.8s ease-out;
+}
+
+/* ============================================
+   CLUB LOGO SHIMMER ANIMATION
+   ============================================ */
+@keyframes clubLogoShimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ============================================
+   SHIMMER SWEEP ANIMATION (Hero CTA)
+   ============================================ */
+@keyframes shimmer-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.animate-shimmer {
+  animation: shimmer-sweep 3s ease-in-out infinite;
 }

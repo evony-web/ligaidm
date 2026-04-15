@@ -25,6 +25,13 @@ model Player {
   maxStreak Int      @default(0)
   matches   Int      @default(0)
   isActive  Boolean  @default(true)
+
+  // Registration fields
+  phone              String?  // WhatsApp number (optional)
+  city               String   @default("") // Kota (required at registration)
+  joki               String?  // Name of joki if player is played by someone else (optional)
+  registrationStatus String   @default("approved") // "pending" | "approved" | "rejected"
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -152,6 +159,19 @@ model Donation {
 }
 
 // ============================================
+// IDM LEAGUE - ADMIN AUTHENTICATION
+// ============================================
+
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("admin") // "super_admin" | "admin"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ============================================
 // IDM LEAGUE - CLUB & LEAGUE SYSTEM
 // ============================================
 
@@ -218,18 +238,4 @@ model PlayoffMatch {
   season Season @relation(fields: [seasonId], references: [id])
   club1  Club   @relation("PlayoffHome", fields: [club1Id], references: [id])
   club2  Club   @relation("PlayoffAway", fields: [club2Id], references: [id])
-}
-
-// ============================================
-// IDM LEAGUE - ADMIN AUTHENTICATION
-// ============================================
-
-model Admin {
-  id           String   @id @default(cuid())
-  username     String   @unique
-  passwordHash String
-  role         String   @default("admin")
-  displayName  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 }

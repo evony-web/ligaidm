@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Music,
-  Sun, Moon, Menu, X, Home, Flame, Radio, LogOut
+  Sun, Moon, Menu, X, Home, Flame, Radio, UserPlus, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -14,11 +14,12 @@ import { Dashboard } from './dashboard';
 import { TournamentView } from './tournament-view';
 import { LeagueView } from './league-view';
 import { AdminPanel } from './admin-panel';
+import { AdminLogin } from './admin-login';
 import { MatchDayCenter } from './match-day-center';
 import { LandingPage } from './landing-page';
-import { LoginPage } from './login-page';
 import { DonationPopup } from './donation-popup';
 import { NotificationStack } from './notification-stack';
+import { RegistrationForm } from './registration-form';
 import { useEffect, useState, useCallback } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { toast } from 'sonner';
@@ -29,6 +30,10 @@ const navItems = [
   { id: 'tournament' as const, label: 'Tournament', icon: Music },
   { id: 'league' as const, label: 'League', icon: Trophy },
   { id: 'admin' as const, label: 'Admin', icon: Shield },
+];
+
+const actionItems = [
+  { id: 'register' as const, label: 'Daftar', icon: UserPlus },
 ];
 
 function DivisionToggle() {
@@ -73,7 +78,7 @@ function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       className="relative w-16 h-8 rounded-full bg-muted transition-all duration-300 hover:scale-105"
-      title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+      title={isDark ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
     >
       <div className={`absolute top-1 w-6 h-6 rounded-full transition-all duration-300 flex items-center justify-center text-xs ${
         isDark
@@ -87,18 +92,20 @@ function ThemeToggle() {
 }
 
 function SidebarContent({ onNav }: { onNav?: () => void }) {
-  const { currentView, setCurrentView, division, isAdminAuthenticated, adminUser, setAdminAuth } = useAppStore();
+  const { currentView, setCurrentView, division, adminAuth, clearAdminAuth } = useAppStore();
   const dt = useDivisionTheme();
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      setAdminAuth(false, null);
-      toast.success('Logged out');
     } catch {
-      toast.error('Logout failed');
+      // Ignore errors
     }
-  }, [setAdminAuth]);
+    clearAdminAuth();
+    setCurrentView('landing');
+    toast.success('Berhasil logout');
+    onNav?.();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -137,8 +144,30 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
         </button>
 
         <div className="px-3 py-1">
-          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Navigation</p>
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Navigasi</p>
         </div>
+
+        {actionItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => { setCurrentView(item.id); onNav?.(); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
+                isActive
+                  ? `bg-gradient-to-r ${division === 'male' ? 'from-idm-male/20 to-idm-male/5 text-idm-male' : 'from-idm-female/20 to-idm-female/5 text-idm-female'} glow-pulse`
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
+              {item.label}
+              {isActive && (
+                <div className={`ml-auto w-1.5 h-1.5 rounded-full ${division === 'male' ? 'bg-idm-male' : 'bg-idm-female'}`} />
+              )}
+            </button>
+          );
+        })}
 
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -163,6 +192,30 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
         })}
       </nav>
 
+      {/* Admin Status / Logout */}
+      {adminAuth.isAuthenticated && (
+        <div className="mx-3 p-3 rounded-xl bg-idm-gold/5 border border-idm-gold/20 mb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-3 h-3 text-idm-gold" />
+            <span className="text-[10px] font-semibold text-idm-gold uppercase tracking-wider">
+              {adminAuth.admin?.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-foreground font-medium">{adminAuth.admin?.username}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <LogOut className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Season Status */}
       <div className={`mx-3 p-3 rounded-xl ${dt.cardPremium} mb-3`}>
         <div className="flex items-center gap-2 mb-2">
@@ -172,36 +225,14 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
         <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
           <div className={`h-full w-3/5 rounded-full bg-gradient-to-r ${division === 'male' ? 'from-idm-male to-idm-male-light' : 'from-idm-female to-idm-female-light'}`} />
         </div>
-        <p className="text-[9px] text-muted-foreground mt-1.5">60% Complete • Week 5/8</p>
+        <p className="text-[9px] text-muted-foreground mt-1.5">60% Selesai • Week 5/11</p>
       </div>
-
-      {/* Admin User Info & Logout */}
-      {isAdminAuthenticated && adminUser && (
-        <div className="mx-3 p-2.5 rounded-xl bg-muted/50 border border-border/30 mb-2">
-          <div className="flex items-center gap-2 mb-1.5">
-            <div className="w-6 h-6 rounded-full bg-idm-gold/20 flex items-center justify-center">
-              <Shield className="w-3 h-3 text-idm-gold" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-semibold truncate">{adminUser.displayName || adminUser.username}</p>
-              <p className="text-[9px] text-muted-foreground">{adminUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}</p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
-              title="Logout"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Theme Toggle */}
       <div className="p-4 pt-2 border-t border-border">
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">
-            {division === 'male' ? '✨ Light Mode' : '🌙 Dark Mode'}
+            {division === 'male' ? '✨ Mode Terang' : '🌙 Mode Gelap'}
           </span>
           <ThemeToggle />
         </div>
@@ -211,21 +242,21 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
 }
 
 export function AppShell() {
-  const { currentView, donationPopup, hideDonationPopup, division, isAdminAuthenticated, setAdminAuth } = useAppStore();
+  const { currentView, donationPopup, hideDonationPopup, division, adminAuth, setAdminAuth, setCurrentView } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const dt = useDivisionTheme();
 
-  // Check session on mount and init admin
+  // Check session on mount
   useEffect(() => {
     async function checkSession() {
       try {
         const res = await fetch('/api/auth/session');
         const data = await res.json();
-        if (data.authenticated && data.user) {
-          setAdminAuth(true, data.user);
+        if (data.authenticated && data.admin) {
+          setAdminAuth({ isAuthenticated: true, admin: data.admin });
         }
       } catch {
-        // Not authenticated, that's fine
+        // Not authenticated
       }
     }
     checkSession();
@@ -252,7 +283,8 @@ export function AppShell() {
       case 'matchday': return <MatchDayCenter />;
       case 'tournament': return <TournamentView />;
       case 'league': return <LeagueView />;
-      case 'admin': return isAdminAuthenticated ? <AdminPanel /> : <LoginPage />;
+      case 'admin': return adminAuth.isAuthenticated ? <AdminPanel /> : <AdminLogin />;
+      case 'register': return <RegistrationForm />;
       default: return <Dashboard />;
     }
   };

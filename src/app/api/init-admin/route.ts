@@ -1,35 +1,39 @@
-import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 
 export async function POST() {
   try {
-    const existing = await db.admin.findUnique({ where: { username: 'jose' } });
+    // Check if super admin already exists
+    const existing = await db.admin.findFirst({ where: { role: 'super_admin' } });
     if (existing) {
-      return NextResponse.json({ message: 'Super admin already exists' });
+      return NextResponse.json({
+        success: true,
+        message: 'Super admin already exists',
+        admin: { id: existing.id, username: existing.username, role: existing.role },
+      });
     }
+
+    // Create super admin
     const passwordHash = await hashPassword('tazevsta');
-    await db.admin.create({
+    const admin = await db.admin.create({
       data: {
         username: 'jose',
         passwordHash,
         role: 'super_admin',
-        displayName: 'Super Admin',
       },
     });
-    return NextResponse.json({ message: 'Super admin created' });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Super admin created successfully',
+      admin: { id: admin.id, username: admin.username, role: admin.role },
+    });
   } catch (error) {
     console.error('Init admin error:', error);
-    return NextResponse.json({ error: 'Failed to create admin' }, { status: 500 });
-  }
-}
-
-export async function GET() {
-  try {
-    const existing = await db.admin.findUnique({ where: { username: 'jose' } });
-    return NextResponse.json({ exists: !!existing });
-  } catch (error) {
-    console.error('Check admin error:', error);
-    return NextResponse.json({ exists: false });
+    return NextResponse.json(
+      { error: 'Failed to initialize admin' },
+      { status: 500 }
+    );
   }
 }

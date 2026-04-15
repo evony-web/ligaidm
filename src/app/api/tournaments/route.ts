@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     include: {
       _count: { select: { teams: true, participations: true, matches: true } },
       season: { select: { name: true, number: true } },
+      teams: { where: { isWinner: true }, select: { id: true, name: true, isWinner: true } },
     },
   });
 
@@ -25,8 +27,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
-  const { name, weekNumber, division, seasonId, prizePool, location, scheduledAt } = body;
+  const { name, weekNumber, division, seasonId, prizePool, location, scheduledAt, bpm } = body;
 
   if (!name || !weekNumber || !division || !seasonId) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
       status: 'setup',
       prizePool: prizePool || 0,
       location: location || 'Online',
-      bpm: Math.floor(Math.random() * 21) + 120,
+      bpm: bpm || 128,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
     },
   });
