@@ -330,13 +330,6 @@ export function LandingPage() {
         </AnimatePresence>
       </nav>
 
-      {/* ========== LIVE INFO TICKER — Marquee ========== */}
-      <div className="relative z-40 py-2.5 px-4 bg-background/60 backdrop-blur-md border-b border-[#d4a853]/10">
-        <div className="max-w-7xl mx-auto">
-          <MarqueeTicker />
-        </div>
-      </div>
-
       {/* ========== HERO SECTION — Cinematic Parallax ========== */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Multi-layer Parallax Background — 3 depth layers */}
@@ -519,6 +512,12 @@ export function LandingPage() {
         </motion.div>
       </section>
 
+      {/* ========== LIVE INFO TICKER — Marquee ========== */}
+      <div className="relative z-40 py-2.5 px-4 bg-background/60 backdrop-blur-md border-b border-[#d4a853]/10">
+        <div className="max-w-7xl mx-auto">
+          <MarqueeTicker />
+        </div>
+      </div>
 
       {/* ========== SEASON CHAMPION — Smooth Reveal Parallax ========== */}
       <section id="champions" ref={championsRef} className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
