@@ -12,9 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TierBadge } from './tier-badge';
 import { ClubProfile } from './club-profile';
 import { useState } from 'react';
-
-const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
+import { container, item } from '@/lib/animations';
 
 interface ClubMember {
   id: string; gamertag: string; division: string; tier: string; points: number; role: string;

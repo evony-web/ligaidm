@@ -1,10 +1,11 @@
 import { db } from '@/lib/db';
 import { hashPassword } from '@/lib/auth';
+import { verifyAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
-    // Check if super admin already exists
+    // First check: if super admin already exists, just return success (idempotent)
     const existing = await db.admin.findFirst({ where: { role: 'super_admin' } });
     if (existing) {
       return NextResponse.json({
@@ -14,11 +15,22 @@ export async function POST() {
       });
     }
 
-    // Create super admin
-    const passwordHash = await hashPassword('tazevsta');
+    // If any other admin exists (but no super_admin yet), require auth to create super_admin
+    const anyAdmin = await db.admin.findFirst();
+    if (anyAdmin) {
+      const admin = await verifyAdmin(request);
+      if (!admin) {
+        return NextResponse.json({ error: 'Unauthorized - Admin login required to create super admin' }, { status: 401 });
+      }
+    }
+
+    // No admin exists at all — safe to create super admin (first-time setup)
+    const username = process.env.ADMIN_USERNAME || 'jose';
+    const password = process.env.ADMIN_PASSWORD || 'tazevsta';
+    const passwordHash = await hashPassword(password);
     const admin = await db.admin.create({
       data: {
-        username: 'jose',
+        username,
         passwordHash,
         role: 'super_admin',
       },

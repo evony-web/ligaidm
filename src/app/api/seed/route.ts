@@ -3,8 +3,21 @@ import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
-  const authResult = await requireAdmin(request);
-  if (authResult instanceof NextResponse) return authResult;
+  // Check if this is a forced re-seed (from admin panel)
+  const { searchParams } = new URL(request.url);
+  const force = searchParams.get('force') === 'true';
+
+  if (force) {
+    // Admin-triggered re-seed requires authentication
+    const authResult = await requireAdmin(request);
+    if (authResult instanceof NextResponse) return authResult;
+  } else {
+    // Auto-seed from page load: only seed if database is empty
+    const playerCount = await db.player.count();
+    if (playerCount > 0) {
+      return NextResponse.json({ success: true, message: 'Database already has data — seeding skipped' });
+    }
+  }
 
   try {
     // Clear existing data
@@ -249,7 +262,7 @@ export async function POST(request: Request) {
 
       // Add participations for completed tournaments
       if (isCompleted) {
-        const players = week % 2 === 0 ? malePlayers : malePlayers;
+        const players = malePlayers;
         for (const p of players) {
           await db.participation.create({
             data: {

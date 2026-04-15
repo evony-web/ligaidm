@@ -58,7 +58,7 @@ export async function GET() {
   const totalMatches = leagueMatches.length;
   const completedMatches = leagueMatches.filter(m => m.status === 'completed').length;
   const liveMatches = leagueMatches.filter(m => m.status === 'live').length;
-  const weeks = [...new Set(leagueMatches.map(m => m.week))].sort((a, b) => a - b);
+  const weeks = [...new Set(leagueMatches.map(m => m.week))].sort((a: number, b: number) => a - b);
   const totalWeeks = 11;
 
   // MVP candidates

@@ -39,6 +39,9 @@ model Player {
   participations Participation[]
   mvpMatches     Match[]       @relation("MvpPlayer")
   clubMembers    ClubMember[]
+
+  @@index([division])
+  @@index([division, isActive])
 }
 
 model Season {
@@ -57,6 +60,8 @@ model Season {
   clubs       Club[]
   leagueMatches LeagueMatch[]
   playoffMatches PlayoffMatch[]
+
+  @@index([division, status])
 }
 
 model Tournament {
@@ -81,6 +86,7 @@ model Tournament {
   donations     Donation[]
 
   @@unique([weekNumber, division, seasonId])
+  @@index([division, seasonId])
 }
 
 model Team {
@@ -126,6 +132,9 @@ model Match {
   team1      Team       @relation("Team1", fields: [team1Id], references: [id])
   team2      Team       @relation("Team2", fields: [team2Id], references: [id])
   mvpPlayer  Player?    @relation("MvpPlayer", fields: [mvpPlayerId], references: [id])
+
+  @@index([tournamentId])
+  @@index([status])
 }
 
 model Participation {
@@ -142,6 +151,9 @@ model Participation {
   tournament Tournament @relation(fields: [tournamentId], references: [id])
 
   @@unique([playerId, tournamentId])
+
+  @@index([tournamentId, status])
+  @@index([isMvp])
 }
 
 model Donation {
@@ -156,6 +168,9 @@ model Donation {
 
   tournament Tournament? @relation(fields: [tournamentId], references: [id])
   season     Season?     @relation(fields: [seasonId], references: [id])
+
+  @@index([tournamentId])
+  @@index([seasonId])
 }
 
 // ============================================
@@ -194,6 +209,8 @@ model Club {
   playoffAway PlayoffMatch[] @relation("PlayoffAway")
 
   @@unique([name, seasonId])
+  @@index([seasonId])
+  @@index([division])
 }
 
 model ClubMember {
@@ -206,6 +223,8 @@ model ClubMember {
   player  Player  @relation(fields: [playerId], references: [id])
 
   @@unique([clubId, playerId])
+
+  @@index([playerId])
 }
 
 model LeagueMatch {
@@ -222,6 +241,9 @@ model LeagueMatch {
   season Season @relation(fields: [seasonId], references: [id])
   club1  Club   @relation("HomeClub", fields: [club1Id], references: [id])
   club2  Club   @relation("AwayClub", fields: [club2Id], references: [id])
+
+  @@index([seasonId, status])
+  @@index([seasonId, week])
 }
 
 model PlayoffMatch {
@@ -238,4 +260,54 @@ model PlayoffMatch {
   season Season @relation(fields: [seasonId], references: [id])
   club1  Club   @relation("PlayoffHome", fields: [club1Id], references: [id])
   club2  Club   @relation("PlayoffAway", fields: [club2Id], references: [id])
+
+  @@index([seasonId])
+  @@index([status])
+}
+
+// ============================================
+// IDM LEAGUE - CMS (CONTENT MANAGEMENT SYSTEM)
+// ============================================
+
+model CmsSection {
+  id          String   @id @default(cuid())
+  slug        String   @unique // "header" | "hero" | "champions" | "mvp" | "clubs" | "gallery" | "sawer" | "cta" | "footer"
+  title       String   @default("")
+  subtitle    String   @default("")
+  description String   @default("")
+  bannerUrl   String?  // Section background/banner image
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cards CmsCard[]
+}
+
+model CmsCard {
+  id          String   @id @default(cuid())
+  sectionId   String
+  title       String   @default("")
+  subtitle    String   @default("")
+  description String   @default("")
+  imageUrl    String?  // Card image
+  linkUrl     String?  // Optional link
+  tag         String?  // Badge tag text
+  tagColor    String?  // Badge tag color
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section CmsSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@index([sectionId])
+}
+
+model CmsSetting {
+  id    String @id @default(cuid())
+  key   String @unique // "logo_url" | "site_title" | "hero_tagline" etc.
+  value String @default("")
+  type  String @default("text") // "text" | "image" | "json"
+  updatedAt DateTime @updatedAt
 }

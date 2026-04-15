@@ -356,7 +356,7 @@ export function BracketView({ matches, bracketType }: BracketViewProps) {
 
         if (!feederEl1 && !feederEl2) continue;
 
-        const getCenter = (el: HTMLDivElement | null) => {
+        const getCenter = (el: HTMLDivElement | null | undefined) => {
           if (!el) return { x: nextX, y: nextY };
           const rect = el.getBoundingClientRect();
           return {

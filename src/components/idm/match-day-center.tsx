@@ -17,48 +17,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TierBadge } from './tier-badge';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
-
-/* ─── Data Interfaces ─── */
-interface StatsData {
-  hasData: boolean;
-  division: string;
-  season: { id: string; name: string; number: number; status: string };
-  activeTournament: {
-    id: string; name: string; weekNumber: number; status: string;
-    prizePool: number; bpm: number; location: string; scheduledAt: string;
-    teams: { id: string; name: string; isWinner: boolean; power: number;
-      teamPlayers: { player: { id: string; name: string; gamertag: string; tier: string; points: number } }[]
-    }[];
-    matches: { id: string; score1: number | null; score2: number | null; status: string; round: number;
-      team1: { id: string; name: string }; team2: { id: string; name: string };
-      mvpPlayer: { id: string; name: string; gamertag: string } | null
-    }[];
-    donations: { id: string; donorName: string; amount: number; message: string | null }[];
-  } | null;
-  totalPlayers: number;
-  totalPrizePool: number;
-  seasonDonationTotal: number;
-  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; maxStreak: number; totalMvp: number; matches: number; club?: string }[];
-  recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
-  upcomingMatches: { id: string; club1: { name: string }; club2: { name: string }; week: number }[];
-  seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
-  topDonors: { donorName: string; totalAmount: number; donationCount: number }[];
-  clubs: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number }[];
-}
+import { formatCurrency } from '@/lib/utils';
+import type { StatsData } from '@/types/stats';
+import { staggerContainerSlow as container, fadeUpItemSlow as item } from '@/lib/animations';
 
 interface PredictionState {
   matchId: string;
   team1Votes: number;
   team2Votes: number;
   userVote: 'team1' | 'team2' | null;
-}
-
-/* ─── Animations ─── */
-const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06 } } };
-const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
 
 /* ─── Live Pulse Indicator ─── */

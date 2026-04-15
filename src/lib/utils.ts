@@ -52,3 +52,10 @@ export function getClubLogoUrl(clubName: string, dbLogo?: string | null): string
   if (dbLogo) return dbLogo;
   return CLUB_LOGO_MAP[clubName] || '/clubs/neon-blaze.png';
 }
+
+/**
+ * Format number as IDR currency
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+}

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { useAppStore } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
-import { getAvatarUrl } from '@/lib/utils';
+import { getAvatarUrl, hashString } from '@/lib/utils';
 
 interface PlayerProfileProps {
   player: {
@@ -30,17 +30,6 @@ interface PlayerProfileProps {
   };
   onClose: () => void;
   rank?: number;
-}
-
-/* ─── Deterministic hash from string for procedural generation ─── */
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
-  }
-  return Math.abs(hash);
 }
 
 /* ─── Procedural Player Banner — uses AI-generated division background ─── */

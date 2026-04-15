@@ -26,79 +26,19 @@ import { BracketView } from './bracket-view';
 import { ParticipantGrid } from './participant-grid';
 import { DanceMatchCard } from './match-card';
 import { WeekNavigator } from './week-navigator';
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
+import { formatCurrency } from '@/lib/utils';
+import type { StatsData } from '@/types/stats';
+import { StatusBadge } from './status-badge';
+import { staggerContainerFast, fadeUpItemSubtle } from '@/lib/animations';
 
-/* ─── Data Interfaces (unchanged) ─── */
-interface StatsData {
-  hasData: boolean;
-  division: string;
-  season: { id: string; name: string; number: number; status: string };
-  activeTournament: {
-    id: string; name: string; weekNumber: number; status: string;
-    prizePool: number; bpm: number; location: string; scheduledAt: string;
-    teams: { id: string; name: string; isWinner: boolean; power: number;
-      teamPlayers: { player: { id: string; name: string; gamertag: string; tier: string; points: number } }[]
-    }[];
-    matches: { id: string; score1: number | null; score2: number | null; status: string;
-      team1: { id: string; name: string }; team2: { id: string; name: string };
-      mvpPlayer: { id: string; name: string; gamertag: string } | null
-    }[];
-    donations: { id: string; donorName: string; amount: number; message: string | null }[];
-  } | null;
-  totalPlayers: number;
-  totalPrizePool: number;
-  seasonDonationTotal: number;
-  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; maxStreak: number; totalMvp: number; matches: number; club?: string; division?: string }[];
-  recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
-  upcomingMatches: { id: string; club1: { name: string }; club2: { name: string }; week: number }[];
-  seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
-  topDonors: { donorName: string; totalAmount: number; donationCount: number }[];
-  clubs: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number }[];
-  weeklyChampions: { weekNumber: number; tournamentName: string; prizePool: number; completedAt: string | null;
-    winnerTeam: { name: string; players: { id: string; gamertag: string; tier: string; points: number; totalWins: number; totalMvp: number; streak: number; matches: number }[] } | null;
-    mvp: { id: string; gamertag: string; tier: string; totalMvp: number; points: number } | null
-  }[];
-  mvpHallOfFame: { id: string; gamertag: string; tier: string; totalMvp: number; points: number; totalWins: number; streak: number; weekNumber: number; tournamentName: string }[];
-}
-
-/* ─── Animation variants (subtler) ─── */
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.04 } }
-};
-const item = {
-  hidden: { opacity: 0, y: 6 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.25 } }
-};
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-}
-
-/* ─── StatusBadge ─── */
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
-    setup: { label: 'Persiapan', cls: 'bg-muted text-muted-foreground' },
-    registration: { label: 'Pendaftaran Dibuka', cls: 'bg-green-500/10 text-green-500' },
-    approval: { label: 'Persetujuan', cls: 'bg-yellow-500/10 text-yellow-500' },
-    team_generation: { label: 'Tim Siap', cls: 'bg-blue-500/10 text-blue-500' },
-    bracket_generation: { label: 'Bracket Siap', cls: 'bg-blue-500/10 text-blue-500' },
-    main_event: { label: 'LIVE NOW', cls: 'bg-red-500/10 text-red-500', pulse: true },
-    scoring: { label: 'Penilaian', cls: 'bg-yellow-500/10 text-yellow-500' },
-    completed: { label: 'Selesai', cls: 'bg-muted text-muted-foreground' },
-  };
-  const c = config[status] || { label: status, cls: 'bg-muted text-muted-foreground' };
-  return (
-    <Badge className={`${c.cls} text-[10px] font-semibold border-0 ${c.pulse ? 'live-dot' : ''}`}>
-      {c.pulse && <span className="w-1.5 h-1.5 rounded-full bg-current mr-1" />}
-      {c.label}
-    </Badge>
-  );
-}
+/* ─── Animation variants (imported from shared module) ─── */
+const container = staggerContainerFast;
+const item = fadeUpItemSubtle;
 
 /* ─── CasinoHeaderCard — kept but used only for hero area ─── */
-function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }: {
+const CasinoHeaderCard = React.memo(function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }: {
   icon: React.ComponentType<{ className?: string }>;
   title: string;
   badge?: string;
@@ -125,10 +65,10 @@ function CasinoHeaderCard({ icon: Icon, title, badge, children, className = '' }
       <CardContent className="p-4 relative z-10">{children}</CardContent>
     </Card>
   );
-}
+})
 
 /* ─── Toornament-style Section Card — clean header with thin bottom border ─── */
-function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
+const SectionCard = React.memo(function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
   badge?: string;
@@ -154,10 +94,10 @@ function SectionCard({ title, icon: Icon, badge, children, className = '' }: {
       </CardContent>
     </Card>
   );
-}
+})
 
 /* ─── Toornament-style Match Row — clean, compact ─── */
-function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
+const MatchRow = React.memo(function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
   club1: string; club2: string; score1: number; score2: number;
   week?: number; status?: string; mvp?: string; isLive?: boolean;
 }) {
@@ -211,10 +151,10 @@ function MatchRow({ club1, club2, score1, score2, week, status, mvp, isLive }: {
       </div>
     </div>
   );
-}
+})
 
 /* ─── Toornament-style Bracket Match ─── */
-function BracketMatch({ team1, team2, score1, score2, status, round, matchIdx, isLast }: {
+const BracketMatch = React.memo(function BracketMatch({ team1, team2, score1, score2, status, round, matchIdx, isLast }: {
   team1: string; team2: string; score1: number | null; score2: number | null;
   status: string; round: number; matchIdx: number; isLast: boolean;
 }) {
@@ -254,10 +194,10 @@ function BracketMatch({ team1, team2, score1, score2, status, round, matchIdx, i
       </div>
     </div>
   );
-}
+})
 
 /* ─── Toornament-style Participant Row ─── */
-function ParticipantRow({ player, rank, onClick }: {
+const ParticipantRow = React.memo(function ParticipantRow({ player, rank, onClick }: {
   player: StatsData['topPlayers'][0];
   rank: number;
   onClick: () => void;
@@ -314,7 +254,7 @@ function ParticipantRow({ player, rank, onClick }: {
       </div>
     </motion.div>
   );
-}
+})
 
 /* ─── Main Dashboard Component ─── */
 export function Dashboard() {
@@ -364,13 +304,13 @@ export function Dashboard() {
 
   /* Group tournament matches by round for bracket view */
   const tournamentMatchesByRound = useMemo(() => {
-    if (!data?.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
+    if (!data?.activeTournament?.matches) return {} as Record<number, NonNullable<StatsData['activeTournament']>['matches']>;
     return data.activeTournament.matches.reduce((acc, m) => {
       const round = 'round' in m ? (m as any).round || 1 : 1;
       if (!acc[round]) acc[round] = [];
       acc[round].push(m);
       return acc;
-    }, {} as Record<number, StatsData['activeTournament']['matches']>);
+    }, {} as Record<number, NonNullable<StatsData['activeTournament']>['matches']>);
   }, [data?.activeTournament?.matches]);
 
   /* Filtered participants */
@@ -381,7 +321,13 @@ export function Dashboard() {
       p.gamertag.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.club && p.club.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [data.topPlayers, searchQuery]);
+  }, [data?.topPlayers, searchQuery]);
+
+  /* Displayed players/clubs — computed inline (trivial slice, no memo needed) */
+  const topPlayers = data?.topPlayers ?? [];
+  const displayedPlayers = showAllPlayers ? topPlayers : topPlayers.slice(0, 10);
+  const clubs = data?.clubs ?? [];
+  const displayedClubs = showAllClubs ? clubs : clubs.slice(0, 6);
 
   if (isLoading) {
     return (
@@ -420,8 +366,6 @@ export function Dashboard() {
   }
 
   const t = data.activeTournament;
-  const displayedPlayers = showAllPlayers ? data.topPlayers : data.topPlayers?.slice(0, 10);
-  const displayedClubs = showAllClubs ? data.clubs : data.clubs?.slice(0, 6);
 
   return (
     <>
@@ -854,7 +798,7 @@ export function Dashboard() {
             </motion.div>
 
             {/* Featured Match — DanceMatchCard style */}
-            {t?.matches?.filter(m => m.status === 'completed').length > 0 && (
+            {t?.matches?.filter(m => m.status === 'completed').length ? (
               <motion.div variants={item}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className={`w-7 h-7 rounded-lg ${dt.iconBg} flex items-center justify-center shrink-0`}>
@@ -863,7 +807,7 @@ export function Dashboard() {
                   <h3 className="text-sm font-semibold">Match Unggulan</h3>
                   <Badge className={`${dt.casinoBadge} ml-auto`}>HASIL</Badge>
                 </div>
-                {t.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
+                {t!.matches.filter(m => m.status === 'completed').slice(-1).map(m => (
                   <DanceMatchCard
                     key={m.id}
                     team1={m.team1}
@@ -871,12 +815,12 @@ export function Dashboard() {
                     score1={m.score1}
                     score2={m.score2}
                     status={m.status}
-                    week={t.weekNumber}
+                    week={t!.weekNumber}
                     mvpPlayer={m.mvpPlayer}
                   />
                 ))}
               </motion.div>
-            )}
+            ) : null}
           </motion.div>
         </TabsContent>
 

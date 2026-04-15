@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
   Shield, Users, Music, Trophy, Gift, Plus, Check,
-  Play, Zap, Crown, Settings, UserPlus, X, Save, Loader2, Clock, MapPin, Phone
+  Play, Zap, Crown, Settings, UserPlus, X, Save, Loader2, Clock, MapPin, Phone, Globe
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,16 +17,12 @@ import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { TierBadge } from './tier-badge';
 import { StatusBadge } from './status-badge';
+import { CmsPanel } from './cms-panel';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
-
-const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-}
+import { formatCurrency } from '@/lib/utils';
+import { container, item } from '@/lib/animations';
 
 const statusLabelMap: Record<string, string> = {
   setup: 'Persiapan',
@@ -89,7 +85,7 @@ export function AdminPanel() {
 
   // Mutations
   const createTournament = useMutation({
-    mutationFn: async (data: { name: string; weekNumber: number; prizePool: number }) => {
+    mutationFn: async (data: { name: string; weekNumber: number; prizePool: number; bpm?: number }) => {
       const res = await fetch('/api/tournaments', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...data, division, seasonId: stats?.season?.id }),
@@ -291,7 +287,7 @@ export function AdminPanel() {
             title: 'Re-seed Database?',
             description: 'Semua data saat ini akan dihapus dan diganti dengan data awal. Tindakan ini tidak dapat dibatalkan.',
             onConfirm: async () => {
-              await fetch('/api/seed', { method: 'POST' });
+              await fetch('/api/seed?force=true', { method: 'POST', credentials: 'include' });
               qc.invalidateQueries();
               toast.success('Database berhasil di-reseed!');
             }
@@ -301,12 +297,13 @@ export function AdminPanel() {
       </div>
 
       <Tabs defaultValue="players" className="w-full">
-        <TabsList className="w-full grid grid-cols-5 bg-muted/50 h-auto">
+        <TabsList className="w-full grid grid-cols-6 bg-muted/50 h-auto">
           <TabsTrigger value="players" className="text-xs py-2"><Users className="w-3 h-3 mr-1" />Players</TabsTrigger>
           <TabsTrigger value="tournaments" className="text-xs py-2"><Music className="w-3 h-3 mr-1" />Tourney</TabsTrigger>
           <TabsTrigger value="matches" className="text-xs py-2"><Trophy className="w-3 h-3 mr-1" />Match</TabsTrigger>
           <TabsTrigger value="clubs" className="text-xs py-2"><Settings className="w-3 h-3 mr-1" />Club</TabsTrigger>
           <TabsTrigger value="donations" className="text-xs py-2"><Gift className="w-3 h-3 mr-1" />Donasi</TabsTrigger>
+          <TabsTrigger value="cms" className="text-xs py-2"><Globe className="w-3 h-3 mr-1" />CMS</TabsTrigger>
         </TabsList>
 
         {/* ====== PLAYERS TAB ====== */}
@@ -785,6 +782,11 @@ export function AdminPanel() {
               ))}
             </div>
           </motion.div>
+        </TabsContent>
+
+        {/* ====== CMS TAB ====== */}
+        <TabsContent value="cms">
+          <CmsPanel />
         </TabsContent>
       </Tabs>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Trophy, Shield, Crown, Music, Target,
@@ -10,13 +11,13 @@ import { TierBadge } from './tier-badge';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
-import { getAvatarUrl } from '@/lib/utils';
+import { getAvatarUrl, hashString } from '@/lib/utils';
 
 interface ClubProfileProps {
   club: {
     id: string;
     name: string;
-    division?: string;
+    division?: 'male' | 'female' | 'league' | string;
     wins: number;
     losses: number;
     points: number;
@@ -29,19 +30,8 @@ interface ClubProfileProps {
   onPlayerClick?: (player: { id: string; name: string; gamertag: string; tier: string; points: number }) => void;
 }
 
-// ─── Utility: deterministic hash from string ───
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
-  }
-  return Math.abs(hash);
-}
-
 // ─── Procedural Club Logo Component ───
-function ClubLogo({ name, division, size = 120, isChampion }: {
+const ClubLogo = React.memo(function ClubLogo({ name, division, size = 120, isChampion }: {
   name: string; division?: string; size?: number; isChampion?: boolean;
 }) {
   const hash = hashString(name);
@@ -320,7 +310,7 @@ function ClubLogo({ name, division, size = 120, isChampion }: {
       )}
     </div>
   );
-}
+})
 
 // ─── Banner Geometric Pattern ───
 function BannerPattern({ division }: { division?: string }) {
@@ -549,7 +539,7 @@ export function ClubProfile({ club, onClose, rank, onPlayerClick }: ClubProfileP
                       onClick={() => onPlayerClick?.(p)}
                     >
                       <div className="relative w-8 rounded-md overflow-hidden shrink-0" style={{ aspectRatio: '3/4' }}>
-                        <img src={getAvatarUrl(p.gamertag, club.division === 'league' ? (p as { division?: string }).division || 'male' : club.division === 'male' ? 'male' : 'female')} alt={p.gamertag} className="w-full h-full object-cover object-top" />
+                        <img src={getAvatarUrl(p.gamertag, (club.division === 'league' ? (p as { division?: string }).division || 'male' : club.division === 'male' ? 'male' : 'female') as 'male' | 'female')} alt={p.gamertag} className="w-full h-full object-cover object-top" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06]/50 via-transparent to-transparent" />
                       </div>
                       <div className="flex-1 min-w-0">

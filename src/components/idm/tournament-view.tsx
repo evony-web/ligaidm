@@ -10,8 +10,11 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TierBadge } from './tier-badge';
+import { StatusBadge } from './status-badge';
 import { useState } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
+import { formatCurrency } from '@/lib/utils';
+import { container, item } from '@/lib/animations';
 
 interface Tournament {
   id: string; name: string; weekNumber: number; division: string; status: string;
@@ -28,33 +31,6 @@ interface Tournament {
   }[];
   donations: { id: string; donorName: string; amount: number }[];
   _count?: { teams: number; participations: number; matches: number };
-}
-
-const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } };
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const config: Record<string, { label: string; cls: string; pulse?: boolean }> = {
-    setup: { label: 'Persiapan', cls: 'bg-muted text-muted-foreground' },
-    registration: { label: 'Pendaftaran', cls: 'bg-green-500/10 text-green-500' },
-    approval: { label: 'Persetujuan', cls: 'bg-yellow-500/10 text-yellow-500' },
-    team_generation: { label: 'Tim Siap', cls: 'bg-blue-500/10 text-blue-500' },
-    bracket_generation: { label: 'Bracket Siap', cls: 'bg-blue-500/10 text-blue-500' },
-    main_event: { label: 'LIVE', cls: 'bg-red-500/10 text-red-500', pulse: true },
-    scoring: { label: 'Penilaian', cls: 'bg-yellow-500/10 text-yellow-500' },
-    completed: { label: 'Selesai ✓', cls: 'bg-muted text-muted-foreground' },
-  };
-  const c = config[status] || { label: status, cls: 'bg-muted text-muted-foreground' };
-  return (
-    <Badge className={`${c.cls} text-[10px] font-semibold border-0 ${c.pulse ? 'live-dot' : ''}`}>
-      {c.pulse && <span className="w-1.5 h-1.5 rounded-full bg-current mr-1" />}
-      {c.label}
-    </Badge>
-  );
 }
 
 export function TournamentView() {

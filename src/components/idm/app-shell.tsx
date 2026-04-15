@@ -1,6 +1,6 @@
 'use client';
 
-import { useAppStore } from '@/lib/store';
+import { useAppStore, type AppView } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,30 +10,61 @@ import {
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Dashboard } from './dashboard';
-import { TournamentView } from './tournament-view';
-import { LeagueView } from './league-view';
-import { AdminPanel } from './admin-panel';
+import { Skeleton } from '@/components/ui/skeleton';
+import dynamic from 'next/dynamic';
 import { AdminLogin } from './admin-login';
-import { MatchDayCenter } from './match-day-center';
 import { LandingPage } from './landing-page';
 import { DonationPopup } from './donation-popup';
 import { NotificationStack } from './notification-stack';
-import { RegistrationForm } from './registration-form';
 import { useEffect, useState, useCallback } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { toast } from 'sonner';
 
-const navItems = [
-  { id: 'dashboard' as const, label: 'Dashboard', icon: Gamepad2 },
-  { id: 'matchday' as const, label: 'Match Day', icon: Radio },
-  { id: 'tournament' as const, label: 'Tournament', icon: Music },
-  { id: 'league' as const, label: 'League', icon: Trophy },
-  { id: 'admin' as const, label: 'Admin', icon: Shield },
+/* ─── Lazy-loaded view components (code-split for smaller initial bundle) ─── */
+const viewLoading = (
+  <div className="space-y-5 max-w-5xl mx-auto">
+    <Skeleton className="h-44 rounded-2xl" />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+      <Skeleton className="h-20 rounded-xl" />
+      <Skeleton className="h-20 rounded-xl" />
+    </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-16 rounded-xl" />
+      ))}
+    </div>
+  </div>
+);
+
+const Dashboard = dynamic(() => import('./dashboard').then(m => ({ default: m.Dashboard })), {
+  loading: () => viewLoading,
+});
+const TournamentView = dynamic(() => import('./tournament-view').then(m => ({ default: m.TournamentView })), {
+  loading: () => viewLoading,
+});
+const LeagueView = dynamic(() => import('./league-view').then(m => ({ default: m.LeagueView })), {
+  loading: () => viewLoading,
+});
+const AdminPanel = dynamic(() => import('./admin-panel').then(m => ({ default: m.AdminPanel })), {
+  loading: () => <div className="flex items-center justify-center py-20"><div className="w-8 h-8 border-2 border-[#d4a853] border-t-transparent rounded-full animate-spin" /></div>,
+});
+const MatchDayCenter = dynamic(() => import('./match-day-center').then(m => ({ default: m.MatchDayCenter })), {
+  loading: () => viewLoading,
+});
+const RegistrationForm = dynamic(() => import('./registration-form').then(m => ({ default: m.RegistrationForm })), {
+  loading: () => <div className="max-w-md mx-auto"><Skeleton className="h-96 rounded-2xl" /></div>,
+});
+
+const navItems: { id: AppView; label: string; icon: typeof Gamepad2 }[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: Gamepad2 },
+  { id: 'matchday', label: 'Match Day', icon: Radio },
+  { id: 'tournament', label: 'Tournament', icon: Music },
+  { id: 'league', label: 'League', icon: Trophy },
+  { id: 'admin', label: 'Admin', icon: Shield },
 ];
 
-const actionItems = [
-  { id: 'register' as const, label: 'Daftar', icon: UserPlus },
+const actionItems: { id: AppView; label: string; icon: typeof UserPlus }[] = [
+  { id: 'register', label: 'Daftar', icon: UserPlus },
 ];
 
 function DivisionToggle() {
@@ -263,7 +294,7 @@ export function AppShell() {
   }, [setAdminAuth]);
 
   // Landing page is standalone - no sidebar/header
-  if (currentView === 'landing') {
+  if ((currentView as AppView) === 'landing') {
     return (
       <>
         <LandingPage />
@@ -343,12 +374,12 @@ export function AppShell() {
           <button
             onClick={() => useAppStore.getState().setCurrentView('landing')}
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300 relative ${
-              currentView === 'landing' ? dt.text : 'text-muted-foreground'
+              (currentView as AppView) === 'landing' ? dt.text : 'text-muted-foreground'
             }`}
           >
-            <Home className={`w-5 h-5 ${currentView === 'landing' ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
+            <Home className={`w-5 h-5 ${(currentView as AppView) === 'landing' ? 'drop-shadow-[0_0_8px_var(--idm-glow)]' : ''}`} />
             <span className="text-[10px] font-medium">Home</span>
-            {currentView === 'landing' && (
+            {(currentView as AppView) === 'landing' && (
               <motion.div layoutId="mobileNav" className={`absolute -top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full ${division === 'male' ? 'bg-idm-male' : 'bg-idm-female'}`} />
             )}
           </button>

@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -23,6 +24,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const authResult = await requireAdmin(request);
+  if (authResult instanceof NextResponse) return authResult;
+
   const body = await request.json();
   const { seasonId, club1Id, club2Id, week, format } = body;
 

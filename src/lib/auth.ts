@@ -2,7 +2,12 @@ import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { db } from './db';
 
-const SESSION_SECRET = process.env.SESSION_SECRET || 'idm-league-secret-key-change-in-production';
+const SESSION_SECRET = process.env.SESSION_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('⚠ SECURITY: Using default SESSION_SECRET in production! Set SESSION_SECRET env variable.');
+  }
+  return 'idm-league-secret-key-change-in-production';
+})();
 const SALT_ROUNDS = 10;
 
 // Password utilities

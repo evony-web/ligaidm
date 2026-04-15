@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     streak: p.streak,
     maxStreak: p.maxStreak,
     matches: p.matches,
-    club: p.clubMembers?.[0]?.club?.name || null,
+    club: (p.clubMembers as unknown as { club: { name: string } }[] | undefined)?.[0]?.club?.name || null,
   }));
 
   return NextResponse.json(leaderboard);

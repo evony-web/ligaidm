@@ -2,8 +2,8 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
-import { getAvatarUrl, getClubLogoUrl } from '@/lib/utils';
-import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
+import { getAvatarUrl, getClubLogoUrl, formatCurrency } from '@/lib/utils';
+import { motion, AnimatePresence, useScroll, useTransform, useInView, type Variants } from 'framer-motion';
 import {
   Trophy, Music, Users, Shield, Crown, Star,
   Gift, ArrowRight, Sparkles, Play,
@@ -17,66 +17,38 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TierBadge } from './tier-badge';
 import { PlayerProfile } from './player-profile';
 import { ClubProfile } from './club-profile';
-import { useState, useRef, useMemo, useEffect, type ReactNode } from 'react';
-
-interface StatsData {
-  hasData: boolean;
-  division: string;
-  season: { id: string; name: string; number: number; status: string };
-  topPlayers: { id: string; name: string; gamertag: string; tier: string; points: number; totalWins: number; streak: number; maxStreak: number; totalMvp: number; matches: number; club?: string }[];
-  totalPlayers: number;
-  totalPrizePool: number;
-  seasonDonationTotal: number;
-  clubs: { id: string; name: string; logo?: string | null; wins: number; losses: number; points: number; gameDiff: number; _count?: { members: number } }[];
-  recentMatches: { id: string; score1: number; score2: number; club1: { name: string }; club2: { name: string }; week: number }[];
-  seasonProgress: { totalWeeks: number; completedWeeks: number; percentage: number };
-  topDonors: { donorName: string; totalAmount: number; donationCount: number; tier: string; tierColor: string; tierIcon: string }[];
-  tournaments: { id: string; name: string; weekNumber: number; status: string; prizePool: number }[];
-  weeklyChampions: {
-    weekNumber: number;
-    tournamentName: string;
-    prizePool: number;
-    completedAt: string | null;
-    winnerTeam: {
-      name: string;
-      players: { id: string; gamertag: string; tier: string; points: number; totalWins: number; totalMvp: number; streak: number; matches: number }[];
-    } | null;
-    mvp: { id: string; gamertag: string; tier: string; totalMvp: number; points: number } | null;
-  }[];
-  mvpHallOfFame: {
-    id: string; gamertag: string; tier: string; totalMvp: number; points: number; totalWins: number; streak: number; weekNumber: number; tournamentName: string; division?: 'male' | 'female';
-  }[];
-}
+import { DonationModal } from './donation-modal';
+import { GallerySection } from './gallery-section';
+import { MarqueeTicker } from './marquee-ticker';
+import { useState, useRef, useMemo, useEffect, type ReactNode, useCallback } from 'react';
+import type { StatsData } from '@/types/stats';
 
 /* ========== Animation Variants ========== */
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 50 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const fadeLeft = {
+const fadeLeft: Variants = {
   hidden: { opacity: 0, x: -50 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const fadeRight = {
+const fadeRight: Variants = {
   hidden: { opacity: 0, x: 50 },
   visible: { opacity: 1, x: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const scaleIn = {
+const scaleIn: Variants = {
   hidden: { opacity: 0, scale: 0.85 },
   visible: { opacity: 1, scale: 1, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const stagger = {
+const stagger: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.12 } }
 };
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
-}
 
 /* ========== Scroll-triggered Section Wrapper ========== */
 function AnimatedSection({ children, className = '', variant = 'fadeUp' }: {
@@ -84,7 +56,7 @@ function AnimatedSection({ children, className = '', variant = 'fadeUp' }: {
   className?: string;
   variant?: 'fadeUp' | 'fadeLeft' | 'fadeRight' | 'scaleIn';
 }) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
   const variants = { fadeUp, fadeLeft, fadeRight, scaleIn };
   const selected = variants[variant] || fadeUp;
@@ -156,6 +128,17 @@ export function LandingPage() {
   const [selectedPlayer, setSelectedPlayer] = useState<StatsData['topPlayers'][0] & { division?: string } | null>(null);
   const [selectedClub, setSelectedClub] = useState<(StatsData['clubs'][0] & { division?: string }) | null>(null);
 
+  /* ========== Donation Modal State ========== */
+  const [donationModalOpen, setDonationModalOpen] = useState(false);
+  const [donationModalType, setDonationModalType] = useState<'weekly' | 'season'>('weekly');
+  const [donationModalAmount, setDonationModalAmount] = useState<number | undefined>(undefined);
+
+  const openDonationModal = useCallback((type: 'weekly' | 'season', amount?: number) => {
+    setDonationModalType(type);
+    setDonationModalAmount(amount);
+    setDonationModalOpen(true);
+  }, []);
+
 
   /* ========== Parallax Refs ========== */
   const heroRef = useRef<HTMLElement>(null);
@@ -199,6 +182,28 @@ export function LandingPage() {
     queryKey: ['stats', 'female'],
     queryFn: async () => { const res = await fetch('/api/stats?division=female'); return res.json(); },
   });
+
+  // CMS content query — dynamic landing page content
+  const { data: cmsData } = useQuery({
+    queryKey: ['cms-content'],
+    queryFn: async () => { const res = await fetch('/api/cms/content'); if (!res.ok) return { settings: {}, sections: {} }; return res.json(); },
+    staleTime: 30000,
+  });
+
+  // CMS helpers with fallback defaults
+  const cms = cmsData?.settings || {};
+  const cmsSections = cmsData?.sections || {};
+  const cmsLogo = cms.logo_url || '/logo1.webp';
+  const cmsSiteTitle = cms.site_title || 'IDM League';
+  const cmsHeroTitle = cms.hero_title || 'Idol Meta';
+  const cmsHeroSubtitle = cms.hero_subtitle || 'Fan Made Edition';
+  const cmsHeroTagline = cms.hero_tagline || 'Tempat dancer terbaik berkompetisi. Tournament mingguan, liga profesional, dan podium yang menunggu.';
+  const cmsHeroBgDesktop = cms.hero_bg_desktop || '/bg-default.jpg';
+  const cmsHeroBgMobile = cms.hero_bg_mobile || '/bg-mobiledefault.jpg';
+  const cmsMaleCta = cms.nav_cta_male_text || 'MALE DIVISION';
+  const cmsFemaleCta = cms.nav_cta_female_text || 'FEMALE DIVISION';
+  const cmsFooterText = cms.footer_text || '© 2025 IDM League — Idol Meta Fan Made Edition. All rights reserved.';
+  const cmsFooterTagline = cms.footer_tagline || 'Dance. Compete. Dominate.';
 
   // Use real API data only — no demo/hardcoded fallbacks
   const maleData = rawMaleData;
@@ -257,9 +262,9 @@ export function LandingPage() {
           {/* Logo */}
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg overflow-hidden glow-pulse shrink-0">
-              <img src="/logo1.webp" alt="IDM" className="w-full h-full object-cover" />
+              <img src={cmsLogo} alt="IDM" className="w-full h-full object-cover" />
             </div>
-            <span className="text-gradient-fury text-sm font-bold tracking-tight">IDM League</span>
+            <span className="text-gradient-fury text-sm font-bold tracking-tight">{cmsSiteTitle}</span>
           </div>
 
           {/* Desktop Nav Links */}
@@ -267,6 +272,7 @@ export function LandingPage() {
             <button onClick={() => scrollToSection('champions')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Champion</button>
             <button onClick={() => scrollToSection('mvp')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">MVP</button>
             <button onClick={() => scrollToSection('clubs')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Club & Peserta</button>
+            <button onClick={() => scrollToSection('gallery')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Galeri</button>
             <button onClick={() => scrollToSection('sawer')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Sawer & Donasi</button>
           </div>
 
@@ -312,6 +318,7 @@ export function LandingPage() {
                 <button onClick={() => scrollToSection('champions')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Champion</button>
                 <button onClick={() => scrollToSection('mvp')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">MVP</button>
                 <button onClick={() => scrollToSection('clubs')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Club & Peserta</button>
+                <button onClick={() => scrollToSection('gallery')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Galeri</button>
                 <button onClick={() => scrollToSection('sawer')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Sawer & Donasi</button>
                 <div className="pt-2 flex gap-2">
                   <Button size="sm" className="flex-1 btn-male text-xs h-9" onClick={() => enterApp('male')}>Male Division</Button>
@@ -323,15 +330,22 @@ export function LandingPage() {
         </AnimatePresence>
       </nav>
 
+      {/* ========== LIVE INFO TICKER — Marquee ========== */}
+      <div className="relative z-40 py-2.5 px-4 bg-background/60 backdrop-blur-md border-b border-[#d4a853]/10">
+        <div className="max-w-7xl mx-auto">
+          <MarqueeTicker />
+        </div>
+      </div>
+
       {/* ========== HERO SECTION — Cinematic Parallax ========== */}
       <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Multi-layer Parallax Background — 3 depth layers */}
         {/* Layer 1: Deep background (slowest) */}
         <motion.div className="absolute inset-0 hidden sm:block" style={{ y: heroY, scale: heroScale }}>
-          <img src="/bg-default.jpg" alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
+          <img src={cmsHeroBgDesktop} alt="" className="w-full h-[130%] object-cover" aria-hidden="true" />
         </motion.div>
         <motion.div className="absolute inset-0 sm:hidden" style={{ y: heroY, scale: heroScale }}>
-          <img src="/bg-mobiledefault.jpg" alt="" className="w-full h-[130%] object-cover object-top" aria-hidden="true" />
+          <img src={cmsHeroBgMobile} alt="" className="w-full h-[130%] object-cover object-top" aria-hidden="true" />
         </motion.div>
 
         {/* Layer 2: Mid-depth gold haze */}
@@ -396,7 +410,7 @@ export function LandingPage() {
                 transition={{ delay: 0.3, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                 className="text-xs sm:text-sm text-[#d4a853]/60 font-bold tracking-[0.25em] uppercase"
               >
-                IDM League
+                {cmsSiteTitle}
               </motion.p>
             </motion.div>
 
@@ -408,7 +422,7 @@ export function LandingPage() {
                 transition={{ delay: 0.8, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                 className="text-3xl sm:text-5xl lg:text-6xl text-gradient-fury font-black tracking-[0.12em] uppercase mt-2"
               >
-                Idol Meta
+                {cmsHeroTitle}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, letterSpacing: '0.3em' }}
@@ -416,17 +430,20 @@ export function LandingPage() {
                 transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                 className="text-lg sm:text-2xl lg:text-3xl text-[#e8d5a3] font-light tracking-[0.15em] uppercase mt-1"
               >
-                Fan Made Edition
+                {cmsHeroSubtitle}
               </motion.p>
             </motion.div>
 
-            {/* Animated Badges */}
+            {/* Animated Badges — from CMS hero section cards */}
             <motion.div variants={fadeUp} className="flex items-center justify-center gap-2.5 mt-6 flex-wrap">
-              {[
-                { text: 'Season 1', glow: true },
-                { text: 'Dance Tournament', glow: false },
-                { text: 'Pro League', glow: false },
-              ].map((badge, i) => (
+              {(cmsSections.hero?.cards?.length > 0
+                ? cmsSections.hero.cards.filter((c: { isActive: boolean }) => c.isActive).map((c: { title: string; order: number }) => ({ text: c.title, glow: c.order === 1 }))
+                : [
+                    { text: 'Season 1', glow: true },
+                    { text: 'Dance Tournament', glow: false },
+                    { text: 'Pro League', glow: false },
+                  ]
+              ).map((badge: { text: string; glow: boolean }, i: number) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
@@ -442,8 +459,7 @@ export function LandingPage() {
 
             {/* Tagline */}
             <motion.p variants={fadeUp} className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-10 mt-8 leading-relaxed">
-              Tempat dancer terbaik berkompetisi. Tournament mingguan, liga profesional,
-              dan podium yang menunggu.
+              {cmsHeroTagline}
             </motion.p>
 
             {/* Hero CTA — Two Division Buttons */}
@@ -455,7 +471,7 @@ export function LandingPage() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 animate-shimmer" />
                   <Music className="w-4 h-4 relative z-10" />
-                  <span className="relative z-10">MALE DIVISION</span>
+                  <span className="relative z-10">{cmsMaleCta}</span>
                 </button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
@@ -464,7 +480,7 @@ export function LandingPage() {
                   onClick={() => enterApp('female')}
                 >
                   <Shield className="w-4 h-4" />
-                  FEMALE DIVISION
+                  {cmsFemaleCta}
                 </button>
               </motion.div>
             </motion.div>
@@ -531,7 +547,7 @@ export function LandingPage() {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <SectionHeader icon={Crown} label="Aula Champion" title="Season Champion" subtitle="Juara terbaru dari setiap divisi — 1 tim, 3 pemain, 1 gelar" />
+            <SectionHeader icon={Crown} label={cmsSections.champions?.subtitle || "Aula Champion"} title={cmsSections.champions?.title || "Season Champion"} subtitle={cmsSections.champions?.description || "Juara terbaru dari setiap divisi — 1 tim, 3 pemain, 1 gelar"} />
           </motion.div>
 
           {/* Both Divisions Side by Side */}
@@ -683,7 +699,7 @@ export function LandingPage() {
 
         <div className="relative z-10 max-w-6xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Medal} label="Hall of Fame" title="MVP Arena" subtitle="Pemain terbaik dari setiap divisi — Dipilih admin berdasarkan skor tertinggi" />
+            <SectionHeader icon={Medal} label={cmsSections.mvp?.subtitle || "Hall of Fame"} title={cmsSections.mvp?.title || "MVP Arena"} subtitle={cmsSections.mvp?.description || "Pemain terbaik dari setiap divisi — Dipilih admin berdasarkan skor tertinggi"} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
               {/* Vertical Gold Divider */}
@@ -854,7 +870,7 @@ export function LandingPage() {
 
         <div className="relative z-10 max-w-7xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
-            <SectionHeader icon={Users} label="Kompetisi" title="Club & Peserta" subtitle="Club-club terbaik yang bertarung di arena IDM League" />
+            <SectionHeader icon={Users} label={cmsSections.clubs?.subtitle || "Kompetisi"} title={cmsSections.clubs?.title || "Club & Peserta"} subtitle={cmsSections.clubs?.description || "Club-club terbaik yang bertarung di arena IDM League"} />
 
             {(() => {
               // Merge clubs from both divisions into one unified ranking
@@ -1193,6 +1209,11 @@ export function LandingPage() {
 
       <div className="section-divider max-w-4xl mx-auto" />
 
+      {/* ========== GALLERY — Premium Parallax Showcase ========== */}
+      <GallerySection />
+
+      <div className="section-divider max-w-4xl mx-auto" />
+
       {/* ========== SEASON GOAL TRACKER — "The Dream" ========== */}
       <section id="dream" ref={dreamRef} className="relative py-24 px-4 overflow-hidden">
         {/* Background — subtle parallax, no scale on content */}
@@ -1261,7 +1282,7 @@ export function LandingPage() {
           </motion.div>
 
           <motion.div variants={fadeUp} className="mt-8">
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => scrollToSection('sawer')} className="px-7 py-3 rounded-2xl bg-gradient-to-r from-[#d4a853] to-[#e8d5a3] text-[#0c0a06] font-black text-sm tracking-wider shadow-[0_0_30px_rgba(212,168,83,0.2)] hover:shadow-[0_0_60px_rgba(212,168,83,0.4)] transition-shadow">
+            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }} onClick={() => openDonationModal('weekly')} className="px-7 py-3 rounded-2xl bg-gradient-to-r from-[#d4a853] to-[#e8d5a3] text-[#0c0a06] font-black text-sm tracking-wider shadow-[0_0_30px_rgba(212,168,83,0.2)] hover:shadow-[0_0_60px_rgba(212,168,83,0.4)] transition-shadow">
               <Gift className="w-4 h-4 inline mr-2" />Dukung Liga
             </motion.button>
           </motion.div>
@@ -1301,7 +1322,15 @@ export function LandingPage() {
               const maleDonors = [...(maleData?.topDonors || [])].sort((a, b) => b.totalAmount - a.totalAmount);
               const femaleDonors = [...(femaleData?.topDonors || [])].sort((a, b) => b.totalAmount - a.totalAmount);
 
-              /* ---- Reusable Donors List ---- */
+              /* Compute donor tier locally from amount */
+              const getDonorTier = (amount: number) => {
+                if (amount >= 500000) return { tier: '💎 Diamond', tierColor: '#60a5fa', tierIcon: '💎' };
+                if (amount >= 200000) return { tier: '🥇 Gold', tierColor: '#d4a853', tierIcon: '🥇' };
+                if (amount >= 100000) return { tier: '🥈 Silver', tierColor: '#94a3b8', tierIcon: '🥈' };
+                return { tier: '🥉 Bronze', tierColor: '#d97706', tierIcon: '🥉' };
+              };
+
+              /* ─── Reusable Donors List ─── */
               const DonorsList = ({ donors, accent }: { donors: typeof allDonors; accent: string }) => {
                 if (donors.length === 0) return null;
                 return (
@@ -1334,7 +1363,7 @@ export function LandingPage() {
                               </div>
                               <div>
                                 <p className="text-sm font-bold text-white">{donor.donorName}</p>
-                                <span className="text-[9px]" style={{ color: donor.tierColor }}>{donor.tierIcon} {donor.tier}</span>
+                                <span className="text-[9px]" style={{ color: getDonorTier(donor.totalAmount).tierColor }}>{getDonorTier(donor.totalAmount).tierIcon} {getDonorTier(donor.totalAmount).tier}</span>
                               </div>
                             </div>
                             <div className="text-right">
@@ -1407,7 +1436,7 @@ export function LandingPage() {
                         <span>Goal: {formatCurrency(goal)}</span>
                       </div>
 
-                      {/* Preset Donation Buttons */}
+                      {/* Preset Donation Buttons — opens Donation Modal */}
                       <div className="grid grid-cols-4 gap-2">
                         {[
                           { amount: 10000, label: 'Rp 10K' },
@@ -1419,7 +1448,8 @@ export function LandingPage() {
                             key={btn.amount}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="px-2 py-2.5 rounded-xl border text-xs font-bold transition-all duration-200"
+                            onClick={() => openDonationModal('weekly', btn.amount)}
+                            className="px-2 py-2.5 rounded-xl border text-xs font-bold transition-all duration-200 cursor-pointer"
                             style={{ borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accentLight }}
                           >
                             💰 {btn.label}
@@ -1486,7 +1516,7 @@ export function LandingPage() {
                       <span>Goal: {formatCurrency(donasiGoal)}</span>
                     </div>
 
-                    {/* Preset Donation Buttons */}
+                    {/* Preset Donation Buttons — opens Donation Modal */}
                     <div className="grid grid-cols-4 gap-2">
                       {[
                         { amount: 25000, label: 'Rp 25K' },
@@ -1498,7 +1528,8 @@ export function LandingPage() {
                           key={btn.amount}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
-                          className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200"
+                          onClick={() => openDonationModal('season', btn.amount)}
+                          className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200 cursor-pointer"
                         >
                           ✨ {btn.label}
                         </motion.button>
@@ -1579,7 +1610,7 @@ export function LandingPage() {
                                 { amount: 50000, label: 'Rp 50K' },
                                 { amount: 100000, label: 'Rp 100K' },
                               ].map((btn) => (
-                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-2 py-2.5 rounded-xl border border-[#d4a853]/20 bg-[#d4a853]/5 text-[#d4a853] text-xs font-bold hover:bg-[#d4a853]/15 hover:border-[#d4a853]/40 transition-all duration-200">
+                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => openDonationModal('weekly', btn.amount)} className="px-2 py-2.5 rounded-xl border border-[#d4a853]/20 bg-[#d4a853]/5 text-[#d4a853] text-xs font-bold hover:bg-[#d4a853]/15 hover:border-[#d4a853]/40 transition-all duration-200 cursor-pointer">
                                   💰 {btn.label}
                                 </motion.button>
                               ))}
@@ -1622,7 +1653,7 @@ export function LandingPage() {
                                 { amount: 100000, label: 'Rp 100K' },
                                 { amount: 250000, label: 'Rp 250K' },
                               ].map((btn) => (
-                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200">
+                                <motion.button key={btn.amount} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => openDonationModal('season', btn.amount)} className="px-2 py-2.5 rounded-xl border border-[#06b6d4]/20 bg-[#06b6d4]/5 text-[#22d3ee] text-xs font-bold hover:bg-[#06b6d4]/15 hover:border-[#06b6d4]/40 transition-all duration-200 cursor-pointer">
                                   ✨ {btn.label}
                                 </motion.button>
                               ))}
@@ -1689,10 +1720,10 @@ export function LandingPage() {
             </motion.div>
           </motion.div>
           <motion.h2 variants={fadeUp} className="text-3xl sm:text-5xl font-black text-gradient-champion mb-3">
-            Punya Skill? Buktikan.
+            {cmsSections.cta?.title || 'Punya Skill? Buktikan.'}
           </motion.h2>
           <motion.p variants={fadeUp} className="text-xs text-muted-foreground mb-8">
-            Daftar sekarang dan tunjukkan siapa dancer terbaik.
+            {cmsSections.cta?.description || 'Daftar sekarang dan tunjukkan siapa dancer terbaik.'}
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
@@ -1730,9 +1761,9 @@ export function LandingPage() {
           >
             {/* Brand */}
             <div className="flex items-center gap-2">
-              <img src="/logo1.webp" alt="IDM" className="w-6 h-6 rounded-lg object-cover" />
-              <span className="text-sm text-gradient-fury font-bold">IDM League</span>
-              <span className="text-[9px] text-muted-foreground/40 ml-1">Fan Made Edition</span>
+              <img src={cmsLogo} alt="IDM" className="w-6 h-6 rounded-lg object-cover" />
+              <span className="text-sm text-gradient-fury font-bold">{cmsSiteTitle}</span>
+              <span className="text-[9px] text-muted-foreground/40 ml-1">{cmsHeroSubtitle}</span>
             </div>
 
             {/* Social */}
@@ -1749,7 +1780,7 @@ export function LandingPage() {
             </div>
 
             {/* Copyright */}
-            <p className="text-[9px] text-muted-foreground/40">&copy; 2025 IDM League — Fan Made Edition</p>
+            <p className="text-[9px] text-muted-foreground/40">{cmsFooterText}</p>
           </motion.div>
         </div>
       </footer>
@@ -1768,12 +1799,20 @@ export function LandingPage() {
         <ClubProfile
           club={{
             ...selectedClub,
-            rank: (selectedClub.division === 'male' ? maleData : femaleData)?.clubs?.findIndex(c => c.id === selectedClub.id) + 1,
+            rank: ((selectedClub.division === 'male' ? maleData : femaleData)?.clubs?.findIndex(c => c.id === selectedClub.id) ?? -1) + 1,
           }}
           onClose={() => setSelectedClub(null)}
-          rank={(selectedClub.division === 'male' ? maleData : femaleData)?.clubs?.findIndex(c => c.id === selectedClub.id) + 1}
+          rank={((selectedClub.division === 'male' ? maleData : femaleData)?.clubs?.findIndex(c => c.id === selectedClub.id) ?? -1) + 1}
         />
       )}
+
+      {/* ========== DONATION MODAL ========== */}
+      <DonationModal
+        open={donationModalOpen}
+        onOpenChange={setDonationModalOpen}
+        defaultType={donationModalType}
+        defaultAmount={donationModalAmount}
+      />
 
       {/* ========== BACK TO TOP BUTTON ========== */}
       <AnimatePresence>
