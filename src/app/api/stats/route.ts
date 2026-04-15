@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const division = searchParams.get('division') || 'male';
 
+  try {
   // Get active season
   const season = await db.season.findFirst({
     where: { division, status: 'active' },
@@ -42,12 +43,30 @@ export async function GET(request: Request) {
   });
   const seasonDonationTotal = seasonDonations.reduce((sum, d) => sum + d.amount, 0);
 
-  // Top players leaderboard
-  const topPlayers = await db.player.findMany({
+  // Top players leaderboard (with club info via junction table)
+  const topPlayersRaw = await db.player.findMany({
     where: { division },
     orderBy: [{ points: 'desc' }, { totalWins: 'desc' }],
     take: 10,
+    include: { clubMembers: { include: { club: { select: { name: true } } } } },
   });
+
+  const topPlayers = topPlayersRaw.map(p => ({
+    id: p.id,
+    name: p.name,
+    gamertag: p.gamertag,
+    division: p.division,
+    tier: p.tier,
+    avatar: p.avatar,
+    points: p.points,
+    totalWins: p.totalWins,
+    totalMvp: p.totalMvp,
+    streak: p.streak,
+    maxStreak: p.maxStreak,
+    matches: p.matches,
+    isActive: p.isActive,
+    club: p.clubMembers[0]?.club?.name ?? undefined,
+  }));
 
   // Clubs standings
   const clubs = await db.club.findMany({
@@ -133,4 +152,24 @@ export async function GET(request: Request) {
       percentage: Math.round((completedWeeks / totalWeeks) * 100),
     },
   });
+
+  } catch (error) {
+    console.error('Stats API error:', error);
+    return NextResponse.json({
+      hasData: false,
+      division,
+      topPlayers: [],
+      clubs: [],
+      recentMatches: [],
+      upcomingMatches: [],
+      playoffMatches: [],
+      tournaments: [],
+      leagueMatches: [],
+      topDonors: [],
+      totalPlayers: 0,
+      totalPrizePool: 0,
+      seasonDonationTotal: 0,
+      seasonProgress: { totalWeeks: 0, completedWeeks: 0, percentage: 0 },
+    });
+  }
 }

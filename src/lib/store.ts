@@ -37,6 +37,11 @@ interface AppState {
   notifications: Notification[];
   addNotification: (type: NotifType, message: string) => void;
   removeNotification: (id: string) => void;
+
+  // Admin auth
+  isAdminAuthenticated: boolean;
+  adminUser: { username: string; role: string; displayName?: string } | null;
+  setAdminAuth: (authenticated: boolean, user?: { username: string; role: string; displayName?: string } | null) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -67,4 +72,8 @@ export const useAppStore = create<AppState>((set) => ({
     }, 5000);
   },
   removeNotification: (id) => set((s) => ({ notifications: s.notifications.filter(n => n.id !== id) })),
+
+  isAdminAuthenticated: false,
+  adminUser: null,
+  setAdminAuth: (authenticated, user) => set({ isAdminAuthenticated: authenticated, adminUser: user || null }),
 }));

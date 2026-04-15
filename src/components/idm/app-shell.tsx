@@ -5,7 +5,7 @@ import { useTheme } from 'next-themes';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Gamepad2, Trophy, Users, Shield, Music,
-  Sun, Moon, Menu, X, Home, Flame, Radio
+  Sun, Moon, Menu, X, Home, Flame, Radio, LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -16,10 +16,12 @@ import { LeagueView } from './league-view';
 import { AdminPanel } from './admin-panel';
 import { MatchDayCenter } from './match-day-center';
 import { LandingPage } from './landing-page';
+import { LoginPage } from './login-page';
 import { DonationPopup } from './donation-popup';
 import { NotificationStack } from './notification-stack';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
+import { toast } from 'sonner';
 
 const navItems = [
   { id: 'dashboard' as const, label: 'Dashboard', icon: Gamepad2 },
@@ -85,8 +87,18 @@ function ThemeToggle() {
 }
 
 function SidebarContent({ onNav }: { onNav?: () => void }) {
-  const { currentView, setCurrentView, division } = useAppStore();
+  const { currentView, setCurrentView, division, isAdminAuthenticated, adminUser, setAdminAuth } = useAppStore();
   const dt = useDivisionTheme();
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setAdminAuth(false, null);
+      toast.success('Logged out');
+    } catch {
+      toast.error('Logout failed');
+    }
+  }, [setAdminAuth]);
 
   return (
     <div className="flex flex-col h-full">
@@ -163,6 +175,28 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
         <p className="text-[9px] text-muted-foreground mt-1.5">60% Complete • Week 5/8</p>
       </div>
 
+      {/* Admin User Info & Logout */}
+      {isAdminAuthenticated && adminUser && (
+        <div className="mx-3 p-2.5 rounded-xl bg-muted/50 border border-border/30 mb-2">
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-6 h-6 rounded-full bg-idm-gold/20 flex items-center justify-center">
+              <Shield className="w-3 h-3 text-idm-gold" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-semibold truncate">{adminUser.displayName || adminUser.username}</p>
+              <p className="text-[9px] text-muted-foreground">{adminUser.role === 'super_admin' ? 'Super Admin' : 'Admin'}</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+              title="Logout"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Theme Toggle */}
       <div className="p-4 pt-2 border-t border-border">
         <div className="flex items-center justify-between">
@@ -177,9 +211,25 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
 }
 
 export function AppShell() {
-  const { currentView, donationPopup, hideDonationPopup, division } = useAppStore();
+  const { currentView, donationPopup, hideDonationPopup, division, isAdminAuthenticated, setAdminAuth } = useAppStore();
   const [mobileOpen, setMobileOpen] = useState(false);
   const dt = useDivisionTheme();
+
+  // Check session on mount and init admin
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/auth/session');
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          setAdminAuth(true, data.user);
+        }
+      } catch {
+        // Not authenticated, that's fine
+      }
+    }
+    checkSession();
+  }, [setAdminAuth]);
 
   // Landing page is standalone - no sidebar/header
   if (currentView === 'landing') {
@@ -202,7 +252,7 @@ export function AppShell() {
       case 'matchday': return <MatchDayCenter />;
       case 'tournament': return <TournamentView />;
       case 'league': return <LeagueView />;
-      case 'admin': return <AdminPanel />;
+      case 'admin': return isAdminAuthenticated ? <AdminPanel /> : <LoginPage />;
       default: return <Dashboard />;
     }
   };

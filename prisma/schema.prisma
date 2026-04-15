@@ -219,3 +219,17 @@ model PlayoffMatch {
   club1  Club   @relation("PlayoffHome", fields: [club1Id], references: [id])
   club2  Club   @relation("PlayoffAway", fields: [club2Id], references: [id])
 }
+
+// ============================================
+// IDM LEAGUE - ADMIN AUTHENTICATION
+// ============================================
+
+model Admin {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         String   @default("admin")
+  displayName  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

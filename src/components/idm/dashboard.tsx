@@ -325,9 +325,26 @@ export function Dashboard() {
     },
   });
 
+  // Safe defaults to prevent crashes
+  const safeData: StatsData = {
+    hasData: data?.hasData ?? false,
+    division: data?.division ?? division,
+    season: data?.season ?? { id: '', name: '', number: 1, status: '' },
+    activeTournament: data?.activeTournament ?? null,
+    totalPlayers: data?.totalPlayers ?? 0,
+    totalPrizePool: data?.totalPrizePool ?? 0,
+    seasonDonationTotal: data?.seasonDonationTotal ?? 0,
+    topPlayers: data?.topPlayers ?? [],
+    recentMatches: data?.recentMatches ?? [],
+    upcomingMatches: data?.upcomingMatches ?? [],
+    seasonProgress: data?.seasonProgress ?? { totalWeeks: 0, completedWeeks: 0, percentage: 0 },
+    topDonors: data?.topDonors ?? [],
+    clubs: data?.clubs ?? [],
+  };
+
   /* Group matches by week for the Matches tab */
-  const recentMatches = data?.recentMatches ?? [];
-  const upcomingMatches = data?.upcomingMatches ?? [];
+  const recentMatches = safeData.recentMatches;
+  const upcomingMatches = safeData.upcomingMatches;
 
   const matchesByWeek = useMemo(() => {
     if (recentMatches.length === 0) return {} as Record<number, StatsData['recentMatches']>;
@@ -349,24 +366,23 @@ export function Dashboard() {
 
   /* Group tournament matches by round for bracket view */
   const tournamentMatchesByRound = useMemo(() => {
-    if (!data?.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
-    return data.activeTournament.matches.reduce((acc, m) => {
+    if (!safeData.activeTournament?.matches) return {} as Record<number, StatsData['activeTournament']['matches']>;
+    return safeData.activeTournament.matches.reduce((acc, m) => {
       const round = 'round' in m ? (m as any).round || 1 : 1;
       if (!acc[round]) acc[round] = [];
       acc[round].push(m);
       return acc;
     }, {} as Record<number, StatsData['activeTournament']['matches']>);
-  }, [data?.activeTournament?.matches]);
+  }, [safeData.activeTournament?.matches]);
 
   /* Filtered participants */
   const filteredPlayers = useMemo(() => {
-    if (!data?.topPlayers) return [];
-    if (!searchQuery) return data.topPlayers;
-    return data.topPlayers.filter(p =>
+    if (!searchQuery) return safeData.topPlayers;
+    return safeData.topPlayers.filter(p =>
       p.gamertag.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.club && p.club.toLowerCase().includes(searchQuery.toLowerCase()))
     );
-  }, [data.topPlayers, searchQuery]);
+  }, [safeData.topPlayers, searchQuery]);
 
   if (isLoading || !data?.hasData) {
     return (
@@ -376,9 +392,9 @@ export function Dashboard() {
     );
   }
 
-  const t = data.activeTournament;
-  const displayedPlayers = showAllPlayers ? data.topPlayers : data.topPlayers?.slice(0, 10);
-  const displayedClubs = showAllClubs ? data.clubs : data.clubs?.slice(0, 6);
+  const t = safeData.activeTournament;
+  const displayedPlayers = showAllPlayers ? safeData.topPlayers : safeData.topPlayers.slice(0, 10);
+  const displayedClubs = showAllClubs ? safeData.clubs : safeData.clubs.slice(0, 6);
 
   return (
     <>
@@ -403,14 +419,14 @@ export function Dashboard() {
         <div className="absolute bottom-4 left-5 right-5 z-10">
           <div className="flex items-center gap-2 mb-1">
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
-              🐉 Season {data.season?.number || 1}
+              🐉 Season {safeData.season.number || 1}
             </Badge>
             <Badge className={`${dt.casinoBadge} px-2 py-0.5`}>
               {division === 'male' ? '🕺 Male' : '💃 Female'}
             </Badge>
           </div>
           <h2 className={`text-2xl lg:text-3xl font-black ${dt.neonGradient}`}>{t?.name || 'IDM League Stage'}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{data.season?.name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{safeData.season.name}</p>
           <div className="flex items-center gap-4 mt-2 text-[10px] text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className={`w-3 h-3 ${dt.neonText}`} />{t?.scheduledAt ? new Date(t.scheduledAt).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Coming Soon'}</span>
             <span className="flex items-center gap-1"><MapPin className={`w-3 h-3 ${dt.neonText}`} />{t?.location || 'Online'}</span>
@@ -432,18 +448,18 @@ export function Dashboard() {
             <span className="text-xs text-muted-foreground">💰 Prize Pool</span>
             <span className={`text-lg font-bold ${dt.neonGradient}`}>{formatCurrency(t?.prizePool || 0)}</span>
           </div>
-          <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
-          <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(data.totalPrizePool)}</p>
+          <Progress value={Math.min((safeData.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
+          <p className="text-[10px] text-muted-foreground mt-1">Target: {formatCurrency(500000)} • Collected: {formatCurrency(safeData.totalPrizePool)}</p>
         </div>
       </motion.div>
 
       {/* ========== QUICK STATS — Casino Pills ========== */}
       <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { icon: Users, value: `${data.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
-          { icon: Shield, value: `${data.clubs?.length || 0}`, label: 'Clubs', color: 'from-idm-female to-idm-female-light' },
-          { icon: Wallet, value: formatCurrency(data.totalPrizePool).replace('Rp', '').trim(), label: 'Prize Pool', color: 'from-[#d4a853] to-[#b8860b]' },
-          { icon: Target, value: `${data.seasonProgress?.percentage || 0}%`, label: 'Progress', color: 'from-green-500 to-green-600' },
+          { icon: Users, value: `${safeData.totalPlayers}`, label: 'Players', color: 'from-idm-male to-idm-male-light' },
+          { icon: Shield, value: `${safeData.clubs.length}`, label: 'Clubs', color: 'from-idm-female to-idm-female-light' },
+          { icon: Wallet, value: formatCurrency(safeData.totalPrizePool).replace('Rp', '').trim(), label: 'Prize Pool', color: 'from-[#d4a853] to-[#b8860b]' },
+          { icon: Target, value: `${safeData.seasonProgress.percentage}%`, label: 'Progress', color: 'from-green-500 to-green-600' },
         ].map((stat, i) => (
           <motion.div key={i} whileHover={{ scale: 1.03, y: -2 }} className="group">
             <div className={`casino-pill ${dt.casinoGlow}`}>
@@ -486,11 +502,11 @@ export function Dashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
 
             {/* Recent Results — Toornament match row style */}
-            {data.recentMatches?.length > 0 && (
+            {safeData.recentMatches.length > 0 && (
               <motion.div variants={item}>
                 <SectionCard title="Recent Results" icon={Radio} badge="LIVE">
                   <div className="space-y-2">
-                    {data.recentMatches.slice(0, 6).map(m => (
+                    {safeData.recentMatches.slice(0, 6).map(m => (
                       <MatchRow
                         key={m.id}
                         club1={m.club1.name}
@@ -516,7 +532,7 @@ export function Dashboard() {
                 <Badge className={`${dt.casinoBadge} ml-auto`}>PODIUM</Badge>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                {data.topPlayers?.slice(0, 3).map((p, idx) => (
+                {safeData.topPlayers.slice(0, 3).map((p, idx) => (
                   <PlayerCard
                     key={p.id}
                     gamertag={p.gamertag}
@@ -539,12 +555,12 @@ export function Dashboard() {
               <SectionCard title="Donation & Sawer" icon={Gift} badge="LIVE">
                 <div className={`p-3 rounded-xl ${dt.bgSubtle} ${dt.border} mb-3`}>
                   <p className="text-xs text-muted-foreground mb-1">Total Prize Pool</p>
-                  <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(data.totalPrizePool)}</p>
-                  <Progress value={Math.min((data.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
+                  <p className={`text-xl font-bold ${dt.neonGradient}`}>{formatCurrency(safeData.totalPrizePool)}</p>
+                  <Progress value={Math.min((safeData.totalPrizePool / 500000) * 100, 100)} className="mt-2 h-1.5" />
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground">Top Contributors</p>
-                  {data.topDonors?.slice(0, 3).map((d, i) => (
+                  {safeData.topDonors.slice(0, 3).map((d, i) => (
                     <div key={i} className={`flex items-center justify-between text-xs p-2 rounded-lg ${dt.bgSubtle} ${dt.borderSubtle}`}>
                       <span className="flex items-center gap-2">
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
@@ -560,27 +576,27 @@ export function Dashboard() {
                 </div>
               </SectionCard>
 
-              <SectionCard title="Season Progress" icon={TrendingUp} badge={`${data.seasonProgress?.percentage}%`}>
+              <SectionCard title="Season Progress" icon={TrendingUp} badge={`${safeData.seasonProgress.percentage}%`}>
                 <div className="space-y-3">
                   <div>
                     <div className="flex justify-between text-xs mb-1.5">
-                      <span className="text-muted-foreground">{data.season?.name}</span>
-                      <span className={`font-semibold ${dt.neonText}`}>{data.seasonProgress?.completedWeeks}/{data.seasonProgress?.totalWeeks} Weeks</span>
+                      <span className="text-muted-foreground">{safeData.season.name}</span>
+                      <span className={`font-semibold ${dt.neonText}`}>{safeData.seasonProgress.completedWeeks}/{safeData.seasonProgress.totalWeeks} Weeks</span>
                     </div>
-                    <Progress value={data.seasonProgress?.percentage || 0} className="h-2.5" />
-                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{data.seasonProgress?.percentage}% Complete</p>
+                    <Progress value={safeData.seasonProgress.percentage} className="h-2.5" />
+                    <p className={`text-[10px] ${dt.neonText} font-semibold mt-1`}>{safeData.seasonProgress.percentage}% Complete</p>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
                     <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.totalPlayers}</p>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{safeData.totalPlayers}</p>
                       <p className="text-[10px] text-muted-foreground">Players</p>
                     </div>
-                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center cursor-pointer`} onClick={() => setSelectedClub(data.clubs?.[0])}>
-                      <p className={`text-lg font-bold ${dt.neonText}`}>{data.clubs?.length || 0}</p>
+                    <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center cursor-pointer`} onClick={() => setSelectedClub(safeData.clubs[0])}>
+                      <p className={`text-lg font-bold ${dt.neonText}`}>{safeData.clubs.length}</p>
                       <p className="text-[10px] text-muted-foreground">Clubs</p>
                     </div>
                     <div className={`p-2.5 rounded-xl ${dt.bgSubtle} ${dt.border} text-center`}>
-                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(data.seasonDonationTotal || 0)}</p>
+                      <p className={`text-sm font-bold ${dt.neonText}`}>{formatCurrency(safeData.seasonDonationTotal)}</p>
                       <p className="text-[10px] text-muted-foreground">Funded</p>
                     </div>
                   </div>
@@ -719,13 +735,13 @@ export function Dashboard() {
                     </Table>
                   </div>
                   {/* Show more / less toggle */}
-                  {data.topPlayers?.length > 10 && (
+                  {safeData.topPlayers.length > 10 && (
                     <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
                       <button
                         onClick={() => setShowAllPlayers(!showAllPlayers)}
                         className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
                       >
-                        {showAllPlayers ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({data.topPlayers.length})</>}
+                        {showAllPlayers ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({safeData.topPlayers.length})</>}
                       </button>
                     </div>
                   )}
@@ -743,7 +759,7 @@ export function Dashboard() {
                       <Shield className={`w-3 h-3 ${dt.neonText}`} />
                     </div>
                     <h3 className="text-xs font-semibold uppercase tracking-wider">Club Standings</h3>
-                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{data.clubs?.length || 0} Clubs</Badge>
+                    <Badge className={`${dt.casinoBadge} ml-auto text-[9px]`}>{safeData.clubs.length} Clubs</Badge>
                   </div>
                   <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
                     <Table>
@@ -797,13 +813,13 @@ export function Dashboard() {
                       </TableBody>
                     </Table>
                   </div>
-                  {data.clubs?.length > 6 && (
+                  {safeData.clubs.length > 6 && (
                     <div className={`flex items-center justify-center py-2 border-t ${dt.borderSubtle}`}>
                       <button
                         onClick={() => setShowAllClubs(!showAllClubs)}
                         className={`flex items-center gap-1 text-[10px] font-medium ${dt.text} hover:underline`}
                       >
-                        {showAllClubs ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({data.clubs.length})</>}
+                        {showAllClubs ? <><ChevronUp className="w-3 h-3" /> Show Less</> : <><ChevronDown className="w-3 h-3" /> Show All ({safeData.clubs.length})</>}
                       </button>
                     </div>
                   )}
@@ -883,7 +899,7 @@ export function Dashboard() {
             {/* Completed Matches — grouped by week (Toornament match list style) */}
             {Object.keys(matchesByWeek).length > 0 && (
               <motion.div variants={item}>
-                <SectionCard title="Match Results" icon={Trophy} badge={`${data.recentMatches?.length || 0} Matches`}>
+                <SectionCard title="Match Results" icon={Trophy} badge={`${safeData.recentMatches.length} Matches`}>
                   <div className="space-y-5">
                     {Object.entries(matchesByWeek)
                       .sort(([a], [b]) => Number(b) - Number(a))
@@ -967,7 +983,7 @@ export function Dashboard() {
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
             <motion.div variants={item}>
               <ParticipantGrid
-                players={data.topPlayers || []}
+                players={safeData.topPlayers}
                 onPlayerClick={(player) => setSelectedPlayer(player)}
               />
             </motion.div>

@@ -28,6 +28,8 @@ export default function Home() {
       }
     }
     checkAndSeed();
+    // Initialize super admin account
+    fetch('/api/init-admin', { method: 'POST' }).catch(() => {});
   }, []);
 
   const handleSplashFinish = useCallback(() => {
