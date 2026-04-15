@@ -765,7 +765,7 @@ export function AdminPanel() {
               </CardContent>
             </Card>
             <div className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar">
-              {donations?.slice(0, 20).map((d: { id: string; donorName: string; amount: number; message: string | null; type: string; createdAt: string }) => (
+              {Array.isArray(donations?.donations) ? donations.donations.slice(0, 20).map((d: { id: string; donorName: string; amount: number; message: string | null; type: string; createdAt: string }) => (
                 <motion.div key={d.id} variants={item} className={`flex items-center justify-between p-2.5 rounded-lg bg-card border border-border/50 ${dt.casinoGlow}`}>
                   <div className="flex items-center gap-2">
                     <Gift className={`w-3.5 h-3.5 ${dt.neonText}`} />
@@ -779,7 +779,7 @@ export function AdminPanel() {
                     <Badge className="text-[9px] border-0 bg-muted text-muted-foreground">{d.type}</Badge>
                   </div>
                 </motion.div>
-              ))}
+              )) : null}
             </div>
           </motion.div>
         </TabsContent>
