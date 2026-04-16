@@ -18,6 +18,7 @@ import { TierBadge } from './tier-badge';
 import { CmsPanel } from './cms-panel';
 import { TournamentManager } from './tournament-manager';
 import { RankingPanel } from './ranking-panel';
+import { ClubManagement } from './club-management';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
@@ -42,17 +43,6 @@ export function AdminPanel() {
   const { data: donations } = useQuery({
     queryKey: ['admin-donations', division],
     queryFn: async () => { const res = await fetch(`/api/donations`); return res.json(); },
-  });
-
-  const { data: clubs } = useQuery({
-    queryKey: ['admin-clubs', division],
-    queryFn: async () => {
-      const seasonId = stats?.season?.id;
-      if (!seasonId) return [];
-      const res = await fetch(`/api/clubs?seasonId=${seasonId}`);
-      return res.json();
-    },
-    enabled: !!stats?.season?.id,
   });
 
   // Mutations
@@ -119,17 +109,6 @@ export function AdminPanel() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-pending-registrations'] }); qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Pendaftaran ditolak.'); },
   });
 
-  const createClub = useMutation({
-    mutationFn: async (name: string) => {
-      const res = await fetch('/api/clubs', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, division, seasonId: stats?.season?.id }),
-      });
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-clubs', division] }); toast.success('Club berhasil dibuat!'); },
-  });
-
   const scoreLeagueMatch = useMutation({
     mutationFn: async ({ matchId, score1, score2 }: { matchId: string; score1: number; score2: number }) => {
       const res = await fetch(`/api/league-matches/${matchId}`, {
@@ -153,7 +132,6 @@ export function AdminPanel() {
   });
 
   const [newDonation, setNewDonation] = useState({ donorName: '', amount: '', message: '' });
-  const [newClub, setNewClub] = useState('');
   const [newPlayer, setNewPlayer] = useState({ name: '', gamertag: '', tier: 'B' });
   const [searchPlayer, setSearchPlayer] = useState('');
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -454,42 +432,7 @@ export function AdminPanel() {
 
         {/* ====== CLUBS TAB ====== */}
         <TabsContent value="clubs">
-          <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">
-            <Card className={dt.casinoCard}>
-              <div className={dt.casinoBar} />
-              <CardContent className="p-4 relative z-10">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Club
-                </h3>
-                <div className="flex gap-2">
-                  <Input placeholder="Nama Club" value={newClub} onChange={(e) => setNewClub(e.target.value)} />
-                  <Button size="sm" onClick={() => { createClub.mutate(newClub); setNewClub(''); }} disabled={!newClub || createClub.isPending}>{createClub.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Create</Button>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="space-y-2">
-              {clubs?.map((c: { id: string; name: string; wins: number; losses: number; points: number; gameDiff: number; _count?: { members: number } }) => (
-                <motion.div key={c.id} variants={item}>
-                  <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer`}>
-                    <div className={dt.casinoBar} />
-                    <CardContent className="p-3 flex items-center justify-between relative z-10">
-                      <div>
-                        <p className="text-sm font-semibold">{c.name}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">
-                          <span>{c.wins}W - {c.losses}L</span>
-                          <span>•</span>
-                          <span>{c.points} pts</span>
-                          <span>•</span>
-                          <span>GD: {c.gameDiff > 0 ? '+' : ''}{c.gameDiff}</span>
-                        </div>
-                      </div>
-                      <Badge className={dt.casinoBadge}>{c._count?.members || 0} anggota</Badge>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          <ClubManagement division={division} dt={dt} seasonId={stats?.season?.id} setConfirmDialog={setConfirmDialog} />
         </TabsContent>
 
         {/* ====== DONATIONS TAB ====== */}
