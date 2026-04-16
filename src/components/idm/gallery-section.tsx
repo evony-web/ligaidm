@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useInView, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, type Variants } from 'framer-motion';
 import {
   Camera, Trophy, Users, Sparkles, Film, Award,
   ChevronLeft, ChevronRight, X, ZoomIn, Calendar,
-  Heart, Eye
+  ChevronRight as ArrowRight
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 /* ========== Gallery Data ========== */
 interface GalleryItem {
@@ -95,173 +94,88 @@ const GALLERY_ITEMS: GalleryItem[] = [
 
 /* ========== Animation Variants ========== */
 const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } }
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } }
 };
 
 const staggerContainer: Variants = {
   hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.06 } }
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
 };
 
-const itemReveal: Variants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+const cardReveal: Variants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] } }
 };
 
-/* ========== Tab Configuration ========== */
-const TABS = [
-  { id: 'all' as const, label: 'Semua', icon: Camera },
-  { id: 'tournament' as const, label: 'Turnamen', icon: Trophy },
-  { id: 'community' as const, label: 'Komunitas', icon: Users },
-  { id: 'behind' as const, label: 'Behind The Scene', icon: Film },
-  { id: 'achievement' as const, label: 'Prestasi', icon: Award },
-] as const;
-
-type TabId = (typeof TABS)[number]['id'];
-
-/* ========== Elegant Gallery Card ========== */
-const GalleryCard = React.memo(function GalleryCard({
-  item, onClick, className = '', index
-}: {
+/* ========== Collection Card — MonoGlass Inspired ========== */
+function CollectionCard({ item, onClick, index }: {
   item: GalleryItem;
   onClick: () => void;
-  className?: string;
   index: number;
 }) {
   return (
     <motion.div
-      variants={itemReveal}
-      layout
-      className={`group relative rounded-2xl overflow-hidden cursor-pointer ${className}`}
+      variants={cardReveal}
+      className="group cursor-pointer"
       onClick={onClick}
-      whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
     >
-      {/* Image Container — uniform aspect ratio */}
-      <div className="relative aspect-[4/3] overflow-hidden">
-        <img
-          src={item.src}
-          alt={item.alt}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          loading="lazy"
-        />
+      <div className="glass rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg">
+        {/* Image Container — 4:3 aspect ratio */}
+        <div className="relative aspect-[4/3] overflow-hidden">
+          <img
+            src={item.src}
+            alt={item.alt}
+            className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05] w-full h-full"
+            loading="lazy"
+          />
 
-        {/* Elegant Gradient Overlay — multi-layer */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/30 to-transparent opacity-70 group-hover:opacity-95 transition-opacity duration-400" />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0c0a06]/20 via-transparent to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-400" />
+          {/* Gradient overlay — subtle on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-        {/* Gold accent line on hover */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#d4a853] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Number badge — top left, glass-subtle style */}
+          <div className="absolute top-3 left-3 backdrop-blur-[12px] bg-white/20 dark:bg-white/10 border border-white/15 rounded-full px-2.5 py-1">
+            <span className="font-mono text-[10px] text-foreground/60 dark:text-white/60 tabular-nums">
+              {String(index + 1).padStart(2, '0')}
+            </span>
+          </div>
 
-        {/* Tag Badge — top left */}
-        <div className="absolute top-3 left-3 z-10">
-          <Badge className={`${item.tagColor} text-[9px] font-bold border-0 px-2.5 py-1 backdrop-blur-md shadow-lg`}>
-            {item.tag}
-          </Badge>
-        </div>
-
-        {/* Zoom Icon — top right, reveal on hover */}
-        <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <div className="w-8 h-8 rounded-lg bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-            <ZoomIn className="w-3.5 h-3.5 text-white/80" />
+          {/* Zoom icon — top right on hover */}
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
+            <div className="w-8 h-8 rounded-lg backdrop-blur-[12px] bg-white/20 dark:bg-white/10 border border-white/15 flex items-center justify-center">
+              <ZoomIn className="w-3.5 h-3.5 text-white/80" />
+            </div>
           </div>
         </div>
 
-        {/* Bottom Content — elegant reveal */}
-        <div className="absolute bottom-0 inset-x-0 p-4 z-10">
-          <h3 className="text-sm font-bold text-white truncate drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-            {item.title}
-          </h3>
-          <p className="text-[11px] text-white/50 mt-1 line-clamp-1 group-hover:text-white/70 transition-colors duration-300">
+        {/* Content area */}
+        <div className="p-5 sm:p-6">
+          <div className="flex items-baseline gap-2 mb-2">
+            <h3 className="font-serif text-lg font-semibold text-foreground">
+              {item.title}
+            </h3>
+            <span className="font-sans text-xs text-muted-foreground/60">{item.tag}</span>
+          </div>
+          <p className="font-sans text-sm text-muted-foreground leading-relaxed line-clamp-2">
             {item.description}
           </p>
-          <div className="flex items-center gap-3 mt-2.5 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-1 group-hover:translate-y-0">
-            <span className="flex items-center gap-1 text-[10px] text-[#d4a853]/70">
+          <div className="mt-4 flex items-center justify-between">
+            <span className="font-mono text-xs text-muted-foreground/50 tabular-nums flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
-          </div>
-        </div>
-
-        {/* Elegant border on hover */}
-        <div className="absolute inset-0 rounded-2xl border border-white/0 group-hover:border-[#d4a853]/20 transition-colors duration-300 pointer-events-none" />
-      </div>
-    </motion.div>
-  );
-});
-
-/* ========== Featured Card — Hero Style ========== */
-const FeaturedCard = React.memo(function FeaturedCard({
-  item, onClick, className = ''
-}: {
-  item: GalleryItem;
-  onClick: () => void;
-  className?: string;
-}) {
-  return (
-    <motion.div
-      variants={itemReveal}
-      layout
-      className={`group relative rounded-2xl overflow-hidden cursor-pointer ${className}`}
-      onClick={onClick}
-      whileHover={{ y: -6, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] } }}
-    >
-      {/* Featured Image — taller aspect ratio */}
-      <div className="relative aspect-[16/10] sm:aspect-[16/9] overflow-hidden">
-        <img
-          src={item.src}
-          alt={item.alt}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          loading="lazy"
-        />
-
-        {/* Multi-layer elegant overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/40 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-400" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0c0a06]/50 via-transparent to-transparent" />
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 80%, rgba(212,168,83,0.08) 0%, transparent 50%)' }} />
-
-        {/* Gold accent line — always visible for featured */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#d4a853] to-transparent" />
-
-        {/* Tag Badge — top left */}
-        <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-          <Badge className={`${item.tagColor} text-[10px] font-bold border-0 px-3 py-1.5 backdrop-blur-md shadow-lg`}>
-            {item.tag}
-          </Badge>
-          <Badge className="bg-[#d4a853]/15 text-[#d4a853] text-[10px] font-bold border border-[#d4a853]/20 px-3 py-1.5 backdrop-blur-md">
-            <Sparkles className="w-3 h-3 mr-1" />Featured
-          </Badge>
-        </div>
-
-        {/* Zoom Icon — top right */}
-        <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-          <div className="w-9 h-9 rounded-xl bg-black/40 backdrop-blur-md border border-white/10 flex items-center justify-center">
-            <ZoomIn className="w-4 h-4 text-white/80" />
-          </div>
-        </div>
-
-        {/* Bottom Content — Featured Layout */}
-        <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 z-10">
-          <h3 className="text-lg sm:text-xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-            {item.title}
-          </h3>
-          <p className="text-sm text-white/60 mt-2 line-clamp-2 group-hover:text-white/80 transition-colors duration-300 max-w-lg">
-            {item.description}
-          </p>
-          <div className="flex items-center gap-4 mt-3">
-            <span className="flex items-center gap-1.5 text-[11px] text-[#d4a853]/70">
-              <Calendar className="w-3.5 h-3.5" />
-              {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+            <span className="font-sans text-xs text-muted-foreground/50 group-hover:text-foreground/70 transition-colors flex items-center gap-1">
+              Lihat
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="transition-transform duration-300 group-hover:translate-x-0.5">
+                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </span>
           </div>
         </div>
-
-        {/* Elegant border on hover */}
-        <div className="absolute inset-0 rounded-2xl border border-[#d4a853]/10 group-hover:border-[#d4a853]/25 transition-colors duration-300 pointer-events-none" />
       </div>
     </motion.div>
   );
-});
+}
 
 /* ========== Lightbox Component ========== */
 function Lightbox({ item, onClose, onPrev, onNext }: {
@@ -276,13 +190,13 @@ function Lightbox({ item, onClose, onPrev, onNext }: {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md p-4"
+        className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
         onClick={onClose}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+          className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full backdrop-blur-[12px] bg-white/15 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
@@ -290,7 +204,7 @@ function Lightbox({ item, onClose, onPrev, onNext }: {
         {/* Prev Button */}
         <button
           onClick={(e) => { e.stopPropagation(); onPrev(); }}
-          className="absolute left-4 z-10 w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+          className="absolute left-4 z-10 w-10 h-10 rounded-full backdrop-blur-[12px] bg-white/15 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
@@ -298,7 +212,7 @@ function Lightbox({ item, onClose, onPrev, onNext }: {
         {/* Next Button */}
         <button
           onClick={(e) => { e.stopPropagation(); onNext(); }}
-          className="absolute right-4 z-10 w-10 h-10 rounded-full glass border border-white/10 flex items-center justify-center text-white/80 hover:text-white transition-colors"
+          className="absolute right-4 z-10 w-10 h-10 rounded-full backdrop-blur-[12px] bg-white/15 border border-white/15 flex items-center justify-center text-white/80 hover:text-white transition-colors"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
@@ -320,15 +234,12 @@ function Lightbox({ item, onClose, onPrev, onNext }: {
             />
           </div>
           {/* Info Bar */}
-          <div className="mt-3 flex items-center gap-3">
-            <Badge className={`${item.tagColor} text-[10px] font-bold border-0`}>
-              {item.tag}
-            </Badge>
+          <div className="mt-4 flex items-center gap-3">
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-white truncate">{item.title}</h3>
-              <p className="text-[11px] text-white/50">{item.description}</p>
+              <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+              <p className="text-[11px] text-white/50 mt-0.5">{item.description}</p>
             </div>
-            <span className="flex items-center gap-1 text-[10px] text-[#d4a853]/70 shrink-0">
+            <span className="flex items-center gap-1 text-[10px] text-white/40 shrink-0 tabular-nums font-mono">
               <Calendar className="w-3 h-3" />
               {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
             </span>
@@ -341,7 +252,6 @@ function Lightbox({ item, onClose, onPrev, onNext }: {
 
 /* ========== Main Gallery Section Component ========== */
 export function GallerySection() {
-  const [activeTab, setActiveTab] = useState<TabId>('all');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   /* ========== Parallax ========== */
@@ -349,25 +259,51 @@ export function GallerySection() {
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start end', 'end start'] });
   const bgY = useTransform(scrollYProgress, [0, 1], ['0%', '-15%']);
 
-  /* ========== Filtered Items ========== */
-  const filteredItems = useMemo(() => {
-    if (activeTab === 'all') return GALLERY_ITEMS;
-    return GALLERY_ITEMS.filter(item => item.category === activeTab);
-  }, [activeTab]);
-
-  // Split into featured and regular
-  const featuredItems = useMemo(() => filteredItems.filter(item => item.featured), [filteredItems]);
-  const regularItems = useMemo(() => filteredItems.filter(item => !item.featured), [filteredItems]);
+  /* ========== Group items by category into "collections" ========== */
+  const collections = useMemo(() => [
+    {
+      id: 'tournament',
+      title: 'Arena Turnamen',
+      subtitle: 'Panggung & Pertarungan',
+      description: 'Momen-momen terbaik dari pertandingan IDM League — dari panggung utama hingga duel dance paling intens.',
+      icon: Trophy,
+      items: GALLERY_ITEMS.filter(g => g.category === 'tournament'),
+    },
+    {
+      id: 'community',
+      title: 'Komunitas',
+      subtitle: 'Bersama & Berkolaborasi',
+      description: 'Members komunitas berkumpul, berdiskusi, dan berkreasi bersama di luar arena pertandingan.',
+      icon: Users,
+      items: GALLERY_ITEMS.filter(g => g.category === 'community'),
+    },
+    {
+      id: 'behind',
+      title: 'Behind The Scene',
+      subtitle: 'Di Balik Layar',
+      description: 'Tim produksi, persiapan, dan momen eksklusif yang jarang terlihat di balik keseruan turnamen.',
+      icon: Film,
+      items: GALLERY_ITEMS.filter(g => g.category === 'behind'),
+    },
+    {
+      id: 'achievement',
+      title: 'Prestasi',
+      subtitle: 'Kemenangan & Penghargaan',
+      description: 'Perayaan kemenangan, penyerahan hadiah, dan momen kebanggaan sepanjang season.',
+      icon: Award,
+      items: GALLERY_ITEMS.filter(g => g.category === 'achievement'),
+    },
+  ], []);
 
   /* ========== Lightbox Navigation ========== */
   const openLightbox = useCallback((index: number) => setLightboxIndex(index), []);
   const closeLightbox = useCallback(() => setLightboxIndex(null), []);
   const prevImage = useCallback(() => {
-    setLightboxIndex(prev => prev !== null ? (prev - 1 + filteredItems.length) % filteredItems.length : null);
-  }, [filteredItems.length]);
+    setLightboxIndex(prev => prev !== null ? (prev - 1 + GALLERY_ITEMS.length) % GALLERY_ITEMS.length : null);
+  }, []);
   const nextImage = useCallback(() => {
-    setLightboxIndex(prev => prev !== null ? (prev + 1) % filteredItems.length : null);
-  }, [filteredItems.length]);
+    setLightboxIndex(prev => prev !== null ? (prev + 1) % GALLERY_ITEMS.length : null);
+  }, []);
 
   /* ========== Keyboard Navigation ========== */
   React.useEffect(() => {
@@ -383,146 +319,229 @@ export function GallerySection() {
 
   return (
     <>
-      <section id="gallery" ref={sectionRef} className="relative py-24 px-4 overflow-hidden">
+      <section id="gallery" ref={sectionRef} className="py-16 sm:py-24 relative overflow-hidden">
         {/* Parallax Background */}
         <motion.div className="absolute inset-0" style={{ y: bgY }}>
-          <img src="/bg-section.jpg" alt="" className="w-full h-[120%] object-cover opacity-[0.06] dark:opacity-[0.10]" aria-hidden="true" />
           <div className="absolute inset-0" style={{
-            background: 'radial-gradient(ellipse at 30% 20%, rgba(212,168,83,0.06) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(168,85,247,0.04) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.03) 0%, transparent 40%)'
+            background: 'radial-gradient(ellipse at 30% 20%, rgba(212,168,83,0.04) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(168,85,247,0.03) 0%, transparent 50%), radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.02) 0%, transparent 40%)'
           }} />
         </motion.div>
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-background" />
-
-        {/* Ambient Glows */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-1/4 left-0 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 60%)' }} />
-          <div className="absolute bottom-1/3 right-0 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.05) 0%, transparent 60%)' }} />
-        </div>
 
         {/* Content */}
-        <div className="relative z-10 max-w-7xl mx-auto">
-          {/* ── Section Header ── */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* ── Section Header — MonoGlass Collections Style ── */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: '-50px' }}
             variants={fadeUp}
-            className="text-center mb-14"
+            className="mb-12 sm:mb-16"
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="h-px w-12 sm:w-20 bg-gradient-to-r from-transparent to-[#d4a853]" />
-              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a853]/20 bg-[#d4a853]/5">
-                <Camera className="w-4 h-4 text-[#d4a853]" />
-                <span className="text-[11px] font-bold text-[#d4a853] uppercase tracking-[0.25em]">Galeri</span>
+            <div className="flex items-end justify-between">
+              <div>
+                <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-foreground">
+                  Koleksi Galeri
+                </h2>
+                <p className="font-sans text-sm text-muted-foreground mt-2">
+                  Empat kategori, satu komunitas.
+                </p>
               </div>
-              <div className="h-px w-12 sm:w-20 bg-gradient-to-l from-transparent to-[#d4a853]" />
+              <div className="hidden sm:flex items-center gap-1.5 font-sans text-sm text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer">
+                <Camera className="w-4 h-4" />
+                <span>{GALLERY_ITEMS.length} foto</span>
+              </div>
             </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gradient-champion">
-              Momen Komunitas
-            </h2>
-            <p className="text-sm text-muted-foreground mt-4 max-w-lg mx-auto leading-relaxed">
-              Kumpulan momen terbaik dari kegiatan komunitas IDM League — dari panggung turnamen hingga cerita di balik layar
-            </p>
+            <div className="w-full h-px bg-border/40 mt-6" />
           </motion.div>
 
-          {/* ── Tab Navigation — Elegant pill style ── */}
+          {/* ── Collections Grid — 3 columns on desktop ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {collections.map((collection, collectionIndex) => {
+              const displayItems = collection.items.slice(0, 3);
+              const Icon = collection.icon;
+              return (
+                <motion.div
+                  key={collection.id}
+                  variants={cardReveal}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, margin: '-30px' }}
+                  className="group cursor-pointer"
+                >
+                  <div className="glass rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg">
+                    {/* Cover Image — first item as cover */}
+                    <div className="relative aspect-[4/3] overflow-hidden">
+                      <img
+                        src={displayItems[0]?.src}
+                        alt={collection.title}
+                        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.05] w-full h-full"
+                        loading="lazy"
+                      />
+                      {/* Gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      {/* Collection number badge */}
+                      <div className="absolute top-3 left-3 backdrop-blur-[12px] bg-white/20 dark:bg-white/10 border border-white/15 rounded-full px-2.5 py-1">
+                        <span className="font-mono text-[10px] text-foreground/60 dark:text-white/60 tabular-nums">
+                          {String(collectionIndex + 1).padStart(2, '0')}
+                        </span>
+                      </div>
+                      {/* Category icon — top right */}
+                      <div className="absolute top-3 right-3 backdrop-blur-[12px] bg-white/20 dark:bg-white/10 border border-white/15 rounded-full p-1.5">
+                        <Icon className="w-3.5 h-3.5 text-white/70" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <h3 className="font-serif text-lg font-semibold text-foreground">
+                          {collection.title}
+                        </h3>
+                        <span className="font-sans text-xs text-muted-foreground/60">{collection.subtitle}</span>
+                      </div>
+                      <p className="font-sans text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                        {collection.description}
+                      </p>
+                      <div className="mt-4 flex items-center justify-between">
+                        <span className="font-mono text-xs text-muted-foreground/50 tabular-nums">
+                          {collection.items.length} works
+                        </span>
+                        <span className="font-sans text-xs text-muted-foreground/50 group-hover:text-foreground/70 transition-colors flex items-center gap-1">
+                          Explore
+                          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="transition-transform duration-300 group-hover:translate-x-0.5">
+                            <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* ── Featured Champion Card — spans full width on last row ── */}
+            <motion.div
+              variants={cardReveal}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-30px' }}
+              className="md:col-span-2 lg:col-span-3"
+            >
+              <div className="glass rounded-2xl overflow-hidden">
+                {/* Featured Header */}
+                <div className="p-5 sm:p-6 border-b border-border/30">
+                  <div className="flex items-center gap-3">
+                    <div className="h-px flex-1 max-w-12 bg-gradient-to-r from-transparent to-[#d4a853]/40" />
+                    <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4a853]/20 bg-[#d4a853]/5">
+                      <Sparkles className="w-4 h-4 text-[#d4a853]" />
+                      <span className="text-[11px] font-bold text-[#d4a853] uppercase tracking-[0.2em]">Featured</span>
+                    </div>
+                    <div className="h-px flex-1 max-w-12 bg-gradient-to-l from-transparent to-[#d4a853]/40" />
+                  </div>
+                </div>
+
+                {/* Featured Items Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 divide-y sm:divide-y-0 sm:divide-x divide-border/20">
+                  {GALLERY_ITEMS.filter(g => g.featured).map((item) => {
+                    const globalIndex = GALLERY_ITEMS.indexOf(item);
+                    return (
+                      <div
+                        key={item.id}
+                        className="group/item cursor-pointer hover:bg-accent/30 transition-colors duration-300"
+                        onClick={() => openLightbox(globalIndex)}
+                      >
+                        <div className="relative aspect-[16/10] overflow-hidden">
+                          <img
+                            src={item.src}
+                            alt={item.alt}
+                            className="object-cover transition-transform duration-700 ease-out group-hover/item:scale-[1.05] w-full h-full"
+                            loading="lazy"
+                          />
+                          {/* Gradient overlay on hover */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover/item:opacity-100 transition-opacity duration-500" />
+                          {/* Gold top accent line — always visible for featured */}
+                          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#d4a853] to-transparent" />
+                          {/* Zoom icon */}
+                          <div className="absolute top-3 right-3 opacity-0 group-hover/item:opacity-100 transition-all duration-300 translate-y-1 group-hover/item:translate-y-0">
+                            <div className="w-8 h-8 rounded-lg backdrop-blur-[12px] bg-white/20 dark:bg-white/10 border border-white/15 flex items-center justify-center">
+                              <ZoomIn className="w-3.5 h-3.5 text-white/80" />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-5 sm:p-6">
+                          <div className="flex items-baseline gap-2 mb-1">
+                            <h3 className="font-serif text-lg font-semibold text-foreground">{item.title}</h3>
+                            <span className="font-sans text-xs text-muted-foreground/60">{item.tag}</span>
+                          </div>
+                          <p className="font-sans text-sm text-muted-foreground leading-relaxed line-clamp-2">
+                            {item.description}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="font-mono text-xs text-muted-foreground/50 tabular-nums flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                            <span className="font-sans text-xs text-[#d4a853]/60 group-hover/item:text-[#d4a853] transition-colors flex items-center gap-1">
+                              Lihat
+                              <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="transition-transform duration-300 group-hover/item:translate-x-0.5">
+                                <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                              </svg>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── All Photos Strip — Horizontal scrollable row ── */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeUp}
-            className="mb-12"
+            className="mt-16"
           >
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
-              {TABS.map(tab => {
-                const isActive = activeTab === tab.id;
-                const count = tab.id === 'all'
-                  ? GALLERY_ITEMS.length
-                  : GALLERY_ITEMS.filter(g => g.category === tab.id).length;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`relative flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 cursor-pointer ${
-                      isActive
-                        ? 'bg-[#d4a853]/15 text-[#d4a853] border border-[#d4a853]/30 shadow-[0_0_20px_rgba(212,168,83,0.1)]'
-                        : 'bg-muted/30 text-muted-foreground border border-transparent hover:bg-muted/50 hover:text-foreground'
-                    }`}
-                  >
-                    <tab.icon className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                    <span className="sm:hidden">{tab.label.split(' ')[0]}</span>
-                    <span className={`text-[10px] font-bold tabular-nums ${isActive ? 'text-[#d4a853]/60' : 'text-muted-foreground/40'}`}>{count}</span>
-                    {isActive && (
-                      <motion.div
-                        layoutId="gallery-tab-indicator"
-                        className="absolute inset-0 rounded-xl border border-[#d4a853]/20"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.5 }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-serif text-xl font-semibold text-foreground">Semua Foto</h3>
+                <p className="font-sans text-sm text-muted-foreground mt-1">Klik untuk memperbesar</p>
+              </div>
+              <div className="w-full max-w-32 h-px bg-border/40 ml-6 hidden sm:block" />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {GALLERY_ITEMS.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  variants={cardReveal}
+                  className="group cursor-pointer"
+                  onClick={() => openLightbox(index)}
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-xl">
+                    <img
+                      src={item.src}
+                      alt={item.alt}
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-110 w-full h-full"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Number */}
+                    <div className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="font-mono text-[9px] text-white/70 tabular-nums">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
 
-          {/* ── Gallery Grid — Elegant Bento Layout ── */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              variants={staggerContainer}
-            >
-              {/* Featured Items — Hero Row */}
-              {featuredItems.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  {featuredItems.map((item) => {
-                    const globalIndex = filteredItems.indexOf(item);
-                    return (
-                      <FeaturedCard
-                        key={item.id}
-                        item={item}
-                        onClick={() => openLightbox(globalIndex)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Regular Items — Clean Uniform Grid */}
-              {regularItems.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                  {regularItems.map((item) => {
-                    const globalIndex = filteredItems.indexOf(item);
-                    return (
-                      <GalleryCard
-                        key={item.id}
-                        item={item}
-                        index={globalIndex}
-                        onClick={() => openLightbox(globalIndex)}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Empty State */}
-              {filteredItems.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-20"
-                >
-                  <Camera className="w-12 h-12 text-[#d4a853]/20 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">Belum ada foto untuk kategori ini</p>
-                </motion.div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* ── Stats Bar — Elegant minimal ── */}
+          {/* ── Stats Bar — Minimal elegant ── */}
           <motion.div
             initial="hidden"
             whileInView="visible"
@@ -530,7 +549,7 @@ export function GallerySection() {
             variants={fadeUp}
             className="mt-14"
           >
-            <div className="flex items-center justify-center gap-0 py-4 px-6 rounded-2xl bg-white/[0.02] backdrop-blur-sm border border-white/[0.04] max-w-lg mx-auto">
+            <div className="flex items-center justify-center gap-0 py-4 px-6 rounded-2xl bg-accent/20 backdrop-blur-sm border border-border/20 max-w-lg mx-auto">
               {[
                 { icon: Camera, value: GALLERY_ITEMS.length, label: 'Foto' },
                 { icon: Trophy, value: GALLERY_ITEMS.filter(g => g.category === 'tournament').length, label: 'Turnamen' },
@@ -538,11 +557,11 @@ export function GallerySection() {
                 { icon: Award, value: GALLERY_ITEMS.filter(g => g.category === 'achievement').length, label: 'Prestasi' },
               ].map((stat, i) => (
                 <React.Fragment key={i}>
-                  {i > 0 && <div className="w-px h-8 bg-white/[0.06] mx-4 sm:mx-6" />}
+                  {i > 0 && <div className="w-px h-8 bg-border/30 mx-4 sm:mx-6" />}
                   <div className="flex items-center gap-2">
                     <stat.icon className="w-4 h-4 text-[#d4a853]/50" />
-                    <span className="text-lg font-black text-gradient-fury">{stat.value}</span>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider hidden sm:inline">{stat.label}</span>
+                    <span className="text-lg font-bold text-foreground tabular-nums">{stat.value}</span>
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider hidden sm:inline font-sans">{stat.label}</span>
                   </div>
                 </React.Fragment>
               ))}
@@ -552,9 +571,9 @@ export function GallerySection() {
       </section>
 
       {/* ── Lightbox ── */}
-      {lightboxIndex !== null && filteredItems[lightboxIndex] && (
+      {lightboxIndex !== null && GALLERY_ITEMS[lightboxIndex] && (
         <Lightbox
-          item={filteredItems[lightboxIndex]}
+          item={GALLERY_ITEMS[lightboxIndex]}
           onClose={closeLightbox}
           onPrev={prevImage}
           onNext={nextImage}
