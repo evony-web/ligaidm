@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
   Shield, Users, Music, Trophy, Gift, Plus,
-  Crown, Settings, UserPlus, X, Loader2, Clock, MapPin, Phone, Globe
+  Crown, Settings, UserPlus, X, Loader2, Clock, MapPin, Phone, Globe, BarChart3
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { TierBadge } from './tier-badge';
 import { CmsPanel } from './cms-panel';
 import { TournamentManager } from './tournament-manager';
+import { RankingPanel } from './ranking-panel';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
@@ -191,10 +192,11 @@ export function AdminPanel() {
       </div>
 
       <Tabs defaultValue="players" className="w-full">
-        <TabsList className="w-full grid grid-cols-6 bg-muted/50 h-auto">
+        <TabsList className="w-full grid grid-cols-7 bg-muted/50 h-auto">
           <TabsTrigger value="players" className="text-xs py-2"><Users className="w-3 h-3 mr-1" />Players</TabsTrigger>
           <TabsTrigger value="tournaments" className="text-xs py-2"><Music className="w-3 h-3 mr-1" />Tourney</TabsTrigger>
           <TabsTrigger value="matches" className="text-xs py-2"><Trophy className="w-3 h-3 mr-1" />Match</TabsTrigger>
+          <TabsTrigger value="rankings" className="text-xs py-2"><BarChart3 className="w-3 h-3 mr-1" />Rank</TabsTrigger>
           <TabsTrigger value="clubs" className="text-xs py-2"><Settings className="w-3 h-3 mr-1" />Club</TabsTrigger>
           <TabsTrigger value="donations" className="text-xs py-2"><Gift className="w-3 h-3 mr-1" />Donasi</TabsTrigger>
           <TabsTrigger value="cms" className="text-xs py-2"><Globe className="w-3 h-3 mr-1" />CMS</TabsTrigger>

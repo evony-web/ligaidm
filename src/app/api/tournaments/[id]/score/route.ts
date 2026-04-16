@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/api-auth';
+import { awardPoints } from '@/lib/points';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -19,7 +20,7 @@ export async function POST(
 
   const match = await db.match.findUnique({
     where: { id: matchId },
-    include: { tournament: true, team1: { include: { teamPlayers: true } }, team2: { include: { teamPlayers: true } } },
+    include: { tournament: true, team1: { include: { teamPlayers: { include: { player: true } } } }, team2: { include: { teamPlayers: { include: { player: true } } } } },
   });
 
   if (!match) {
@@ -46,6 +47,11 @@ export async function POST(
     return NextResponse.json({ error: 'Draws are not allowed in elimination brackets' }, { status: 400 });
   }
 
+  // Get team names for descriptions
+  const winningTeam = match.team1Id === winnerId ? match.team1! : match.team2!;
+  const losingTeam = match.team1Id === loserId ? match.team1! : match.team2!;
+  const matchLabel = `R${match.round}M${match.matchNumber} ${winningTeam.name} vs ${losingTeam.name}`;
+
   // Update the match
   const updatedMatch = await db.match.update({
     where: { id: matchId },
@@ -59,10 +65,8 @@ export async function POST(
     },
   });
 
-  // ===== AWARD MATCH POINTS =====
+  // ===== AWARD MATCH POINTS WITH AUDIT TRAIL =====
   // 1 participation point (once per tournament) + 2 points per match win
-  const winningTeam = match.team1Id === winnerId ? match.team1! : match.team2!;
-
   for (const tp of winningTeam.teamPlayers) {
     // Check if participation point already given
     const participation = await db.participation.findUnique({
@@ -70,34 +74,55 @@ export async function POST(
     });
 
     if (participation) {
-      const participationPtGiven = participation.pointsEarned >= 1; // already got participation point
-      const newPoints = (participationPtGiven ? 0 : 1) + 2; // 1pt participation (once) + 2pt win
+      const participationPtGiven = participation.pointsEarned >= 1;
+      const participationPts = participationPtGiven ? 0 : 1;
+      const winPts = 2;
+      const totalPts = participationPts + winPts;
 
+      // Update participation record
       await db.participation.update({
         where: { id: participation.id },
-        data: { pointsEarned: participation.pointsEarned + newPoints },
+        data: { pointsEarned: participation.pointsEarned + totalPts },
       });
 
-      // Update player stats
-      const player = await db.player.findUnique({ where: { id: tp.playerId } });
-      if (player) {
-        const newStreak = player.streak + 1;
-        await db.player.update({
-          where: { id: tp.playerId },
-          data: {
-            points: player.points + newPoints,
-            totalWins: player.totalWins + 1,
-            matches: player.matches + 1,
-            streak: newStreak,
-            maxStreak: Math.max(newStreak, player.maxStreak),
-          },
+      // Award participation point (if first match in this tournament)
+      if (!participationPtGiven) {
+        await awardPoints({
+          playerId: tp.playerId,
+          amount: 1,
+          reason: 'participation',
+          description: `Partisipasi tournament - ${match.tournament.name}`,
+          tournamentId: id,
+          matchId,
         });
       }
+
+      // Award match win point
+      await awardPoints({
+        playerId: tp.playerId,
+        amount: winPts,
+        reason: 'match_win',
+        description: `Menang match ${matchLabel}`,
+        tournamentId: id,
+        matchId,
+      });
+
+      // Update player stats (streak, wins, matches)
+      const player = tp.player;
+      const newStreak = player.streak + 1;
+      await db.player.update({
+        where: { id: tp.playerId },
+        data: {
+          totalWins: player.totalWins + 1,
+          matches: player.matches + 1,
+          streak: newStreak,
+          maxStreak: Math.max(newStreak, player.maxStreak),
+        },
+      });
     }
   }
 
   // Losing team: 1 participation point (once)
-  const losingTeam = match.team1Id === loserId ? match.team1! : match.team2!;
   for (const tp of losingTeam.teamPlayers) {
     const participation = await db.participation.findUnique({
       where: { playerId_tournamentId: { playerId: tp.playerId, tournamentId: id } },
@@ -105,24 +130,34 @@ export async function POST(
 
     if (participation) {
       const participationPtGiven = participation.pointsEarned >= 1;
-      const newPoints = participationPtGiven ? 0 : 1;
+      const participationPts = participationPtGiven ? 0 : 1;
 
+      // Update participation record
       await db.participation.update({
         where: { id: participation.id },
-        data: { pointsEarned: participation.pointsEarned + newPoints },
+        data: { pointsEarned: participation.pointsEarned + participationPts },
       });
 
-      const player = await db.player.findUnique({ where: { id: tp.playerId } });
-      if (player) {
-        await db.player.update({
-          where: { id: tp.playerId },
-          data: {
-            points: player.points + newPoints,
-            matches: player.matches + 1,
-            streak: 0, // losing resets streak
-          },
+      // Award participation point (if first match in this tournament)
+      if (!participationPtGiven) {
+        await awardPoints({
+          playerId: tp.playerId,
+          amount: 1,
+          reason: 'participation',
+          description: `Partisipasi tournament - ${match.tournament.name}`,
+          tournamentId: id,
+          matchId,
         });
       }
+
+      // Update player stats (streak reset, matches increment)
+      await db.player.update({
+        where: { id: tp.playerId },
+        data: {
+          matches: tp.player.matches + 1,
+          streak: 0, // losing resets streak
+        },
+      });
     }
   }
 
@@ -163,7 +198,6 @@ export async function POST(
     // For DE: loser drops to lower bracket
     if (format === 'double_elimination' && loserId) {
       // Find the corresponding lower bracket match
-      // Lower bracket round 1 gets losers from upper round 1, etc.
       const lowerRound = currentRound;
       const lowerMatch = await db.match.findFirst({
         where: { tournamentId: id, round: lowerRound, bracket: 'lower' },
@@ -175,7 +209,6 @@ export async function POST(
           await db.match.update({ where: { id: lowerMatch.id }, data: { team1Id: loserId } });
         } else if (!lowerMatch.team2Id) {
           await db.match.update({ where: { id: lowerMatch.id }, data: { team2Id: loserId } });
-          // Check if ready
           const updated2 = await db.match.findUnique({ where: { id: lowerMatch.id } });
           if (updated2?.team1Id && updated2?.team2Id && updated2.status === 'pending') {
             await db.match.update({ where: { id: lowerMatch.id }, data: { status: 'ready' } });
@@ -216,9 +249,6 @@ export async function POST(
       }
     }
   }
-
-  // Grand final: upper bracket winner was already team1, lower bracket winner is team2
-  // No further advancement needed
 
   // ===== Check if all matches completed =====
   const pendingMatches = await db.match.count({

@@ -39,9 +39,11 @@ model Player {
   participations Participation[]
   mvpMatches     Match[]       @relation("MvpPlayer")
   clubMembers    ClubMember[]
+  pointRecords   PlayerPoint[]
 
   @@index([division])
   @@index([division, isActive])
+  @@index([points])
 }
 
 model Season {
@@ -88,6 +90,7 @@ model Tournament {
   participations Participation[]
   prizes        TournamentPrize[]
   donations     Donation[]
+  pointRecords  PlayerPoint[]
 
   @@unique([weekNumber, division, seasonId])
   @@index([division, seasonId])
@@ -148,6 +151,7 @@ model Match {
   winner     Team?      @relation("MatchWinner", fields: [winnerId], references: [id])
   loser      Team?      @relation("MatchLoser", fields: [loserId], references: [id])
   mvpPlayer  Player?    @relation("MvpPlayer", fields: [mvpPlayerId], references: [id])
+  pointRecords PlayerPoint[]
 
   @@index([tournamentId])
   @@index([status])
@@ -347,4 +351,28 @@ model CmsSetting {
   value String @default("")
   type  String @default("text") // "text" | "image" | "json"
   updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// IDM LEAGUE - POINT TRANSACTION AUDIT TRAIL
+// ============================================
+
+model PlayerPoint {
+  id           String   @id @default(cuid())
+  playerId     String
+  tournamentId String?  // null for non-tournament adjustments
+  matchId      String?  // null for non-match points
+  amount       Int      // positive = earned, negative = deduction
+  reason       String   // "participation" | "match_win" | "prize_juara1" | "prize_juara2" | "prize_juara3" | "prize_mvp" | "admin_adjustment" | "tier_upgrade_bonus"
+  description  String   // Human-readable detail e.g. "Menang match vs Team Alpha"
+  createdAt    DateTime @default(now())
+
+  player     Player     @relation(fields: [playerId], references: [id])
+  tournament Tournament? @relation(fields: [tournamentId], references: [id])
+  match      Match?     @relation(fields: [matchId], references: [id])
+
+  @@index([playerId])
+  @@index([tournamentId])
+  @@index([reason])
+  @@index([playerId, tournamentId])
 }

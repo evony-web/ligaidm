@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/api-auth';
+import { awardPoints, processTierUpgrade } from '@/lib/points';
 import { NextResponse } from 'next/server';
 
 export async function POST(
@@ -81,7 +82,6 @@ export async function POST(
     }
   } else if (format === 'group_stage') {
     // For group stage, ranking is based on group results + playoff
-    // Simplified: use final match winners
     const playoffMatches = tournament.matches.filter(m => m.round >= 2 && m.status === 'completed');
     const maxPlayoffRound = playoffMatches.length > 0 ? Math.max(...playoffMatches.map(m => m.round)) : 0;
     const finalMatch = playoffMatches.find(m => m.round === maxPlayoffRound);
@@ -103,8 +103,9 @@ export async function POST(
     await db.team.update({ where: { id: tid }, data: { rank: 3 } });
   }
 
-  // ===== AWARD PRIZE POINTS =====
+  // ===== AWARD PRIZE POINTS WITH AUDIT TRAIL =====
   const savedPrizes = await db.tournamentPrize.findMany({ where: { tournamentId: id }, orderBy: { position: 'asc' } });
+  const tierUpgrades: { playerId: string; gamertag: string; fromTier: string; toTier: string }[] = [];
 
   for (const prize of savedPrizes) {
     const isMvpPrize = prize.label.toLowerCase().includes('mvp');
@@ -114,14 +115,35 @@ export async function POST(
       3: rank3TeamIds[0] || null,
     };
 
+    // Map prize label to reason
+    const getPrizeReason = (label: string): string => {
+      const l = label.toLowerCase();
+      if (l.includes('mvp')) return 'prize_mvp';
+      if (l.includes('juara 1') || l.includes('1st')) return 'prize_juara1';
+      if (l.includes('juara 2') || l.includes('2nd')) return 'prize_juara2';
+      if (l.includes('juara 3') || l.includes('3rd')) return 'prize_juara3';
+      return 'prize_other';
+    };
+
     if (isMvpPrize && mvpPlayerId) {
       // Award MVP points directly to the player
       const player = await db.player.findUnique({ where: { id: mvpPlayerId } });
       if (player) {
+        // Award points with audit trail
+        await awardPoints({
+          playerId: mvpPlayerId,
+          amount: prize.pointsPerPlayer,
+          reason: getPrizeReason(prize.label),
+          description: `MVP - ${tournament.name}`,
+          tournamentId: id,
+        });
+
+        // Update MVP count
         await db.player.update({
           where: { id: mvpPlayerId },
-          data: { points: player.points + prize.pointsPerPlayer, totalMvp: player.totalMvp + 1 },
+          data: { totalMvp: player.totalMvp + 1 },
         });
+
         // Update participation
         const part = await db.participation.findUnique({
           where: { playerId_tournamentId: { playerId: mvpPlayerId, tournamentId: id } },
@@ -131,6 +153,12 @@ export async function POST(
             where: { id: part.id },
             data: { pointsEarned: part.pointsEarned + prize.pointsPerPlayer, isMvp: true },
           });
+        }
+
+        // Check tier upgrade
+        const upgrade = await processTierUpgrade(mvpPlayerId);
+        if (upgrade?.upgraded) {
+          tierUpgrades.push({ playerId: mvpPlayerId, gamertag: player.gamertag, fromTier: upgrade.fromTier, toTier: upgrade.toTier });
         }
       }
 
@@ -143,7 +171,6 @@ export async function POST(
       }
     } else {
       // Team prize — find the team at this position
-      // Match prize label to rank
       let targetTeamId: string | null = null;
       if (prize.label.toLowerCase().includes('juara 1') || prize.label.toLowerCase().includes('1st')) {
         targetTeamId = rank1TeamId;
@@ -156,30 +183,38 @@ export async function POST(
       if (targetTeamId) {
         const team = await db.team.findUnique({
           where: { id: targetTeamId },
-          include: { teamPlayers: true },
+          include: { teamPlayers: { include: { player: true } } },
         });
 
         if (team) {
           for (const tp of team.teamPlayers) {
-            const player = await db.player.findUnique({ where: { id: tp.playerId } });
-            if (player) {
-              await db.player.update({
-                where: { id: tp.playerId },
-                data: { points: player.points + prize.pointsPerPlayer },
+            // Award points with audit trail
+            await awardPoints({
+              playerId: tp.playerId,
+              amount: prize.pointsPerPlayer,
+              reason: getPrizeReason(prize.label),
+              description: `${prize.label} - ${tournament.name} (${team.name})`,
+              tournamentId: id,
+            });
+
+            // Update participation
+            const part = await db.participation.findUnique({
+              where: { playerId_tournamentId: { playerId: tp.playerId, tournamentId: id } },
+            });
+            if (part) {
+              await db.participation.update({
+                where: { id: part.id },
+                data: {
+                  pointsEarned: part.pointsEarned + prize.pointsPerPlayer,
+                  isWinner: rank1TeamId === targetTeamId,
+                },
               });
-              // Update participation
-              const part = await db.participation.findUnique({
-                where: { playerId_tournamentId: { playerId: tp.playerId, tournamentId: id } },
-              });
-              if (part) {
-                await db.participation.update({
-                  where: { id: part.id },
-                  data: {
-                    pointsEarned: part.pointsEarned + prize.pointsPerPlayer,
-                    isWinner: rank1TeamId === targetTeamId,
-                  },
-                });
-              }
+            }
+
+            // Check tier upgrade
+            const upgrade = await processTierUpgrade(tp.playerId);
+            if (upgrade?.upgraded) {
+              tierUpgrades.push({ playerId: tp.playerId, gamertag: tp.player.gamertag, fromTier: upgrade.fromTier, toTier: upgrade.toTier });
             }
           }
         }
@@ -203,5 +238,5 @@ export async function POST(
     },
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json({ ...result, tierUpgrades });
 }
