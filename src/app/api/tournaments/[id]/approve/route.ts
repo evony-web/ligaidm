@@ -86,7 +86,7 @@ export async function POST(
   // Bulk approval: return summary
   return NextResponse.json({
     processed: results.length,
-    errors: errors.length,
+    errorCount: errors.length,
     results,
     errors,
   });
