@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 
 /* ========== Feed Item Types ========== */
 interface FeedItem {
@@ -43,44 +43,88 @@ const DEMO_ITEMS: FeedItem[] = [
   { id: 'demo-6', type: 'registration', icon: '🆕', title: 'NewDancer mendaftar sebagai pemain', subtitle: 'Female Division', timestamp: new Date().toISOString(), division: 'female', accent: '#22d3ee' },
   { id: 'demo-7', type: 'donation', icon: '💰', title: 'AnonDonor menyawer Rp1jt', subtitle: 'Donasi Season', timestamp: new Date().toISOString(), accent: '#22c55e' },
   { id: 'demo-8', type: 'champion', icon: '🏆', title: 'Team Omega Juara Week 4!', subtitle: 'Female Division', timestamp: new Date().toISOString(), division: 'female', accent: '#d4a853' },
+  { id: 'demo-9', type: 'score', icon: '⚽', title: 'Club D 2–2 Club E', subtitle: 'Week 5 • Seru!', timestamp: new Date().toISOString(), division: 'female', accent: '#06b6d4' },
+  { id: 'demo-10', type: 'donation', icon: '💎', title: 'VIPSupporter menyawer Rp250rb', subtitle: 'Donasi Season', timestamp: new Date().toISOString(), accent: '#22c55e' },
 ];
 
-/* ========== Single Feed Pill ========== */
-function FeedPill({ item }: { item: FeedItem }) {
+/* ========== Accent colors per type ========== */
+const TYPE_ACCENT: Record<FeedItem['type'], string> = {
+  champion: '#d4a853',
+  mvp: '#eab308',
+  donation: '#22c55e',
+  score: '#06b6d4',
+  transfer: '#a855f7',
+  registration: '#22d3ee',
+};
+
+/* ========== Single Feed Card ========== */
+function FeedCard({ item }: { item: FeedItem }) {
+  const accent = item.accent || TYPE_ACCENT[item.type] || '#d4a853';
+
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/30 bg-background/40 shrink-0">
-      <span className="text-xs shrink-0">{item.icon}</span>
-      <p className="text-[11px] sm:text-xs font-semibold text-foreground truncate max-w-[160px] sm:max-w-[220px]">
-        {item.title}
-      </p>
-      {item.subtitle && (
-        <>
-          <span className="text-muted-foreground/30 shrink-0">·</span>
-          <p className="text-[10px] text-muted-foreground truncate max-w-[100px] sm:max-w-[140px] hidden md:block">
-            {item.subtitle}
-          </p>
-        </>
-      )}
-      <span className="text-[9px] text-muted-foreground/50 shrink-0 tabular-nums">
+    <div
+      className="flex items-center gap-2.5 px-4 py-2 rounded-lg shrink-0 border transition-all duration-300 hover:scale-[1.02] cursor-default select-none"
+      style={{
+        background: `linear-gradient(135deg, ${accent}08 0%, ${accent}03 100%)`,
+        borderColor: `${accent}20`,
+      }}
+    >
+      {/* Icon with glow */}
+      <span
+        className="text-base shrink-0 drop-shadow-sm"
+        style={{ filter: `drop-shadow(0 0 4px ${accent}40)` }}
+      >
+        {item.icon}
+      </span>
+
+      {/* Content */}
+      <div className="flex items-center gap-2 min-w-0">
+        <p className="text-[11px] sm:text-xs font-bold text-foreground truncate max-w-[180px] sm:max-w-[240px]">
+          {item.title}
+        </p>
+        {item.subtitle && (
+          <>
+            <span className="text-muted-foreground/20 shrink-0 text-[8px]">◆</span>
+            <p className="text-[10px] text-muted-foreground/70 truncate max-w-[100px] sm:max-w-[140px] hidden sm:block">
+              {item.subtitle}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Time badge */}
+      <span
+        className="text-[9px] font-medium shrink-0 tabular-nums px-1.5 py-0.5 rounded"
+        style={{ color: `${accent}aa`, background: `${accent}10` }}
+      >
         {formatTimeAgo(item.timestamp)}
       </span>
+
+      {/* Division dot */}
       {item.division && (
         <span
-          className="w-1.5 h-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: item.division === 'male' ? '#06b6d4' : '#a855f7' }}
+          className="w-2 h-2 rounded-full shrink-0 ring-1 ring-offset-1 ring-offset-background"
+          style={{
+            backgroundColor: item.division === 'male' ? '#06b6d4' : '#a855f7',
+            boxShadow: `0 0 6px ${item.division === 'male' ? '#06b6d440' : '#a855f740'}`,
+            ringColor: item.division === 'male' ? '#06b6d460' : '#a855f760',
+          }}
         />
       )}
     </div>
   );
 }
 
-/* ========== Main MarqueeTicker — 3-item Carousel ========== */
-const VISIBLE_COUNT = 3;
-const INTERVAL_MS = 7000;
+/* ========== Separator Diamond ========== */
+function Separator() {
+  return (
+    <span className="text-[8px] text-[#d4a853]/30 shrink-0 mx-1 select-none">◆</span>
+  );
+}
 
+/* ========== Main MarqueeTicker — Pro Infinite Scroll ========== */
 export function MarqueeTicker() {
   const prefersReducedMotion = useReducedMotion();
-  const [offset, setOffset] = useState(0);
 
   const { data } = useQuery<{ items: FeedItem[] }>({
     queryKey: ['feed'],
@@ -96,58 +140,61 @@ export function MarqueeTicker() {
     return DEMO_ITEMS;
   }, [data?.items]);
 
-  const total = items.length;
+  if (items.length === 0) return null;
 
-  // Auto-advance every 7 seconds, shift by 1
-  const goNext = useCallback(() => {
-    setOffset(prev => (prev + 1) % total);
-  }, [total]);
+  // Duration based on item count — smooth & readable
+  const duration = Math.max(30, items.length * 4);
 
-  useEffect(() => {
-    if (total <= VISIBLE_COUNT) return;
-    const timer = setInterval(goNext, INTERVAL_MS);
-    return () => clearInterval(timer);
-  }, [goNext, total]);
+  // Build the track: items + separators, tripled for seamless loop
+  const buildTrack = (trackItems: FeedItem[]) => {
+    const elements: React.ReactNode[] = [];
+    trackItems.forEach((item, i) => {
+      elements.push(<FeedCard key={`card-${item.id}-${i}`} item={item} />);
+      if (i < trackItems.length - 1) {
+        elements.push(<Separator key={`sep-${i}`} />);
+      }
+    });
+    return elements;
+  };
 
-  if (total === 0) return null;
-
-  // Build a window of VISIBLE_COUNT items starting from offset (wrapping)
-  const visibleItems: FeedItem[] = [];
-  for (let i = 0; i < VISIBLE_COUNT; i++) {
-    visibleItems.push(items[(offset + i) % total]);
-  }
+  const trackContent = buildTrack(items);
 
   return (
-    <div className="w-full overflow-hidden">
-      <div className="relative flex items-center justify-center min-h-[36px] gap-3 sm:gap-4">
-        <motion.div
-          key={offset}
-          initial={prefersReducedMotion ? false : { opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="flex items-center gap-3 sm:gap-4"
-        >
-          {visibleItems.map((item, i) => (
-            <FeedPill key={`${item.id}-${offset + i}`} item={item} />
-          ))}
-        </motion.div>
+    <div className="w-full overflow-hidden relative group">
+      {/* Fade edges — premium gradient mask */}
+      <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to right, hsl(var(--background)), transparent)' }}
+      />
+      <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 z-10 pointer-events-none"
+        style={{ background: 'linear-gradient(to left, hsl(var(--background)), transparent)' }}
+      />
 
-        {/* Dot indicators */}
-        {total > VISIBLE_COUNT && (
-          <div className="absolute right-4 sm:right-8 flex items-center gap-1">
-            {items.slice(0, Math.min(total, 8)).map((_, i) => (
-              <span
-                key={i}
-                className={`block rounded-full transition-all duration-300 ${
-                  i === offset % Math.min(total, 8)
-                    ? 'w-4 h-1 bg-[#d4a853]'
-                    : 'w-1 h-1 bg-muted-foreground/25'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+      {/* Scrolling track — 3x duplicated for seamless infinite loop */}
+      <div
+        className="flex items-center shrink-0 ticker-track"
+        style={{
+          animationName: 'ticker-scroll',
+          animationDuration: `${duration}s`,
+          animationTimingFunction: 'linear',
+          animationIterationCount: 'infinite',
+          animationPlayState: prefersReducedMotion ? 'paused' : 'running',
+        }}
+      >
+        {trackContent}
+        {trackContent}
+        {trackContent}
       </div>
+
+      {/* Hover pause overlay */}
+      <style jsx>{`
+        .ticker-track:hover {
+          animation-play-state: paused !important;
+        }
+        @keyframes ticker-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-33.333%); }
+        }
+      `}</style>
     </div>
   );
 }
