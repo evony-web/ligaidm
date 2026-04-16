@@ -20,6 +20,7 @@ export async function GET(request: Request) {
       _count: { select: { teams: true, participations: true, matches: true } },
       season: { select: { name: true, number: true } },
       teams: { where: { isWinner: true }, select: { id: true, name: true, isWinner: true } },
+      prizes: { orderBy: { position: 'asc' } },
     },
   });
 
@@ -31,10 +32,21 @@ export async function POST(request: Request) {
   if (authResult instanceof NextResponse) return authResult;
 
   const body = await request.json();
-  const { name, weekNumber, division, seasonId, prizePool, location, scheduledAt, bpm } = body;
+  const { name, weekNumber, division, seasonId, prizePool, format, defaultMatchFormat, bpm, location, scheduledAt } = body;
 
   if (!name || !weekNumber || !division || !seasonId) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    return NextResponse.json({ error: 'Missing required fields: name, weekNumber, division, seasonId' }, { status: 400 });
+  }
+
+  const validFormats = ['single_elimination', 'double_elimination', 'group_stage'];
+  const validMatchFormats = ['BO1', 'BO3', 'BO5'];
+
+  if (format && !validFormats.includes(format)) {
+    return NextResponse.json({ error: 'Invalid format. Use: single_elimination, double_elimination, group_stage' }, { status: 400 });
+  }
+
+  if (defaultMatchFormat && !validMatchFormats.includes(defaultMatchFormat)) {
+    return NextResponse.json({ error: 'Invalid match format. Use: BO1, BO3, BO5' }, { status: 400 });
   }
 
   const tournament = await db.tournament.create({
@@ -44,6 +56,8 @@ export async function POST(request: Request) {
       division,
       seasonId,
       status: 'setup',
+      format: format || 'single_elimination',
+      defaultMatchFormat: defaultMatchFormat || 'BO1',
       prizePool: prizePool || 0,
       location: location || 'Online',
       bpm: bpm || 128,

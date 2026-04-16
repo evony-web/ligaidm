@@ -69,12 +69,15 @@ model Tournament {
   name        String
   weekNumber  Int
   division    String   // "male" | "female"
-  status      String   @default("setup") // "setup" | "registration" | "approval" | "team_generation" | "bracket_generation" | "main_event" | "scoring" | "completed"
+  status      String   @default("setup") // "setup" | "registration" | "approval" | "team_generation" | "bracket_generation" | "main_event" | "finalization" | "completed"
+  format      String   @default("single_elimination") // "single_elimination" | "double_elimination" | "group_stage"
+  defaultMatchFormat String @default("BO1") // "BO1" | "BO3" | "BO5" — default, can be overridden per match
   seasonId    String
-  prizePool   Int      @default(0) // in IDR
+  prizePool   Int      @default(0) // total prize pool in IDR
   bpm         Int?
   location    String?
   scheduledAt DateTime?
+  finalizedAt DateTime? // when admin finalized prizes/MVP
   completedAt DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -83,6 +86,7 @@ model Tournament {
   teams         Team[]
   matches       Match[]
   participations Participation[]
+  prizes        TournamentPrize[]
   donations     Donation[]
 
   @@unique([weekNumber, division, seasonId])
@@ -101,6 +105,8 @@ model Team {
   teamPlayers TeamPlayer[]
   matchAsTeam1 Match[]    @relation("Team1")
   matchAsTeam2 Match[]    @relation("Team2")
+  matchesWon  Match[]    @relation("MatchWinner")
+  matchesLost Match[]    @relation("MatchLoser")
 }
 
 model TeamPlayer {
@@ -117,24 +123,35 @@ model TeamPlayer {
 model Match {
   id           String   @id @default(cuid())
   tournamentId String
-  team1Id      String
-  team2Id      String
+  round        Int      @default(1)    // Round number (1=first round, 2=second, etc.)
+  matchNumber  Int      @default(1)    // Position within round for display order
+  bracket      String   @default("upper") // "upper" | "lower" | "grand_final" | "group"
+  groupLabel   String?                 // "A" | "B" | "C" | "D" (only for group stage)
+  format       String   @default("BO1") // "BO1" | "BO3" | "BO5" — per match override
+
+  // Team references — nullable because bracket slots may be TBD until previous match completes
+  team1Id      String?
+  team2Id      String?
   score1       Int?
   score2       Int?
-  status       String   @default("pending") // "pending" | "live" | "completed"
+  status       String   @default("pending") // "pending" | "ready" | "live" | "completed"
+  winnerId     String?  // Team ID of winner (set when match completed)
+  loserId      String?  // Team ID of loser (for DE lower bracket feed)
   mvpPlayerId  String?
-  round        Int      @default(1)
   scheduledAt  DateTime?
   completedAt  DateTime?
   createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id])
-  team1      Team       @relation("Team1", fields: [team1Id], references: [id])
-  team2      Team       @relation("Team2", fields: [team2Id], references: [id])
+  team1      Team?      @relation("Team1", fields: [team1Id], references: [id])
+  team2      Team?      @relation("Team2", fields: [team2Id], references: [id])
+  winner     Team?      @relation("MatchWinner", fields: [winnerId], references: [id])
+  loser      Team?      @relation("MatchLoser", fields: [loserId], references: [id])
   mvpPlayer  Player?    @relation("MvpPlayer", fields: [mvpPlayerId], references: [id])
 
   @@index([tournamentId])
   @@index([status])
+  @@index([tournamentId, bracket, round])
 }
 
 model Participation {
@@ -142,6 +159,7 @@ model Participation {
   playerId     String
   tournamentId String
   status       String   @default("registered") // "registered" | "approved" | "rejected" | "assigned"
+  tierOverride String?  // Tier assigned by admin during approval (overrides Player.tier for team generation)
   pointsEarned Int      @default(0)
   isMvp        Boolean  @default(false)
   isWinner     Boolean  @default(false)
@@ -171,6 +189,25 @@ model Donation {
 
   @@index([tournamentId])
   @@index([seasonId])
+}
+
+// ============================================
+// IDM LEAGUE - TOURNAMENT PRIZE DISTRIBUTION
+// ============================================
+
+model TournamentPrize {
+  id           String   @id @default(cuid())
+  tournamentId String
+  label        String   // "Juara 1" | "Juara 2" | "Juara 3" | "MVP" | custom label
+  position     Int      @default(0) // Sort order (1=first)
+  prizeAmount  Int      @default(0) // in IDR
+  pointsPerPlayer Int   @default(0) // Auto-calculated: prizeAmount / recipientCount
+  recipientCount  Int   @default(1) // 1 for MVP, 3 for team (members per team)
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId])
 }
 
 // ============================================

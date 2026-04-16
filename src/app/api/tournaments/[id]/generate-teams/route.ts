@@ -2,6 +2,16 @@ import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/api-auth';
 import { NextResponse } from 'next/server';
 
+/** Fisher-Yates shuffle in-place */
+function fisherYatesShuffle<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -25,41 +35,86 @@ export async function POST(
     return NextResponse.json({ error: 'Tournament not found' }, { status: 404 });
   }
 
-  // Group players by tier
-  const sTier = tournament.participations.filter(p => p.player.tier === 'S').map(p => p.player).sort((a, b) => b.points - a.points);
-  const aTier = tournament.participations.filter(p => p.player.tier === 'A').map(p => p.player).sort((a, b) => b.points - a.points);
-  const bTier = tournament.participations.filter(p => p.player.tier === 'B').map(p => p.player).sort((a, b) => b.points - a.points);
+  const totalApproved = tournament.participations.length;
 
-  // Need at least 2 of each tier for 2 teams
-  if (sTier.length < 2 || aTier.length < 2 || bTier.length < 2) {
-    return NextResponse.json({
-      error: 'Not enough players per tier. Need at least 2 S, 2 A, 2 B',
-      sCount: sTier.length,
-      aCount: aTier.length,
-      bCount: bTier.length,
-    }, { status: 400 });
+  // VALIDATION: Total must be divisible by 3
+  if (totalApproved === 0) {
+    return NextResponse.json(
+      { error: 'No approved players to form teams' },
+      { status: 400 }
+    );
   }
 
-  // Determine number of teams (based on smallest tier / 1, capped at available)
-  const teamCount = Math.min(Math.floor(sTier.length / 1), Math.floor(aTier.length / 1), Math.floor(bTier.length / 1));
+  if (totalApproved % 3 !== 0) {
+    const remainder = totalApproved % 3;
+    const needed = 3 - remainder;
+    return NextResponse.json(
+      {
+        error: `Need ${needed} more player(s) to form complete teams (total must be divisible by 3, current: ${totalApproved})`,
+        totalApproved,
+        needed,
+      },
+      { status: 400 }
+    );
+  }
 
-  // Snake draft assignment
-  const teamAssignments: { sPlayer: typeof sTier[0], aPlayer: typeof aTier[0], bPlayer: typeof bTier[0] }[] = [];
+  // Determine effective tier for each player: tierOverride if set, otherwise player.tier
+  type PlayerWithParticipation = typeof tournament.participations[number] & {
+    effectiveTier: string;
+  };
+
+  const playersWithTier: PlayerWithParticipation[] = tournament.participations.map((p) => ({
+    ...p,
+    effectiveTier: p.tierOverride || p.player.tier,
+  }));
+
+  // Group by effective tier
+  const sTier = playersWithTier.filter((p) => p.effectiveTier === 'S');
+  const aTier = playersWithTier.filter((p) => p.effectiveTier === 'A');
+  const bTier = playersWithTier.filter((p) => p.effectiveTier === 'B');
+
+  const teamCount = totalApproved / 3;
+
+  // Validate tier distribution: each tier must have exactly teamCount players
+  if (sTier.length !== teamCount || aTier.length !== teamCount || bTier.length !== teamCount) {
+    return NextResponse.json(
+      {
+        error: `Tier distribution mismatch for ${teamCount} teams. Need ${teamCount} of each tier. Got S:${sTier.length}, A:${aTier.length}, B:${bTier.length}`,
+        sCount: sTier.length,
+        aCount: aTier.length,
+        bCount: bTier.length,
+        teamCount,
+      },
+      { status: 400 }
+    );
+  }
+
+  // SHUFFLE: Randomize each tier independently using Fisher-Yates
+  const shuffledS = fisherYatesShuffle(sTier);
+  const shuffledA = fisherYatesShuffle(aTier);
+  const shuffledB = fisherYatesShuffle(bTier);
+
+  // Delete existing teams first (regeneration support)
+  // TeamPlayer and Team cascade deletion
+  const existingTeams = await db.team.findMany({ where: { tournamentId: id } });
+  if (existingTeams.length > 0) {
+    await db.teamPlayer.deleteMany({
+      where: { teamId: { in: existingTeams.map((t) => t.id) } },
+    });
+    await db.team.deleteMany({ where: { tournamentId: id } });
+  }
+
+  // Each team gets 1S + 1A + 1B
+  const teams: { id: string; name: string; power: number; playerIds: string[] }[] = [];
 
   for (let i = 0; i < teamCount; i++) {
-    teamAssignments.push({
-      sPlayer: sTier[i],
-      aPlayer: aTier[i],
-      bPlayer: bTier[i],
-    });
-  }
+    const sPlayer = shuffledS[i];
+    const aPlayer = shuffledA[i];
+    const bPlayer = shuffledB[i];
 
-  // Create teams
-  const teams = [];
-  for (let i = 0; i < teamAssignments.length; i++) {
-    const assignment = teamAssignments[i];
     const teamName = `Team ${String.fromCharCode(65 + i)}`; // Team A, Team B, etc.
-    const power = assignment.sPlayer.points + assignment.aPlayer.points + assignment.bPlayer.points;
+    const power = sPlayer.player.points + aPlayer.player.points + bPlayer.player.points;
+    const playerIds = [sPlayer.playerId, aPlayer.playerId, bPlayer.playerId];
 
     const team = await db.team.create({
       data: {
@@ -70,45 +125,85 @@ export async function POST(
     });
 
     await db.teamPlayer.createMany({
-      data: [
-        { teamId: team.id, playerId: assignment.sPlayer.id },
-        { teamId: team.id, playerId: assignment.aPlayer.id },
-        { teamId: team.id, playerId: assignment.bPlayer.id },
-      ],
+      data: playerIds.map((playerId) => ({
+        teamId: team.id,
+        playerId,
+      })),
     });
 
-    teams.push(team);
+    teams.push({ id: team.id, name: teamName, power, playerIds });
   }
 
-  // Auto-balance: swap B-tier players if power imbalance > 20%
+  // Auto-balance: After initial assignment, try swapping B-tier players between teams if power imbalance > 15%
   if (teams.length >= 2) {
-    const teamsWithPlayers = await db.team.findMany({
-      where: { tournamentId: id },
-      include: { teamPlayers: { include: { player: true } } },
-    });
+    let improved = true;
+    let iterations = 0;
+    const maxIterations = teams.length * teams.length; // prevent infinite loops
 
-    for (let i = 0; i < teamsWithPlayers.length - 1; i++) {
-      for (let j = i + 1; j < teamsWithPlayers.length; j++) {
-        const t1 = teamsWithPlayers[i];
-        const t2 = teamsWithPlayers[j];
-        const powerDiff = Math.abs(t1.power - t2.power);
-        const maxPower = Math.max(t1.power, t2.power);
+    while (improved && iterations < maxIterations) {
+      improved = false;
+      iterations++;
 
-        if (maxPower > 0 && powerDiff / maxPower > 0.2) {
-          // Find B-tier players to swap
-          const b1 = t1.teamPlayers.find(tp => tp.player.tier === 'B');
-          const b2 = t2.teamPlayers.find(tp => tp.player.tier === 'B');
+      // Recalculate team powers from DB
+      const teamsWithPlayers = await db.team.findMany({
+        where: { tournamentId: id },
+        include: { teamPlayers: { include: { player: true } } },
+      });
 
-          if (b1 && b2) {
-            // Swap
-            await db.teamPlayer.update({ where: { id: b1.id }, data: { playerId: b2.playerId } });
-            await db.teamPlayer.update({ where: { id: b2.id }, data: { playerId: b1.playerId } });
+      // Find min and max power
+      const powers = teamsWithPlayers.map((t) => t.power);
+      const maxPower = Math.max(...powers);
+      const minPower = Math.min(...powers);
 
-            // Recalculate power
-            const newPower1 = t1.power - b1.player.points + b2.player.points;
-            const newPower2 = t2.power - b2.player.points + b1.player.points;
-            await db.team.update({ where: { id: t1.id }, data: { power: newPower1 } });
-            await db.team.update({ where: { id: t2.id }, data: { power: newPower2 } });
+      // Check if imbalance > 15%
+      if (maxPower > 0 && (maxPower - minPower) / maxPower > 0.15) {
+        // Sort teams by power descending to find strongest and weakest
+        const sorted = [...teamsWithPlayers].sort((a, b) => b.power - a.power);
+        const strongest = sorted[0];
+        const weakest = sorted[sorted.length - 1];
+
+        // Find B-tier players to swap
+        const bPlayerStrongest = strongest.teamPlayers.find(
+          (tp) => tp.player.tier === 'B'
+        );
+        const bPlayerWeakest = weakest.teamPlayers.find(
+          (tp) => tp.player.tier === 'B'
+        );
+
+        if (bPlayerStrongest && bPlayerWeakest) {
+          const newStrongestPower =
+            strongest.power - bPlayerStrongest.player.points + bPlayerWeakest.player.points;
+          const newWeakestPower =
+            weakest.power - bPlayerWeakest.player.points + bPlayerStrongest.player.points;
+
+          // Only swap if it reduces the imbalance
+          const currentImbalance = maxPower - minPower;
+          const newMaxPower = Math.max(newStrongestPower, newWeakestPower);
+          const newMinPower = Math.min(newStrongestPower, newWeakestPower);
+          const newImbalance = newMaxPower - newMinPower;
+
+          if (newImbalance < currentImbalance) {
+            // Swap player assignments
+            await db.teamPlayer.update({
+              where: { id: bPlayerStrongest.id },
+              data: { playerId: bPlayerWeakest.playerId },
+            });
+            await db.teamPlayer.update({
+              where: { id: bPlayerWeakest.id },
+              data: { playerId: bPlayerStrongest.playerId },
+            });
+
+            // Update team powers
+            await db.team.update({
+              where: { id: strongest.id },
+              data: { power: newStrongestPower },
+            });
+            await db.team.update({
+              where: { id: weakest.id },
+              data: { power: newWeakestPower },
+            });
+
+            improved = true;
           }
         }
       }
@@ -116,9 +211,12 @@ export async function POST(
   }
 
   // Update tournament status
-  await db.tournament.update({ where: { id }, data: { status: 'team_generation' } });
+  await db.tournament.update({
+    where: { id },
+    data: { status: 'team_generation' },
+  });
 
-  // Update participation statuses
+  // Update participation statuses to "assigned"
   await db.participation.updateMany({
     where: { tournamentId: id, status: 'approved' },
     data: { status: 'assigned' },
@@ -127,6 +225,7 @@ export async function POST(
   const finalTeams = await db.team.findMany({
     where: { tournamentId: id },
     include: { teamPlayers: { include: { player: true } } },
+    orderBy: { name: 'asc' },
   });
 
   return NextResponse.json({ teams: finalTeams, teamCount });
