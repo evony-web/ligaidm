@@ -566,11 +566,9 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ========== LIVE INFO TICKER — Marquee ========== */}
-      <div className="relative z-40 py-2.5 px-4 bg-background/60 backdrop-blur-md border-b border-[#d4a853]/10">
-        <div className="max-w-7xl mx-auto">
-          <MarqueeTicker />
-        </div>
+      {/* ========== LIVE INFO TICKER — Marquee Banner ========== */}
+      <div className="relative z-40 py-2.5 bg-background/60 backdrop-blur-md border-y border-[#d4a853]/10">
+        <MarqueeTicker />
       </div>
 
       {/* ========== SEASON CHAMPION — Smooth Reveal Parallax ========== */}
