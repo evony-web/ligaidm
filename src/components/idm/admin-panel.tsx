@@ -447,6 +447,11 @@ export function AdminPanel() {
           </motion.div>
         </TabsContent>
 
+        {/* ====== RANKINGS TAB ====== */}
+        <TabsContent value="rankings">
+          <RankingPanel division={division} dt={dt} setConfirmDialog={setConfirmDialog} />
+        </TabsContent>
+
         {/* ====== CLUBS TAB ====== */}
         <TabsContent value="clubs">
           <motion.div variants={container} initial="hidden" animate="show" className="space-y-3">

@@ -14,13 +14,6 @@ export async function GET(
   const player = await db.player.findUnique({
     where: { id: playerId },
     include: {
-      pointRecords: {
-        orderBy: { createdAt: 'desc' },
-        include: {
-          tournament: { select: { name: true, weekNumber: true } },
-          match: { select: { round: true, matchNumber: true, bracket: true } },
-        },
-      },
       participations: {
         include: { tournament: { select: { name: true, weekNumber: true, status: true } } },
         orderBy: { createdAt: 'desc' },
@@ -32,9 +25,19 @@ export async function GET(
     return NextResponse.json({ error: 'Player not found' }, { status: 404 });
   }
 
+  // Query PlayerPoint separately to avoid Prisma client caching issues
+  const pointRecords = await db.playerPoint.findMany({
+    where: { playerId },
+    orderBy: { createdAt: 'desc' },
+    include: {
+      tournament: { select: { name: true, weekNumber: true } },
+      match: { select: { round: true, matchNumber: true, bracket: true } },
+    },
+  });
+
   // Point breakdown by reason
   const breakdown: Record<string, number> = {};
-  for (const record of player.pointRecords) {
+  for (const record of pointRecords) {
     breakdown[record.reason] = (breakdown[record.reason] || 0) + record.amount;
   }
 
@@ -51,7 +54,7 @@ export async function GET(
       maxStreak: player.maxStreak,
       matches: player.matches,
     },
-    pointRecords: player.pointRecords,
+    pointRecords,
     breakdown,
     tournamentHistory: player.participations,
   });

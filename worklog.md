@@ -231,3 +231,21 @@ Stage Summary:
 - Score input references confirmed correct (scoreInputs[m.id])
 - React Compiler memoization issues resolved
 - Zero lint errors, zero TypeScript errors
+
+---
+Task ID: 6
+Agent: main
+Task: Add Rankings tab in admin panel with ranking table, point history, tier upgrade suggestions
+
+Work Log:
+- Created `/src/components/idm/ranking-panel.tsx` — full-featured ranking panel component
+- Integrated RankingPanel into admin-panel.tsx as 7th tab "Rank"
+- Updated admin-panel.tsx: added BarChart3 icon import, RankingPanel import, 7-column TabsList, Rankings TabsContent
+- Tested rankings API: GET /api/rankings?division=male returns 45 players with tier info and upgrade suggestions
+- Tested player detail API: GET /api/rankings/[playerId] returns point records and breakdown
+- All lint checks pass (0 errors, 0 warnings)
+
+Stage Summary:
+- RankingPanel component with: summary cards (total players, tier distribution, pending upgrades, thresholds), pending upgrade alerts with individual/bulk upgrade buttons, tier filter (All/S/A/B), recalculate button, full ranking table with progress bars, expandable player detail view showing point breakdown and history
+- Admin panel now has 7 tabs: Players, Tourney, Match, Rank, Club, Donasi, CMS
+- Point system explanation card at bottom of ranking panel
