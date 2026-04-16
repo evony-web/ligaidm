@@ -148,29 +148,15 @@ export function LandingPage() {
   const heroOpacity = useTransform(heroScroll, [0, 0.7], [1, 0]);
   const contentY = useTransform(heroScroll, [0, 1], ['0%', '20%']);
 
-  /* ========== Section Parallax Refs ========== */
+  /* ========== Section Refs (no parallax — performance optimized) ========== */
   const championsRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: championsScroll } = useScroll({ target: championsRef, offset: ['start end', 'end start'] });
-  const championsBgY = useTransform(championsScroll, [0, 1], ['0%', '-20%']);
-
   const clubsRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: clubsScroll } = useScroll({ target: clubsRef, offset: ['start end', 'end start'] });
-  const clubsY = useTransform(clubsScroll, [0, 1], ['6%', '-6%']);
-
   const dreamRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: dreamScroll } = useScroll({ target: dreamRef, offset: ['start end', 'end start'] });
-  const dreamY = useTransform(dreamScroll, [0, 1], ['3%', '-3%']);
-
   const sawerRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: sawerScroll } = useScroll({ target: sawerRef, offset: ['start end', 'end start'] });
-  const sawerY = useTransform(sawerScroll, [0, 1], ['6%', '-6%']);
-
   const ctaRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: ctaScroll } = useScroll({ target: ctaRef, offset: ['start end', 'end start'] });
-  const ctaY = useTransform(ctaScroll, [0, 1], ['10%', '-10%']);
 
   /* ========== Hero Mid-depth Parallax ========== */
-  const heroMidY = useTransform(heroScroll, [0, 1], ['0%', '15%']);
+  const heroMidY = useTransform(heroScroll, [0, 1], ['0%', '12%']);
 
   /* ========== Data Queries ========== */
   const { data: rawMaleData } = useQuery<StatsData>({
@@ -216,16 +202,16 @@ export function LandingPage() {
     setCurrentView('dashboard');
   };
 
-  /* ========== Floating Particles ========== */
+  /* ========== Floating Particles — Reduced for performance ========== */
   const particles = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => ({
+    return Array.from({ length: 6 }, (_, i) => ({
       id: i,
       left: `${Math.random() * 100}%`,
       size: 1 + Math.random() * 2,
       delay: Math.random() * 14,
-      duration: 12 + Math.random() * 16,
-      opacity: 0.15 + Math.random() * 0.3,
-      alt: i % 4 === 0,
+      duration: 14 + Math.random() * 18,
+      opacity: 0.12 + Math.random() * 0.2,
+      alt: i % 3 === 0,
     }));
   }, []);
 
@@ -591,12 +577,8 @@ export function LandingPage() {
       <section id="champions" ref={championsRef} className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Fixed background with subtle parallax - only the BG moves, NOT cards */}
         <div className="absolute inset-0">
-          <motion.div
-            className="absolute inset-0"
-            style={{ y: championsBgY }}
-          >
-            <img src="/bg-default.jpg" alt="" className="w-full h-[120%] object-cover opacity-[0.06] dark:opacity-[0.10]" aria-hidden="true" />
-          </motion.div>
+          {/* Static background — no parallax for performance */}
+          <img src="/bg-default.jpg" alt="" className="w-full h-[120%] object-cover opacity-[0.06] dark:opacity-[0.10]" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
         </div>
 
@@ -958,10 +940,10 @@ export function LandingPage() {
       {/* ========== CLUB PESERTA — Premium Parallax Showcase ========== */}
       <section id="clubs" ref={clubsRef} className="relative py-24 px-4 overflow-hidden">
         {/* Parallax Background Layer */}
-        <motion.div className="absolute inset-0" style={{ y: clubsY }}>
+        <div className="absolute inset-0">
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(212,168,83,0.04) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(212,168,83,0.03) 0%, transparent 50%)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/95 to-background" />
-        </motion.div>
+        </div>
         {/* Floating ambient orbs */}
         <div className="ambient-light" style={{ top: '15%', left: '5%', animationDuration: '22s' }} />
         <div className="ambient-light" style={{ bottom: '20%', right: '8%', animationDuration: '18s', animationDelay: '-8s' }} />
@@ -1315,10 +1297,10 @@ export function LandingPage() {
       {/* ========== SEASON GOAL TRACKER — "The Dream" ========== */}
       <section id="dream" ref={dreamRef} className="relative py-28 px-4 overflow-hidden">
         {/* Background — dramatic parallax */}
-        <motion.div className="absolute inset-0" style={{ y: dreamY }}>
+        <div className="absolute inset-0">
           <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-10" aria-hidden="true" />
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.12) 0%, transparent 50%), radial-gradient(ellipse at 20% 70%, rgba(6,182,212,0.04) 0%, transparent 40%), radial-gradient(ellipse at 80% 70%, rgba(168,85,247,0.04) 0%, transparent 40%)' }} />
-        </motion.div>
+        </div>
         {/* Ambient orbs */}
         <div className="ambient-light" style={{ top: '20%', right: '15%', animationDuration: '20s' }} />
         <div className="ambient-light" style={{ bottom: '30%', left: '10%', animationDuration: '18s', animationDelay: '-6s' }} />
@@ -1398,10 +1380,10 @@ export function LandingPage() {
 
       {/* ========== DONATION & SAWER — Parallax Donation Cards ========== */}
       <section id="sawer" ref={sawerRef} className="relative py-20 px-4 overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: sawerY }}>
+        <div className="absolute inset-0">
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 30% 40%, rgba(168,85,247,0.03) 0%, transparent 50%), radial-gradient(ellipse at 70% 60%, rgba(6,182,212,0.03) 0%, transparent 50%)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 to-background" />
-        </motion.div>
+        </div>
 
         <div className="relative z-10 max-w-5xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={stagger}>
@@ -1803,10 +1785,10 @@ export function LandingPage() {
 
       {/* ========== CTA — Premium Glass Reveal ========== */}
       <section ref={ctaRef} className="relative py-24 px-4 overflow-hidden">
-        <motion.div className="absolute inset-0" style={{ y: ctaY }}>
+        <div className="absolute inset-0">
           <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-10" aria-hidden="true" />
           <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.08) 0%, transparent 50%)' }} />
-        </motion.div>
+        </div>
 
         {/* Decorative corner accents */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
