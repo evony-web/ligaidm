@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useReducedMotion } from 'framer-motion';
-import { Trophy, Gift, Star, UserPlus, ArrowRightLeft } from 'lucide-react';
+import { motion, useReducedMotion } from 'framer-motion';
 
 /* ========== Feed Item Types ========== */
 interface FeedItem {
@@ -15,55 +14,6 @@ interface FeedItem {
   timestamp: string;
   division?: string;
   accent: string;
-}
-
-/* ========== Type Icon Map ========== */
-const TYPE_CONFIG: Record<FeedItem['type'], { iconEl: React.ReactNode; pulseClass: string }> = {
-  transfer: { iconEl: <ArrowRightLeft className="w-3 h-3" />, pulseClass: 'text-purple-400' },
-  donation: { iconEl: <Gift className="w-3 h-3" />, pulseClass: 'text-green-400' },
-  score: { iconEl: <Trophy className="w-3 h-3" />, pulseClass: 'text-cyan-400' },
-  champion: { iconEl: <Trophy className="w-3 h-3" />, pulseClass: 'text-yellow-400' },
-  mvp: { iconEl: <Star className="w-3 h-3" />, pulseClass: 'text-yellow-400' },
-  registration: { iconEl: <UserPlus className="w-3 h-3" />, pulseClass: 'text-cyan-300' },
-};
-
-/* ========== Single Feed Chip ========== */
-function FeedChip({ item }: { item: FeedItem }) {
-  const config = TYPE_CONFIG[item.type] || TYPE_CONFIG.score;
-  const timeAgo = formatTimeAgo(item.timestamp);
-
-  return (
-    <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-full glass border border-border/30 shrink-0 hover:border-[#d4a853]/30 transition-colors group cursor-default max-w-md">
-      {/* Icon */}
-      <span className="text-sm shrink-0">{item.icon}</span>
-
-      {/* Content */}
-      <div className="flex items-center gap-2 min-w-0">
-        <p className="text-[11px] sm:text-xs font-semibold text-foreground truncate">
-          {item.title}
-        </p>
-        {item.subtitle && (
-          <>
-            <span className="text-muted-foreground/40 shrink-0">·</span>
-            <p className="text-[10px] text-muted-foreground truncate hidden sm:block">
-              {item.subtitle}
-            </p>
-          </>
-        )}
-      </div>
-
-      {/* Time */}
-      <span className="text-[9px] text-muted-foreground/50 shrink-0 tabular-nums">{timeAgo}</span>
-
-      {/* Division dot */}
-      {item.division && (
-        <span
-          className="w-1.5 h-1.5 rounded-full shrink-0"
-          style={{ backgroundColor: item.division === 'male' ? '#06b6d4' : '#a855f7' }}
-        />
-      )}
-    </div>
-  );
 }
 
 /* ========== Time Formatter ========== */
@@ -95,49 +45,50 @@ const DEMO_ITEMS: FeedItem[] = [
   { id: 'demo-8', type: 'champion', icon: '🏆', title: 'Team Omega Juara Week 4!', subtitle: 'Female Division', timestamp: new Date().toISOString(), division: 'female', accent: '#d4a853' },
 ];
 
-/* ========== Marquee Row (single direction) ========== */
-function MarqueeRow({ items, speed = 40, reverse = false }: {
-  items: FeedItem[];
-  speed?: number;
-  reverse?: boolean;
-}) {
-  const prefersReducedMotion = useReducedMotion();
-  const duration = Math.max(20, items.length * speed / 10);
-
+/* ========== Single Feed Pill ========== */
+function FeedPill({ item }: { item: FeedItem }) {
   return (
-    <div className="flex overflow-hidden relative">
-      {/* Fade edges */}
-      <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-20 z-10 pointer-events-none" style={{ background: 'linear-gradient(to right, var(--background), transparent)' }} />
-      <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-20 z-10 pointer-events-none" style={{ background: 'linear-gradient(to left, var(--background), transparent)' }} />
-
-      {/* Scrolling track — duplicated for seamless loop */}
-      <div
-        className="flex gap-3 shrink-0"
-        style={{
-          animationName: reverse ? 'marquee-scroll-reverse' : 'marquee-scroll',
-          animationDuration: `${duration}s`,
-          animationTimingFunction: 'linear',
-          animationIterationCount: 'infinite',
-          animationPlayState: prefersReducedMotion ? 'paused' : 'running',
-        }}
-      >
-        {items.map(item => <FeedChip key={item.id} item={item} />)}
-        {/* Duplicate for seamless loop */}
-        {items.map(item => <FeedChip key={`${item.id}-dup`} item={item} />)}
-      </div>
+    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/30 bg-background/40 shrink-0">
+      <span className="text-xs shrink-0">{item.icon}</span>
+      <p className="text-[11px] sm:text-xs font-semibold text-foreground truncate max-w-[160px] sm:max-w-[220px]">
+        {item.title}
+      </p>
+      {item.subtitle && (
+        <>
+          <span className="text-muted-foreground/30 shrink-0">·</span>
+          <p className="text-[10px] text-muted-foreground truncate max-w-[100px] sm:max-w-[140px] hidden md:block">
+            {item.subtitle}
+          </p>
+        </>
+      )}
+      <span className="text-[9px] text-muted-foreground/50 shrink-0 tabular-nums">
+        {formatTimeAgo(item.timestamp)}
+      </span>
+      {item.division && (
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0"
+          style={{ backgroundColor: item.division === 'male' ? '#06b6d4' : '#a855f7' }}
+        />
+      )}
     </div>
   );
 }
 
-/* ========== Main MarqueeTicker Component ========== */
+/* ========== Main MarqueeTicker — 3-item Carousel ========== */
+const VISIBLE_COUNT = 3;
+const INTERVAL_MS = 7000;
+
 export function MarqueeTicker() {
-  const { data, isLoading } = useQuery<{ items: FeedItem[] }>({
+  const prefersReducedMotion = useReducedMotion();
+  const [offset, setOffset] = useState(0);
+
+  const { data } = useQuery<{ items: FeedItem[] }>({
     queryKey: ['feed'],
     queryFn: async () => {
       const res = await fetch('/api/feed');
       return res.json();
     },
-    refetchInterval: 30000, // refresh every 30s
+    refetchInterval: 30000,
   });
 
   const items = useMemo(() => {
@@ -145,10 +96,58 @@ export function MarqueeTicker() {
     return DEMO_ITEMS;
   }, [data?.items]);
 
+  const total = items.length;
+
+  // Auto-advance every 7 seconds, shift by 1
+  const goNext = useCallback(() => {
+    setOffset(prev => (prev + 1) % total);
+  }, [total]);
+
+  useEffect(() => {
+    if (total <= VISIBLE_COUNT) return;
+    const timer = setInterval(goNext, INTERVAL_MS);
+    return () => clearInterval(timer);
+  }, [goNext, total]);
+
+  if (total === 0) return null;
+
+  // Build a window of VISIBLE_COUNT items starting from offset (wrapping)
+  const visibleItems: FeedItem[] = [];
+  for (let i = 0; i < VISIBLE_COUNT; i++) {
+    visibleItems.push(items[(offset + i) % total]);
+  }
+
   return (
-    <div className="w-full overflow-hidden relative">
-      {/* Single full-width banner row */}
-      <MarqueeRow items={items} speed={35} reverse={false} />
+    <div className="w-full overflow-hidden">
+      <div className="relative flex items-center justify-center min-h-[36px] gap-3 sm:gap-4">
+        <motion.div
+          key={offset}
+          initial={prefersReducedMotion ? false : { opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="flex items-center gap-3 sm:gap-4"
+        >
+          {visibleItems.map((item, i) => (
+            <FeedPill key={`${item.id}-${offset + i}`} item={item} />
+          ))}
+        </motion.div>
+
+        {/* Dot indicators */}
+        {total > VISIBLE_COUNT && (
+          <div className="absolute right-4 sm:right-8 flex items-center gap-1">
+            {items.slice(0, Math.min(total, 8)).map((_, i) => (
+              <span
+                key={i}
+                className={`block rounded-full transition-all duration-300 ${
+                  i === offset % Math.min(total, 8)
+                    ? 'w-4 h-1 bg-[#d4a853]'
+                    : 'w-1 h-1 bg-muted-foreground/25'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
