@@ -107,8 +107,8 @@ function FeedCard({ item }: { item: FeedItem }) {
           style={{
             backgroundColor: item.division === 'male' ? '#06b6d4' : '#a855f7',
             boxShadow: `0 0 6px ${item.division === 'male' ? '#06b6d440' : '#a855f740'}`,
-            ringColor: item.division === 'male' ? '#06b6d460' : '#a855f760',
-          }}
+            '--tw-ring-color': item.division === 'male' ? '#06b6d460' : '#a855f760',
+          } as React.CSSProperties}
         />
       )}
     </div>

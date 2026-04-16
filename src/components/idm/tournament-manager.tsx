@@ -18,10 +18,11 @@ import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/utils';
 import { container, item } from '@/lib/animations';
+import type { DivisionTheme } from '@/hooks/use-division-theme';
 
 interface TournamentManagerProps {
   division: string;
-  dt: Record<string, string>;
+  dt: DivisionTheme;
   stats: { season?: { id: string } } | null;
   setConfirmDialog: (d: { open: boolean; title: string; description: string; onConfirm: () => void }) => void;
 }
@@ -438,7 +439,7 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
                         <div className="flex flex-wrap gap-1">
                           {selected.participations.map((p: { id: string; playerId: string; player: { gamertag: string; tier: string }; status: string }) => (
                             <Badge key={p.id} className={`text-[9px] border-0 ${p.status === 'registered' ? 'bg-blue-500/10 text-blue-500' : 'bg-green-500/10 text-green-500'}`}>
-                              <TierBadge tier={p.player?.tier || 'B'} size="xs" /> {p.player?.gamertag}
+                              <TierBadge tier={p.player?.tier || 'B'} /> {p.player?.gamertag}
                             </Badge>
                           ))}
                         </div>
@@ -568,7 +569,7 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
                       <div className="flex flex-wrap gap-1">
                         {t.teamPlayers.map((tp: { player: { gamertag: string; tier: string } }) => (
                           <span key={tp.player.gamertag} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50">
-                            <TierBadge tier={tp.player.tier} size="xs" /> {tp.player.gamertag}
+                            <TierBadge tier={tp.player.tier}  /> {tp.player.gamertag}
                           </span>
                         ))}
                       </div>
@@ -756,7 +757,7 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
                   <Select value={selectedMvp} onValueChange={setSelectedMvp}>
                     <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Pilih MVP..." /></SelectTrigger>
                     <SelectContent>
-                      {selected.participations?.map((p: { playerId: string; player: { id: string; gamertag: string; pointsEarned: number } }) => (
+                      {selected.participations?.map((p: { playerId: string; pointsEarned: number; player: { id: string; gamertag: string } }) => (
                         <SelectItem key={p.playerId} value={p.playerId}>
                           {p.player.gamertag} ({p.pointsEarned}pts)
                         </SelectItem>
@@ -797,7 +798,7 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
                         <div className="flex gap-1 mt-0.5">
                           {t.teamPlayers.map((tp: { player: { gamertag: string; tier: string } }) => (
                             <span key={tp.player.gamertag} className="flex items-center gap-0.5 text-[9px]">
-                              <TierBadge tier={tp.player.tier} size="xs" /> {tp.player.gamertag}
+                              <TierBadge tier={tp.player.tier}  /> {tp.player.gamertag}
                             </span>
                           ))}
                         </div>

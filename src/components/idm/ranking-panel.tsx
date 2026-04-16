@@ -13,10 +13,11 @@ import { TierBadge } from './tier-badge';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { container, item } from '@/lib/animations';
+import type { DivisionTheme } from '@/hooks/use-division-theme';
 
 interface RankingPanelProps {
   division: string;
-  dt: Record<string, string>;
+  dt: DivisionTheme;
   setConfirmDialog: (d: { open: boolean; title: string; description: string; onConfirm: () => void }) => void;
 }
 

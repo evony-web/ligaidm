@@ -74,3 +74,26 @@ export async function authenticateAdmin(username: string, password: string) {
 
   return { id: admin.id, username: admin.username, role: admin.role };
 }
+
+// Cookie-based session parsing
+const SESSION_COOKIE_NAME = 'idm-admin-session';
+
+export function getSessionFromCookies(cookieHeader: string | null): { username: string; role: string } | null {
+  if (!cookieHeader) return null;
+
+  const cookies = Object.fromEntries(
+    cookieHeader.split(';').map(c => {
+      const [key, ...val] = c.trim().split('=');
+      return [key, val.join('=')];
+    })
+  );
+
+  const token = cookies[SESSION_COOKIE_NAME];
+  if (!token) return null;
+
+  const result = verifySessionToken(token);
+  if (!result) return null;
+
+  // Return username and role from the token (adminId is used as identifier)
+  return { username: result.adminId, role: result.role };
+}
