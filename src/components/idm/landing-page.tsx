@@ -233,14 +233,39 @@ export function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeSection, setActiveSection] = useState('');
 
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 20);
       setShowBackToTop(window.scrollY > 500);
+      // Scroll progress
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0);
+      // Auto-close mobile menu on scroll
+      if (mobileMenuOpen) setMobileMenuOpen(false);
     };
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, [mobileMenuOpen]);
+
+  // Track active section for nav highlight
+  useEffect(() => {
+    const sectionIds = ['champions', 'mvp', 'clubs', 'gallery', 'sawer'];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { rootMargin: '-40% 0px -55% 0px' }
+    );
+    sectionIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
   }, []);
 
   const scrollToSection = (id: string) => {
@@ -258,6 +283,14 @@ export function LandingPage() {
           ? 'bg-background/80 backdrop-blur-md border-b border-[#d4a853]/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
           : 'bg-transparent'
       }`}>
+        {/* Scroll Progress Bar */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] z-50">
+          <motion.div
+            className="h-full bg-gradient-to-r from-[#d4a853] via-[#e8d5a3] to-[#d4a853] shadow-[0_0_8px_rgba(212,168,83,0.4)]"
+            style={{ width: `${scrollProgress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
@@ -268,12 +301,33 @@ export function LandingPage() {
           </div>
 
           {/* Desktop Nav Links */}
-          <div className="hidden sm:flex items-center gap-6">
-            <button onClick={() => scrollToSection('champions')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Champion</button>
-            <button onClick={() => scrollToSection('mvp')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">MVP</button>
-            <button onClick={() => scrollToSection('clubs')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Club & Peserta</button>
-            <button onClick={() => scrollToSection('gallery')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Galeri</button>
-            <button onClick={() => scrollToSection('sawer')} className="text-muted-foreground text-sm hover:text-[#d4a853] transition-colors cursor-pointer">Sawer & Donasi</button>
+          <div className="hidden sm:flex items-center gap-1">
+            {[
+              { id: 'champions', label: 'Champion' },
+              { id: 'mvp', label: 'MVP' },
+              { id: 'clubs', label: 'Club & Peserta' },
+              { id: 'gallery', label: 'Galeri' },
+              { id: 'sawer', label: 'Sawer' },
+            ].map(item => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className={`relative px-3 py-1.5 text-sm transition-all duration-300 cursor-pointer rounded-md ${
+                  activeSection === item.id
+                    ? 'text-[#d4a853] font-semibold'
+                    : 'text-muted-foreground hover:text-[#d4a853]/70'
+                }`}
+              >
+                {item.label}
+                {activeSection === item.id && (
+                  <motion.div
+                    layoutId="nav-active"
+                    className="absolute bottom-0 left-1 right-1 h-[2px] bg-[#d4a853] rounded-full"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  />
+                )}
+              </button>
+            ))}
           </div>
 
           {/* CTA Buttons */}
@@ -315,11 +369,25 @@ export function LandingPage() {
               className="sm:hidden bg-background/95 backdrop-blur-md border-b border-[#d4a853]/10"
             >
               <div className="px-4 py-3 space-y-1">
-                <button onClick={() => scrollToSection('champions')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Champion</button>
-                <button onClick={() => scrollToSection('mvp')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">MVP</button>
-                <button onClick={() => scrollToSection('clubs')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Club & Peserta</button>
-                <button onClick={() => scrollToSection('gallery')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Galeri</button>
-                <button onClick={() => scrollToSection('sawer')} className="block w-full text-left text-muted-foreground text-sm hover:text-[#d4a853] py-2 transition-colors">Sawer & Donasi</button>
+                {[
+                  { id: 'champions', label: 'Champion' },
+                  { id: 'mvp', label: 'MVP' },
+                  { id: 'clubs', label: 'Club & Peserta' },
+                  { id: 'gallery', label: 'Galeri' },
+                  { id: 'sawer', label: 'Sawer & Donasi' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className={`block w-full text-left py-2.5 px-3 rounded-lg text-sm transition-all ${
+                      activeSection === item.id
+                        ? 'text-[#d4a853] font-semibold bg-[#d4a853]/10'
+                        : 'text-muted-foreground hover:text-[#d4a853] hover:bg-[#d4a853]/5'
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
                 <div className="pt-2 flex gap-2">
                   <Button size="sm" className="flex-1 btn-male text-xs h-9" onClick={() => enterApp('male')}>Male Division</Button>
                   <Button size="sm" variant="outline" className="flex-1 btn-female text-xs h-9" onClick={() => enterApp('female')}>Female Division</Button>
@@ -570,8 +638,39 @@ export function LandingPage() {
                 >
                   {(!data || !data.weeklyChampions?.length) ? (
                     <Card className="overflow-hidden border" style={{ borderColor: `${accent}20` }}>
-                      <CardContent className="p-8 text-center">
-                        <Skeleton className="h-64 w-full rounded-2xl mb-4" />
+                      <div className="h-0.5 bg-gradient-to-r from-transparent via-current to-transparent" style={{ color: accent }} />
+                      <CardContent className="p-0">
+                        <div className="relative h-48 overflow-hidden">
+                          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${accent}08 0%, ${accent}04 50%, transparent 100%)` }} />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#0c0a06] via-[#0c0a06]/60 to-transparent" />
+                          <div className="absolute bottom-4 inset-x-0 px-5 flex items-end justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${accent}15` }}>
+                                <DivisionIcon className="w-4 h-4" style={{ color: accentLight }} />
+                              </div>
+                              <div>
+                                <h3 className="text-base font-black uppercase tracking-wider" style={{ color: accentLight }}>{division} Division</h3>
+                                <p className="text-[9px] font-semibold text-white/40">SEASON CHAMPION</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-6 text-center space-y-4">
+                          <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${accent}10` }}>
+                            <Crown className="w-8 h-8" style={{ color: `${accent}30` }} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white/60">Musim Baru Dimulai</p>
+                            <p className="text-xs text-muted-foreground/50 mt-1">Champion akan muncul setelah week pertama selesai</p>
+                          </div>
+                          <div className="flex justify-center gap-2">
+                            {[1, 2, 3].map(i => (
+                              <div key={i} className="w-20 h-24 rounded-xl border border-dashed flex items-center justify-center" style={{ borderColor: `${accent}15` }}>
+                                <span className="text-[10px] font-bold" style={{ color: `${accent}25` }}>#{i}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
                   ) : (() => {
@@ -708,7 +807,7 @@ export function LandingPage() {
               <motion.div variants={fadeLeft}>
                 {(() => {
                   const mvp = maleData?.mvpHallOfFame?.[0];
-                  if (!mvp) return <div className="py-16 text-center"><Medal className="w-12 h-12 text-[#06b6d4]/15 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Belum ada MVP</p></div>;
+                  if (!mvp) return <div className="py-16 text-center"><div className="w-20 h-20 mx-auto rounded-2xl bg-[#06b6d4]/10 flex items-center justify-center mb-4"><Medal className="w-10 h-10 text-[#06b6d4]/25" /></div><p className="text-sm font-semibold text-white/50">MVP Belum Dipilih</p><p className="text-xs text-muted-foreground/40 mt-1">Pemain terbaik akan muncul setelah turnamen pertama</p></div>;
                   return (
                     <div
                       className="relative rounded-2xl overflow-hidden cursor-pointer group min-h-[440px] border border-[#06b6d4]/15 hover:border-[#06b6d4]/30 transition-all duration-300"
@@ -781,7 +880,7 @@ export function LandingPage() {
               <motion.div variants={fadeRight}>
                 {(() => {
                   const mvp = femaleData?.mvpHallOfFame?.[0];
-                  if (!mvp) return <div className="py-16 text-center"><Medal className="w-12 h-12 text-[#a855f7]/15 mx-auto mb-3" /><p className="text-sm text-muted-foreground">Belum ada MVP</p></div>;
+                  if (!mvp) return <div className="py-16 text-center"><div className="w-20 h-20 mx-auto rounded-2xl bg-[#a855f7]/10 flex items-center justify-center mb-4"><Medal className="w-10 h-10 text-[#a855f7]/25" /></div><p className="text-sm font-semibold text-white/50">MVP Belum Dipilih</p><p className="text-xs text-muted-foreground/40 mt-1">Pemain terbaik akan muncul setelah turnamen pertama</p></div>;
                   return (
                     <div
                       className="relative rounded-2xl overflow-hidden cursor-pointer group min-h-[440px] border border-[#a855f7]/15 hover:border-[#a855f7]/30 transition-all duration-300"
@@ -1214,14 +1313,21 @@ export function LandingPage() {
       <div className="section-divider max-w-4xl mx-auto" />
 
       {/* ========== SEASON GOAL TRACKER — "The Dream" ========== */}
-      <section id="dream" ref={dreamRef} className="relative py-24 px-4 overflow-hidden">
-        {/* Background — subtle parallax, no scale on content */}
+      <section id="dream" ref={dreamRef} className="relative py-28 px-4 overflow-hidden">
+        {/* Background — dramatic parallax */}
         <motion.div className="absolute inset-0" style={{ y: dreamY }}>
-          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-15" aria-hidden="true" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 30%, rgba(212,168,83,0.08) 0%, transparent 50%), radial-gradient(ellipse at 20% 70%, rgba(6,182,212,0.03) 0%, transparent 40%), radial-gradient(ellipse at 80% 70%, rgba(168,85,247,0.03) 0%, transparent 40%)' }} />
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-10" aria-hidden="true" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.12) 0%, transparent 50%), radial-gradient(ellipse at 20% 70%, rgba(6,182,212,0.04) 0%, transparent 40%), radial-gradient(ellipse at 80% 70%, rgba(168,85,247,0.04) 0%, transparent 40%)' }} />
         </motion.div>
         {/* Ambient orbs */}
         <div className="ambient-light" style={{ top: '20%', right: '15%', animationDuration: '20s' }} />
+        <div className="ambient-light" style={{ bottom: '30%', left: '10%', animationDuration: '18s', animationDelay: '-6s' }} />
+
+        {/* Decorative ring behind content */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-[#d4a853]/5" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-[#d4a853]/8" />
+        </div>
 
         <motion.div
           initial="hidden"
@@ -1254,7 +1360,7 @@ export function LandingPage() {
               { icon: Users, value: `${(maleData?.clubs?.length || 0) + (femaleData?.clubs?.length || 0)}`, label: 'Club', accent: 'border-white/[0.08]' },
               { icon: Trophy, value: formatCurrency((maleData?.totalPrizePool || 0) + (femaleData?.totalPrizePool || 0)), label: 'Prize Pool', accent: 'border-[#d4a853]/15' },
             ].map((s, i) => (
-              <div key={s.label} className={`rounded-2xl bg-white/[0.03] backdrop-blur-sm border ${s.accent} p-4 sm:p-5 transition-all duration-300 hover:bg-white/[0.06]`}>
+              <div key={s.label} className={`rounded-2xl bg-white/[0.03] backdrop-blur-sm border ${s.accent} p-4 sm:p-5 transition-all duration-300 hover:bg-white/[0.06] hover:scale-[1.02]`}>
                 <s.icon className="w-4 h-4 text-[#d4a853] mx-auto mb-2" />
                 <p className="text-lg sm:text-2xl font-black text-white truncate">{s.value}</p>
                 <p className="text-[9px] sm:text-[10px] text-muted-foreground/50 uppercase tracking-wider mt-1">{s.label}</p>
@@ -1695,12 +1801,20 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ========== CTA — Glass Reveal ========== */}
-      <section ref={ctaRef} className="relative py-20 px-4 overflow-hidden">
+      {/* ========== CTA — Premium Glass Reveal ========== */}
+      <section ref={ctaRef} className="relative py-24 px-4 overflow-hidden">
         <motion.div className="absolute inset-0" style={{ y: ctaY }}>
-          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-15" aria-hidden="true" />
-          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.06) 0%, transparent 50%)' }} />
+          <img src="/bg-section.jpg" alt="" className="w-full h-full object-cover opacity-10" aria-hidden="true" />
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 50%, rgba(212,168,83,0.08) 0%, transparent 50%)' }} />
         </motion.div>
+
+        {/* Decorative corner accents */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute top-8 left-8 w-16 h-16 border-l-2 border-t-2 border-[#d4a853]/10 rounded-tl-xl" />
+          <div className="absolute top-8 right-8 w-16 h-16 border-r-2 border-t-2 border-[#d4a853]/10 rounded-tr-xl" />
+          <div className="absolute bottom-8 left-8 w-16 h-16 border-l-2 border-b-2 border-[#d4a853]/10 rounded-bl-xl" />
+          <div className="absolute bottom-8 right-8 w-16 h-16 border-r-2 border-b-2 border-[#d4a853]/10 rounded-br-xl" />
+        </div>
 
         <motion.div
           initial="hidden"
@@ -1748,38 +1862,72 @@ export function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ========== FOOTER — Compact ========== */}
-      <footer className="py-8 px-4 border-t border-[#d4a853]/10 bg-[#0c0a06]/30">
-        <div className="max-w-5xl mx-auto">
+      {/* ========== FOOTER — Premium ========== */}
+      <footer className="relative py-12 px-4 border-t border-[#d4a853]/10 bg-[#0c0a06]/50 overflow-hidden">
+        {/* Subtle top glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-24 pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(212,168,83,0.04) 0%, transparent 70%)' }} />
+
+        <div className="relative max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="flex flex-col sm:flex-row items-center justify-between gap-4"
           >
-            {/* Brand */}
-            <div className="flex items-center gap-2">
-              <img src={cmsLogo} alt="IDM" className="w-6 h-6 rounded-lg object-cover" />
-              <span className="text-sm text-gradient-fury font-bold">{cmsSiteTitle}</span>
-              <span className="text-[9px] text-muted-foreground/40 ml-1">{cmsHeroSubtitle}</span>
+            {/* Top row: Brand + Tagline + Nav links */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6 mb-8">
+              {/* Brand */}
+              <div className="flex flex-col items-center sm:items-start gap-1.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg overflow-hidden glow-pulse shrink-0">
+                    <img src={cmsLogo} alt="IDM" className="w-full h-full object-cover" />
+                  </div>
+                  <span className="text-lg text-gradient-fury font-bold">{cmsSiteTitle}</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground/50 tracking-wider">{cmsHeroTitle} — {cmsHeroSubtitle}</p>
+              </div>
+
+              {/* Quick Nav */}
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+                {[
+                  { id: 'champions', label: 'Champion' },
+                  { id: 'mvp', label: 'MVP' },
+                  { id: 'clubs', label: 'Club' },
+                  { id: 'gallery', label: 'Galeri' },
+                  { id: 'sawer', label: 'Sawer' },
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => scrollToSection(item.id)}
+                    className="text-[11px] text-muted-foreground/50 hover:text-[#d4a853] transition-colors cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Social */}
+              <div className="flex items-center gap-2">
+                <a href="#" className="w-9 h-9 rounded-xl glass border border-border/30 flex items-center justify-center text-muted-foreground/60 hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Discord">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                </a>
+                <a href="#" className="w-9 h-9 rounded-xl glass border border-border/30 flex items-center justify-center text-muted-foreground/60 hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Instagram">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                </a>
+                <a href="#" className="w-9 h-9 rounded-xl glass border border-border/30 flex items-center justify-center text-muted-foreground/60 hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="YouTube">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                </a>
+              </div>
             </div>
 
-            {/* Social */}
-            <div className="flex items-center gap-2">
-              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Discord">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-              </a>
-              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="Instagram">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
-              </a>
-              <a href="#" className="w-8 h-8 rounded-lg glass border border-border/30 flex items-center justify-center text-muted-foreground hover:text-[#d4a853] hover:border-[#d4a853]/30 transition-all" aria-label="YouTube">
-                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-              </a>
-            </div>
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-[#d4a853]/10 to-transparent mb-6" />
 
-            {/* Copyright */}
-            <p className="text-[9px] text-muted-foreground/40">{cmsFooterText}</p>
+            {/* Bottom row: Tagline + Copyright */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-[11px] text-[#d4a853]/40 font-semibold tracking-wider uppercase">{cmsFooterTagline}</p>
+              <p className="text-[9px] text-muted-foreground/30">{cmsFooterText}</p>
+            </div>
           </motion.div>
         </div>
       </footer>

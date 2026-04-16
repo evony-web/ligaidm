@@ -142,9 +142,10 @@ export function MarqueeTicker() {
     return DEMO_ITEMS;
   }, [data?.items]);
 
-  // Split items into two rows for premium double-ticker effect
-  const row1 = useMemo(() => items.filter((_, i) => i % 2 === 0), [items]);
-  const row2 = useMemo(() => items.filter((_, i) => i % 2 === 1), [items]);
+  // Split items into three rows for premium triple-ticker effect
+  const row1 = useMemo(() => items.filter((_, i) => i % 3 === 0), [items]);
+  const row2 = useMemo(() => items.filter((_, i) => i % 3 === 1), [items]);
+  const row3 = useMemo(() => items.filter((_, i) => i % 3 === 2), [items]);
 
   return (
     <div className="w-full overflow-hidden relative">
@@ -163,10 +164,11 @@ export function MarqueeTicker() {
         <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Info Terkini</span>
       </div>
 
-      {/* Double Marquee Rows */}
-      <div className="space-y-2">
+      {/* Triple Marquee Rows */}
+      <div className="space-y-1.5">
         <MarqueeRow items={row1} speed={45} reverse={false} />
         <MarqueeRow items={row2} speed={50} reverse={true} />
+        <MarqueeRow items={row3} speed={42} reverse={false} />
       </div>
     </div>
   );
