@@ -4,8 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '@/lib/store';
 import { motion } from 'framer-motion';
 import {
-  Shield, Users, Music, Trophy, Gift, Plus, Check,
-  Play, Zap, Crown, Settings, UserPlus, X, Save, Loader2, Clock, MapPin, Phone, Globe
+  Shield, Users, Music, Trophy, Gift, Plus,
+  Crown, Settings, UserPlus, X, Loader2, Clock, MapPin, Phone, Globe
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,10 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { TierBadge } from './tier-badge';
-import { StatusBadge } from './status-badge';
 import { CmsPanel } from './cms-panel';
 import { TournamentManager } from './tournament-manager';
 import { useState } from 'react';
@@ -24,17 +22,6 @@ import { toast } from 'sonner';
 import { useDivisionTheme } from '@/hooks/use-division-theme';
 import { formatCurrency } from '@/lib/utils';
 import { container, item } from '@/lib/animations';
-
-const statusLabelMap: Record<string, string> = {
-  setup: 'Persiapan',
-  registration: 'Registrasi',
-  approval: 'Persetujuan',
-  team_generation: 'Buat Tim',
-  bracket_generation: 'Buat Bracket',
-  main_event: 'Acara Utama',
-  scoring: 'Skor',
-  completed: 'Selesai',
-};
 
 export function AdminPanel() {
   const { division } = useAppStore();
@@ -44,11 +31,6 @@ export function AdminPanel() {
   const { data: players } = useQuery({
     queryKey: ['admin-players', division],
     queryFn: async () => { const res = await fetch(`/api/players?division=${division}`); return res.json(); },
-  });
-
-  const { data: tournaments } = useQuery({
-    queryKey: ['admin-tournaments', division],
-    queryFn: async () => { const res = await fetch(`/api/tournaments?division=${division}`); return res.json(); },
   });
 
   const { data: stats } = useQuery({
@@ -72,31 +54,7 @@ export function AdminPanel() {
     enabled: !!stats?.season?.id,
   });
 
-  // Selected tournament for detailed management
-  const [selectedTournamentId, setSelectedTournamentId] = useState<string | null>(null);
-  const { data: selectedTournament } = useQuery({
-    queryKey: ['admin-tournament', selectedTournamentId],
-    queryFn: async () => {
-      if (!selectedTournamentId) return null;
-      const res = await fetch(`/api/tournaments/${selectedTournamentId}`);
-      return res.json();
-    },
-    enabled: !!selectedTournamentId,
-  });
-
   // Mutations
-  const createTournament = useMutation({
-    mutationFn: async (data: { name: string; weekNumber: number; prizePool: number; bpm?: number }) => {
-      const res = await fetch('/api/tournaments', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, division, seasonId: stats?.season?.id }),
-      });
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); toast.success('Tournament berhasil dibuat!'); },
-  });
-
   const updateTier = useMutation({
     mutationFn: async ({ playerId, tier }: { playerId: string; tier: string }) => {
       const res = await fetch(`/api/players/${playerId}`, {
@@ -119,60 +77,6 @@ export function AdminPanel() {
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-players', division] }); toast.success('Player berhasil ditambahkan!'); },
     onError: (e: Error) => { toast.error(e.message); },
-  });
-
-  const advanceStatus = useMutation({
-    mutationFn: async ({ tournamentId, status }: { tournamentId: string; status: string }) => {
-      const res = await fetch(`/api/tournaments/${tournamentId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Status diperbarui!'); },
-  });
-
-  const approvePlayer = useMutation({
-    mutationFn: async ({ tournamentId, playerId, tier }: { tournamentId: string; playerId: string; tier: string }) => {
-      const res = await fetch(`/api/tournaments/${tournamentId}/approve`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId, tier, approve: true }),
-      });
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player disetujui!'); },
-  });
-
-  const registerPlayer = useMutation({
-    mutationFn: async ({ tournamentId, playerId }: { tournamentId: string; playerId: string }) => {
-      const res = await fetch(`/api/tournaments/${tournamentId}/register`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId }),
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Player terdaftar!'); },
-    onError: (e: Error) => { toast.error(e.message); },
-  });
-
-  const generateTeams = useMutation({
-    mutationFn: async (tournamentId: string) => {
-      const res = await fetch(`/api/tournaments/${tournamentId}/generate-teams`, { method: 'POST' });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Tim berhasil di-generate!'); },
-    onError: (e: Error) => { toast.error(e.message); },
-  });
-
-  const generateBracket = useMutation({
-    mutationFn: async (tournamentId: string) => {
-      const res = await fetch(`/api/tournaments/${tournamentId}/generate-bracket`, { method: 'POST' });
-      if (!res.ok) throw new Error('Failed');
-      return res.json();
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-tournaments', division] }); qc.invalidateQueries({ queryKey: ['admin-tournament', selectedTournamentId] }); toast.success('Bracket berhasil di-generate!'); },
   });
 
   const addDonation = useMutation({
@@ -247,7 +151,6 @@ export function AdminPanel() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['stats', division] }); toast.success('Skor playoff berhasil!'); },
   });
 
-  const [newTournament, setNewTournament] = useState({ name: '', weekNumber: '', prizePool: '', bpm: '' });
   const [newDonation, setNewDonation] = useState({ donorName: '', amount: '', message: '' });
   const [newClub, setNewClub] = useState('');
   const [newPlayer, setNewPlayer] = useState({ name: '', gamertag: '', tier: 'B' });
@@ -263,16 +166,6 @@ export function AdminPanel() {
     p.gamertag.toLowerCase().includes(searchPlayer.toLowerCase()) ||
     p.name.toLowerCase().includes(searchPlayer.toLowerCase())
   ) || [];
-
-  const nextStatusMap: Record<string, string> = {
-    setup: 'registration', registration: 'approval', approval: 'team_generation',
-    team_generation: 'bracket_generation', bracket_generation: 'main_event',
-    main_event: 'scoring', scoring: 'completed',
-  };
-
-  // Registered but not approved players in selected tournament
-  const pendingApprovals = selectedTournament?.participations?.filter((p: { status: string }) => p.status === 'registered') || [];
-  const approvedPlayers = selectedTournament?.participations?.filter((p: { status: string }) => ['approved', 'assigned'].includes(p.status)) || [];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 max-w-5xl mx-auto">
@@ -438,160 +331,7 @@ export function AdminPanel() {
 
         {/* ====== TOURNAMENTS TAB ====== */}
         <TabsContent value="tournaments">
-          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4">
-            {/* Create tournament */}
-            <Card className={dt.casinoCard}>
-              <div className={dt.casinoBar} />
-              <CardContent className="p-4 relative z-10">
-                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                  <Plus className={`w-4 h-4 ${dt.neonText}`} /> Create Tournament
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-                  <Input placeholder="Nama" value={newTournament.name} onChange={(e) => setNewTournament(p => ({ ...p, name: e.target.value }))} />
-                  <Input placeholder="Week #" type="number" value={newTournament.weekNumber} onChange={(e) => setNewTournament(p => ({ ...p, weekNumber: e.target.value }))} />
-                  <Input placeholder="Prize (IDR)" type="number" value={newTournament.prizePool} onChange={(e) => setNewTournament(p => ({ ...p, prizePool: e.target.value }))} />
-                  <Input placeholder="BPM (contoh 128)" type="number" value={newTournament.bpm} onChange={(e) => setNewTournament(p => ({ ...p, bpm: e.target.value }))} />
-                  <Button size="sm" disabled={!newTournament.name || !newTournament.weekNumber || createTournament.isPending}
-                    onClick={() => createTournament.mutate({ name: newTournament.name, weekNumber: parseInt(newTournament.weekNumber), prizePool: parseInt(newTournament.prizePool) || 0, bpm: parseInt(newTournament.bpm) || 128 })}>
-                    {createTournament.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Plus className="w-3 h-3 mr-1" />} Create
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tournament list */}
-            <div className="space-y-2">
-              {tournaments?.map((t: { id: string; name: string; weekNumber: number; status: string; prizePool: number; _count?: { teams: number; participations: number } }) => (
-                <motion.div key={t.id} variants={item}>
-                  <Card className={`${dt.casinoCard} ${dt.casinoGlow} casino-shimmer cursor-pointer ${selectedTournamentId === t.id ? `ring-1 ${dt.border}` : ''}`}
-                    onClick={() => setSelectedTournamentId(selectedTournamentId === t.id ? null : t.id)}>
-                    <div className={dt.casinoBar} />
-                    <CardContent className="p-3 relative z-10">
-                      <div className="flex items-center justify-between flex-wrap gap-2">
-                        <div>
-                          <p className="text-sm font-semibold">{t.name}</p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <StatusBadge status={t.status} />
-                            <span className="text-[10px] text-muted-foreground">Week {t.weekNumber}</span>
-                            <span className="text-[10px] text-muted-foreground">{formatCurrency(t.prizePool)}</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-1.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
-                          {nextStatusMap[t.status] && t.status !== 'completed' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={advanceStatus.isPending}
-                              onClick={() => setConfirmDialog({
-                                open: true,
-                                title: `Ubah Status ke ${statusLabelMap[nextStatusMap[t.status]]}?`,
-                                description: `Tournament "${t.name}" akan diubah ke status "${statusLabelMap[nextStatusMap[t.status]]}".`,
-                                onConfirm: () => advanceStatus.mutate({ tournamentId: t.id, status: nextStatusMap[t.status] })
-                              })}>
-                              {advanceStatus.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />} {statusLabelMap[nextStatusMap[t.status]] || nextStatusMap[t.status].replace(/_/g, ' ')}
-                            </Button>
-                          )}
-                          {t.status === 'approval' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={generateTeams.isPending} onClick={() => generateTeams.mutate(t.id)}>
-                              {generateTeams.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Users className="w-3 h-3 mr-1" />} Buat Tim
-                            </Button>
-                          )}
-                          {t.status === 'team_generation' && (
-                            <Button size="sm" variant="outline" className="text-[10px] h-7" disabled={generateBracket.isPending} onClick={() => generateBracket.mutate(t.id)}>
-                              {generateBracket.isPending ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Music className="w-3 h-3 mr-1" />} Buat Bracket
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Selected Tournament Detail */}
-            {selectedTournament && (
-              <Card className={`${dt.casinoCard} ${dt.cornerAccent}`}>
-                <div className={dt.casinoBar} />
-                <CardContent className="p-4 relative z-10">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold">{selectedTournament.name} — Manajemen</h3>
-                    <StatusBadge status={selectedTournament.status} />
-                  </div>
-
-                  {/* Pending Approvals */}
-                  {pendingApprovals.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs font-semibold text-yellow-500 mb-2">⏳ Menunggu Persetujuan ({pendingApprovals.length})</p>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto custom-scrollbar">
-                        {pendingApprovals.map((p: { id: string; playerId: string; player: { id: string; gamertag: string; tier: string; points: number } }) => (
-                          <div key={p.id} className="flex items-center justify-between p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/10">
-                            <div className="flex items-center gap-2">
-                              <TierBadge tier={p.player.tier} />
-                              <span className="text-xs font-medium">{p.player.gamertag}</span>
-                              <span className="text-[10px] text-muted-foreground">{p.player.points}pts</span>
-                            </div>
-                            <div className="flex items-center gap-1.5">
-                              <Select onValueChange={(tier) => approvePlayer.mutate({ tournamentId: selectedTournament.id, playerId: p.playerId, tier })}>
-                                <SelectTrigger className="w-20 h-6 text-[10px]"><SelectValue placeholder="Setujui" /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="S">Sebagai S</SelectItem>
-                                  <SelectItem value="A">Sebagai A</SelectItem>
-                                  <SelectItem value="B">Sebagai B</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Register Players */}
-                  {(selectedTournament.status === 'registration' || selectedTournament.status === 'setup') && (
-                    <div className="mb-4">
-                      <p className="text-xs font-semibold text-blue-500 mb-2">📋 Daftar Players</p>
-                      <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
-                        {players?.filter((p: { id: string }) => !selectedTournament.participations?.some((pp: { playerId: string }) => pp.playerId === p.id)).slice(0, 6).map((p: { id: string; gamertag: string; tier: string }) => (
-                          <div key={p.id} className="flex items-center justify-between p-1.5 rounded hover:bg-muted/50">
-                            <div className="flex items-center gap-2">
-                              <TierBadge tier={p.tier} />
-                              <span className="text-xs">{p.gamertag}</span>
-                            </div>
-                            <Button size="sm" variant="ghost" className={`h-6 text-[10px] ${dt.neonText}`}
-                              onClick={() => registerPlayer.mutate({ tournamentId: selectedTournament.id, playerId: p.id })}>
-                              <UserPlus className="w-3 h-3 mr-1" /> Daftar
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Teams & Match info */}
-                  {selectedTournament.teams?.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-green-500 mb-2">✅ Tim ({selectedTournament.teams.length})</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {selectedTournament.teams.map((t: { id: string; name: string; power: number; isWinner: boolean; teamPlayers: { player: { gamertag: string; tier: string; points: number } }[] }) => (
-                          <div key={t.id} className={`p-2 rounded-lg text-xs ${t.isWinner ? 'bg-yellow-500/5 border border-yellow-500/10' : 'bg-muted/50'}`}>
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-semibold">{t.name} {t.isWinner && '👑'}</span>
-                              <span className={dt.neonText}>⚡ {t.power}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                              {t.teamPlayers.map((tp: { player: { gamertag: string; tier: string } }) => (
-                                <span key={tp.player.gamertag} className="flex items-center gap-1 casino-pill px-1.5 py-0.5 rounded">
-                                  <TierBadge tier={tp.player.tier} /> {tp.player.gamertag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-          </motion.div>
+          <TournamentManager division={division} dt={dt} stats={stats} setConfirmDialog={setConfirmDialog} />
         </TabsContent>
 
         {/* ====== MATCHES TAB ====== */}

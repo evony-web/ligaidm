@@ -233,7 +233,7 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
     return dist;
   }, [pendingApprovals, approvedParticipations, tierOverrides]);
 
-  const matchesByBracket = useMemo(() => {
+  const matchesByBracket = (() => {
     if (!selected?.matches) return {};
     const grouped: Record<string, typeof selected.matches> = {};
     for (const m of selected.matches) {
@@ -242,15 +242,15 @@ export function TournamentManager({ division, dt, stats, setConfirmDialog }: Tou
       grouped[key].push(m);
     }
     return grouped;
-  }, [selected?.matches]);
+  })();
 
   // Helpers
-  const nextMatch = useMemo(() => {
+  const nextMatch = (() => {
     if (!selected?.matches) return null;
     return selected.matches.find((m: { status: string; team1Id: string | null; team2Id: string | null }) =>
       (m.status === 'ready' || m.status === 'pending') && m.team1Id && m.team2Id
     );
-  }, [selected?.matches]);
+  })();
 
   const getTeamName = (teamId: string | null) => {
     if (!teamId || !selected?.teams) return 'TBD';

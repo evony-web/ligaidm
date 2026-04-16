@@ -204,3 +204,30 @@ Stage Summary:
 - File upload working for logos, banners, card images
 - Admin can CRUD sections and cards with inline editing
 - Zero lint errors, zero TypeScript errors
+
+---
+Task ID: step10-admin-panel-integration
+Agent: Main Agent
+Task: Integrate TournamentManager component into admin-panel.tsx and fix bugs
+
+Work Log:
+- Verified score input bug in tournament-manager.tsx: scoreInputs.id] was actually already fixed to scoreInputs[m.id] (hex analysis confirmed bytes contain 5b6d2e69645d = [m.id])
+- Replaced old inline tournament tab (lines 439-595, ~156 lines) in admin-panel.tsx with <TournamentManager division={division} dt={dt} stats={stats} setConfirmDialog={setConfirmDialog} />
+- Cleaned up unused tournament-related code from admin-panel.tsx:
+  - Removed: statusLabelMap constant, tournaments query, selectedTournamentId state, selectedTournament query
+  - Removed mutations: createTournament, advanceStatus, approvePlayer, registerPlayer, generateTeams, generateBracket
+  - Removed state: newTournament
+  - Removed derived data: nextStatusMap, pendingApprovals, approvedPlayers
+- Cleaned up unused imports: Check, Play, Zap, Save, Separator, StatusBadge
+- Fixed React Compiler memoization errors in tournament-manager.tsx:
+  - Converted matchesByBracket useMemo to IIFE (compiler inferred selected.matches but source had selected?.matches)
+  - Converted nextMatch useMemo to IIFE (same issue)
+- ESLint: 0 errors, 0 warnings
+- Dev server running, all APIs returning 200
+
+Stage Summary:
+- TournamentManager component fully integrated into admin panel
+- Admin panel cleaned up (removed ~100 lines of duplicate tournament code + unused imports)
+- Score input references confirmed correct (scoreInputs[m.id])
+- React Compiler memoization issues resolved
+- Zero lint errors, zero TypeScript errors
