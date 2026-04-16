@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { TierBadge } from './tier-badge';
 import { StatusBadge } from './status-badge';
 import { CmsPanel } from './cms-panel';
+import { TournamentManager } from './tournament-manager';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useDivisionTheme } from '@/hooks/use-division-theme';

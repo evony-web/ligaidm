@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     where,
     orderBy: { weekNumber: 'desc' },
     include: {
-      _count: { select: { teams: true, participations: true, matches: true } },
+      _count: { select: { teams: true, participations: true, matches: true, prizes: true } },
       season: { select: { name: true, number: true } },
       teams: { where: { isWinner: true }, select: { id: true, name: true, isWinner: true } },
       prizes: { orderBy: { position: 'asc' } },
