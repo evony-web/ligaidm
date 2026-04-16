@@ -2,8 +2,8 @@
 
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { motion, useReducedMotion } from 'framer-motion';
-import { Trophy, ArrowRight, Radio, Gift, Star, UserPlus, ArrowRightLeft } from 'lucide-react';
+import { useReducedMotion } from 'framer-motion';
+import { Trophy, Gift, Star, UserPlus, ArrowRightLeft } from 'lucide-react';
 
 /* ========== Feed Item Types ========== */
 interface FeedItem {
@@ -145,34 +145,10 @@ export function MarqueeTicker() {
     return DEMO_ITEMS;
   }, [data?.items]);
 
-  // Split items into three rows for premium triple-ticker effect
-  const row1 = useMemo(() => items.filter((_, i) => i % 3 === 0), [items]);
-  const row2 = useMemo(() => items.filter((_, i) => i % 3 === 1), [items]);
-  const row3 = useMemo(() => items.filter((_, i) => i % 3 === 2), [items]);
-
   return (
     <div className="w-full overflow-hidden relative">
-      {/* Ambient top glow */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        <div className="absolute top-0 left-1/4 w-32 h-8 rounded-full" style={{ background: 'radial-gradient(circle, rgba(212,168,83,0.08) 0%, transparent 70%)' }} />
-        <div className="absolute top-0 right-1/4 w-32 h-8 rounded-full" style={{ background: 'radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%)' }} />
-      </div>
-
-      {/* Label Badge — left side */}
-      <div className="relative z-10 flex items-center gap-3 mb-2">
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20">
-          <Radio className="w-3 h-3 text-red-400 live-dot" />
-          <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">LIVE</span>
-        </div>
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Info Terkini</span>
-      </div>
-
-      {/* Triple Marquee Rows */}
-      <div className="space-y-1.5">
-        <MarqueeRow items={row1} speed={45} reverse={false} />
-        <MarqueeRow items={row2} speed={50} reverse={true} />
-        <MarqueeRow items={row3} speed={42} reverse={false} />
-      </div>
+      {/* Single full-width banner row */}
+      <MarqueeRow items={items} speed={35} reverse={false} />
     </div>
   );
 }
