@@ -114,7 +114,10 @@ function MarqueeRow({ items, speed = 40, reverse = false }: {
       <div
         className="flex gap-3 shrink-0"
         style={{
-          animation: `${reverse ? 'marquee-scroll-reverse' : 'marquee-scroll'} ${duration}s linear infinite`,
+          animationName: reverse ? 'marquee-scroll-reverse' : 'marquee-scroll',
+          animationDuration: `${duration}s`,
+          animationTimingFunction: 'linear',
+          animationIterationCount: 'infinite',
           animationPlayState: prefersReducedMotion ? 'paused' : 'running',
         }}
       >
